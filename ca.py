@@ -124,7 +124,8 @@ def default_recording_command(rec_dir, rec_name, rec_duration):
 				'rec_dir':rec_dir,
 				'rec_name':rec_name}
 	print rec_cmd
-	os.system(rec_cmd)
+	if os.system(rec_cmd):
+		raise Exception('Recording failed')
 	return [('presenter/source', '%s/%s.mkv' % (rec_dir,rec_name))]
 
 
@@ -137,6 +138,7 @@ def start_capture(schedule):
 	duration = schedule[1] - now
 	recording_id = schedule[2]
 	recording_name = 'recording-%s-%i' % (recording_id, now)
+	os.mkdir(config.CAPTURE_DIR)
 	recording_dir  = '%s/%s' % (config.CAPTURE_DIR, recording_name)
 	os.mkdir(recording_dir)
 
@@ -144,17 +146,14 @@ def start_capture(schedule):
 	register_ca(status='capturing')
 	recording_state(recording_id,'capturing')
 
-	'''
-	rec_cmd = ('raspivid -t %(duration)i000 -n -vf -o - | ' \
-			+ 'ffmpeg -i silence.mkv -acodec copy ' \
-			+ '-r 30 -i pipe:0 -vcodec copy -t %(duration)i ' \
-			+ '"%(rec_dir)s/%(rec_name)s.mkv"') % \
-			{ 'duration':duration, 
-				'rec_dir':recording_dir,
-				'rec_name':recording_name}
-	os.system(rec_cmd)
-	'''
-	tracks = recording_command(recording_dir, recording_name, duration)
+	tracks = []
+	try:
+		tracks = recording_command(recording_dir, recording_name, duration)
+	except:
+		# Update state
+		recording_state(recording_id,'capture_error')
+		register_ca(status='idle')
+		return False
 
 	# Put metadata files on disk
 	attachments = schedule[-1].get('attach')
@@ -190,70 +189,91 @@ def start_capture(schedule):
 			'workflow_def':workflow_def,
 			'workflow_config':workflow_config }
 
-	# create mediapackage
-	curlcmd = ('curl -f --digest -u %(user)s:%(passwd)s ' \
-			+ '-H "X-Requested-Auth: Digest" ' \
-			+ '"%(url)s/ingest/createMediaPackage" ' \
-			+ '-o "%(rec_dir)s/mediapackage.xml"') % rec_data
-	print curlcmd
-	os.system(curlcmd)
-
-	# add episode dc catalog
-	if os.path.isfile('%s/episode.xml' % recording_dir):
+	try:
+		# create mediapackage
 		curlcmd = ('curl -f --digest -u %(user)s:%(passwd)s ' \
-				+ '-H "X-Requested-Auth: Digest" "%(url)s/ingest/addDCCatalog" ' \
-				+ '-F "mediaPackage=<%(rec_dir)s/mediapackage.xml" ' \
-				+ '-F "flavor=dublincore/episode" ' \
-				+ '-F "dublinCore=@%(rec_dir)s/episode.xml" ' \
-				+ '-o "%(rec_dir)s/mediapackage-new.xml"') % rec_data
+				+ '-H "X-Requested-Auth: Digest" ' \
+				+ '"%(url)s/ingest/createMediaPackage" ' \
+				+ '-o "%(rec_dir)s/mediapackage.xml"') % rec_data
 		print curlcmd
-		os.system(curlcmd)
-		os.rename('%s/mediapackage-new.xml' % recording_dir,
-				'%s/mediapackage.xml' % recording_dir)
+		if os.system(curlcmd):
+			raise Exception('curl failed: Tried to create Mediapackage')
 
-	# add series dc catalog
-	if os.path.isfile('%s/series.xml' % recording_dir):
+		# add episode dc catalog
+		if os.path.isfile('%s/episode.xml' % recording_dir):
+			curlcmd = ('curl -f --digest -u %(user)s:%(passwd)s ' \
+					+ '-H "X-Requested-Auth: Digest" "%(url)s/ingest/addDCCatalog" ' \
+					+ '-F "mediaPackage=<%(rec_dir)s/mediapackage.xml" ' \
+					+ '-F "flavor=dublincore/episode" ' \
+					+ '-F "dublinCore=@%(rec_dir)s/episode.xml" ' \
+					+ '-o "%(rec_dir)s/mediapackage-new.xml"') % rec_data
+			print curlcmd
+			if os.system(curlcmd):
+				raise Exception('curl failed: Tried to add episode DC catalog')
+			os.rename('%s/mediapackage-new.xml' % recording_dir,
+					'%s/mediapackage.xml' % recording_dir)
+
+		# add series dc catalog
+		if os.path.isfile('%s/series.xml' % recording_dir):
+			curlcmd = ('curl -f --digest -u %(user)s:%(passwd)s ' \
+					+ '-H "X-Requested-Auth: Digest" "%(url)s/ingest/addDCCatalog" ' \
+					+ '-F "mediaPackage=<%(rec_dir)s/mediapackage.xml" ' \
+					+ '-F "flavor=dublincore/series" ' \
+					+ '-F "dublinCore=@%(rec_dir)s/series.xml" ' \
+					+ '-o "%(rec_dir)s/mediapackage-new.xml"') % rec_data
+			print curlcmd
+			if os.system(curlcmd):
+				raise Exception('curl failed: Tried to add series DC catalog')
+			os.rename('%s/mediapackage-new.xml' % recording_dir,
+					'%s/mediapackage.xml' % recording_dir)
+
+		# add track
+		for (flavor, track) in tracks:
+			track_data = rec_data.copy()
+			track_data['flavor'] = flavor
+			track_data['track']  = track
+			curlcmd = ('curl -f --digest -u %(user)s:%(passwd)s ' \
+					+ '-H "X-Requested-Auth: Digest" "%(url)s/ingest/addTrack" ' \
+					+ '-F "flavor=%(flavor)s" ' \
+					+ '-F "mediaPackage=<%(rec_dir)s/mediapackage.xml" ' \
+					+ '-F "BODY1=@%(track)s" ' \
+					+ '-o "%(rec_dir)s/mediapackage-new.xml"') % track_data
+			print curlcmd
+			if os.system(curlcmd):
+				raise Exception('curl failed: Tried to upload track')
+			os.rename('%s/mediapackage-new.xml' % recording_dir,
+					'%s/mediapackage.xml' % recording_dir)
+
+		# ingest
 		curlcmd = ('curl -f --digest -u %(user)s:%(passwd)s ' \
-				+ '-H "X-Requested-Auth: Digest" "%(url)s/ingest/addDCCatalog" ' \
+				+ '-H "X-Requested-Auth: Digest" "%(url)s/ingest/ingest" ' \
 				+ '-F "mediaPackage=<%(rec_dir)s/mediapackage.xml" ' \
-				+ '-F "flavor=dublincore/series" ' \
-				+ '-F "dublinCore=@%(rec_dir)s/series.xml" ' \
-				+ '-o "%(rec_dir)s/mediapackage-new.xml"') % rec_data
+				+ '-F "workflowDefinitionId=%(workflow_def)s" ' \
+				+ '-F "workflowInstanceId=%(rec_id)s" ' \
+				+ '%(workflow_config)s ' \
+				+ '-o "%(rec_dir)s/worflowInstance.xml"') % rec_data
 		print curlcmd
-		os.system(curlcmd)
-		os.rename('%s/mediapackage-new.xml' % recording_dir,
-				'%s/mediapackage.xml' % recording_dir)
+		if os.system(curlcmd):
+			raise Exception('curl failed: Tried to ingest')
 
-	# add track
-	for (flavor, track) in tracks:
-		track_data = rec_data.copy()
-		track_data['flavor'] = flavor
-		track_data['track']  = track
-		curlcmd = ('curl -f --digest -u %(user)s:%(passwd)s ' \
-				+ '-H "X-Requested-Auth: Digest" "%(url)s/ingest/addTrack" ' \
-				+ '-F "flavor=%(flavor)s" ' \
-				+ '-F "mediaPackage=<%(rec_dir)s/mediapackage.xml" ' \
-				+ '-F "BODY1=@%(track)s" ' \
-				+ '-o "%(rec_dir)s/mediapackage-new.xml"') % track_data
-		print curlcmd
-		os.system(curlcmd)
-		os.rename('%s/mediapackage-new.xml' % recording_dir,
-				'%s/mediapackage.xml' % recording_dir)
-
-	# ingest
-	curlcmd = ('curl -f --digest -u %(user)s:%(passwd)s ' \
-			+ '-H "X-Requested-Auth: Digest" "%(url)s/ingest/ingest" ' \
-			+ '-F "mediaPackage=<%(rec_dir)s/mediapackage.xml" ' \
-			+ '-F "workflowDefinitionId=%(workflow_def)s" ' \
-			+ '-F "workflowInstanceId=%(rec_id)s" ' \
-			+ '%(workflow_config)s ' \
-			+ '-o "%(rec_dir)s/worflowInstance.xml"') % rec_data
-	print curlcmd
-	os.system(curlcmd)
+	except:
+		# Update state if something went wrong
+		recording_state(recording_id,'upload_error')
+		register_ca(status='idle')
+		return False
 
 	# Update state
 	recording_state(recording_id,'upload_finished')
 	register_ca(status='idle')
+	return True
+
+
+def safe_start_capture(schedule):
+	try:
+		return start_capture(schedule)
+	except:
+		register_ca(status='idle')
+		return False
 
 
 def control_loop():
@@ -261,7 +281,10 @@ def control_loop():
 	schedule = []
 	while True:
 		if len(schedule) and schedule[0][0] <= get_timestamp():
-			start_capture(schedule[0])
+			if not safe_start_capture(schedule[0]):
+				# Something went wrong but we do not want to restart the capture
+				# continuously
+				time.sleep( schedule[0][1] - get_timestamp() )
 		if get_timestamp() - last_update > config.UPDATE_FREQUENCY:
 			schedule = get_schedule()
 			last_update = get_timestamp()
