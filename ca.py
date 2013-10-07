@@ -25,7 +25,6 @@ import icalendar
 from datetime import datetime
 import os.path
 
-import imp
 import config
 
 
@@ -114,31 +113,12 @@ def get_config_params(properties):
 	return wdef, param
 
 
-def default_recording_command(rec_dir, rec_name, rec_duration):
-	rec_cmd = ('raspivid -t %(duration)i000 -n -b 4000000 -hf -vf -fps 25 -o - | ' \
-			+ 'ffmpeg ' \
-			+ '-f alsa -i hw:2 ' \
-			+ '-r 25 -i pipe:0 -c:v copy -t %(duration)i ' \
-			+ '"%(rec_dir)s/%(rec_name)s.mkv"') % \
-			{ 'duration':rec_duration, 
-				'rec_dir':rec_dir,
-				'rec_name':rec_name}
-	print rec_cmd
-	if os.system(rec_cmd):
-		raise Exception('Recording failed')
-	return [('presenter/source', '%s/%s.mkv' % (rec_dir,rec_name))]
-
-
-recording_command   = default_recording_command
-
-
 def start_capture(schedule):
 	now = get_timestamp()
 	print '%i: start_recording...' % now
 	duration = schedule[1] - now
 	recording_id = schedule[2]
 	recording_name = 'recording-%s-%i' % (recording_id, now)
-	os.mkdir(config.CAPTURE_DIR)
 	recording_dir  = '%s/%s' % (config.CAPTURE_DIR, recording_name)
 	os.mkdir(recording_dir)
 
@@ -149,7 +129,8 @@ def start_capture(schedule):
 	tracks = []
 	try:
 		tracks = recording_command(recording_dir, recording_name, duration)
-	except:
+	except Exception as e:
+		print str(e)
 		# Update state
 		recording_state(recording_id,'capture_error')
 		register_ca(status='idle')
@@ -271,7 +252,8 @@ def start_capture(schedule):
 def safe_start_capture(schedule):
 	try:
 		return start_capture(schedule)
-	except:
+	except Exception as e:
+		print str(e)
 		register_ca(status='idle')
 		return False
 
@@ -293,7 +275,18 @@ def control_loop():
 		time.sleep(1.0)
 
 
+def load_capture_plugin():
+	import imp
+	mod = imp.load_source('capture', '%s/capture_plugins/%s.py' % (
+		os.path.dirname(os.path.abspath(__file__)),
+		config.CAPTURE_PLUGIN ))
+	global recording_command
+	recording_command = mod.recording_command
+	print recording_command
+
+
 if __name__ == '__main__':
+	load_capture_plugin()
 	register_ca()
 	print get_schedule()
 	control_loop()
