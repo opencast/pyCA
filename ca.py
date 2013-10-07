@@ -5,7 +5,7 @@
 	~~~~~~~~~~~~~~~~~~~~
 
 	:copyright: 2013, Lars Kiesow <lkiesow@uos.de>
-	:license: FreeBSD and LGPL, see license.* for more details.
+	:license: LGPL – see license.lgpl for more details.
 '''
 
 # Set default encoding to UTF-8
@@ -25,18 +25,14 @@ import icalendar
 from datetime import datetime
 import os.path
 
-ignore_tz = False
-admin_server_url    = 'http://localhost:8080'
-admin_server_user   = 'digestadmin'
-admin_server_passwd = 'opencast'
-update_frequency    = 60
-capture_dir         = '/home/pi/recordings/'
+import imp
+import config
 
 
 def get_url_opener():
 	mgr = urllib2.HTTPPasswordMgrWithDefaultRealm()
-	mgr.add_password(None, admin_server_url, admin_server_user,
-			admin_server_passwd)
+	mgr.add_password(None, config.ADMIN_SERVER_URL, config.ADMIN_SERVER_USER,
+			config.ADMIN_SERVER_PASSWD)
 	return urllib2.build_opener(urllib2.HTTPBasicAuthHandler(mgr),
 			urllib2.HTTPDigestAuthHandler(mgr))
 
@@ -44,7 +40,8 @@ def get_url_opener():
 
 def register_ca(address='http://localhost:8080',status='idle'):
 	params = {'address':address, 'state':status}
-	req = urllib2.Request('%s/capture-admin/agents/pica' % admin_server_url,
+	req = urllib2.Request('%s/capture-admin/agents/%s' % (
+			config.ADMIN_SERVER_URL, config.CAPTURE_AGENT_NAME),
 			urllib.urlencode(params))
 	req.add_header('X-Requested-Auth', 'Digest')
 
@@ -56,7 +53,7 @@ def register_ca(address='http://localhost:8080',status='idle'):
 def recording_state(rid, status='upcoming'):
 	params = {'state':status}
 	req = urllib2.Request('%s/capture-admin/recordings/%s' % \
-			(admin_server_url, rid),
+			(config.ADMIN_SERVER_URL, rid),
 			urllib.urlencode(params))
 	req.add_header('X-Requested-Auth', 'Digest')
 
@@ -66,8 +63,8 @@ def recording_state(rid, status='upcoming'):
 
 
 def get_schedule():
-	req = urllib2.Request('%s/recordings/calendars?agentid=pica' % \
-			admin_server_url)
+	req = urllib2.Request('%s/recordings/calendars?agentid=%s' % (
+			config.ADMIN_SERVER_URL, config.CAPTURE_AGENT_NAME))
 	req.add_header('X-Requested-Auth', 'Digest')
 
 	u = get_url_opener().open(req)
@@ -99,7 +96,7 @@ def unix_ts(dt):
 
 
 def get_timestamp():
-	if ignore_tz:
+	if config.IGNORE_TZ:
 		return unix_ts(datetime.now())
 	return unix_ts(datetime.now(dateutil.tz.tzutc()))
 
@@ -140,7 +137,7 @@ def start_capture(schedule):
 	duration = schedule[1] - now
 	recording_id = schedule[2]
 	recording_name = 'recording-%s-%i' % (recording_id, now)
-	recording_dir  = '%s/%s' % (capture_dir, recording_name)
+	recording_dir  = '%s/%s' % (config.CAPTURE_DIR, recording_name)
 	os.mkdir(recording_dir)
 
 	# Set state
@@ -184,9 +181,9 @@ def start_capture(schedule):
 	recording_state(recording_id,'uploading')
 	
 	rec_data = {
-			'user':admin_server_user,
-			'passwd':admin_server_passwd,
-			'url':admin_server_url,
+			'user':config.ADMIN_SERVER_USER,
+			'passwd':config.ADMIN_SERVER_PASSWD,
+			'url':config.ADMIN_SERVER_URL,
 			'rec_dir':recording_dir,
 			'rec_name':recording_name,
 			'rec_id':recording_id,
@@ -265,7 +262,7 @@ def control_loop():
 	while True:
 		if len(schedule) and schedule[0][0] <= get_timestamp():
 			start_capture(schedule[0])
-		if get_timestamp() - last_update > update_frequency:
+		if get_timestamp() - last_update > config.UPDATE_FREQUENCY:
 			schedule = get_schedule()
 			last_update = get_timestamp()
 			print '%i: updated schedule' % get_timestamp()
