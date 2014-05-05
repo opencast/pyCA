@@ -38,6 +38,10 @@ def get_url_opener():
 
 
 def register_ca(address='http://localhost:8080',status='idle'):
+	# If this is a backup CA we don't tell the Matterhorn core that we are here.
+	# We will just run silently in the background:
+	if config.BACKUP_AGENT:
+		return
 	params = {'address':address, 'state':status}
 	req = urllib2.Request('%s/capture-admin/agents/%s' % (
 			config.ADMIN_SERVER_URL, config.CAPTURE_AGENT_NAME),
@@ -50,6 +54,11 @@ def register_ca(address='http://localhost:8080',status='idle'):
 
 
 def recording_state(rid, status='upcoming'):
+	# If this is a backup CA we don't update the recording state. The actual CA
+	# does that and we don't want to mess with it.  We will just run silently in
+	# the background:
+	if config.BACKUP_AGENT:
+		return
 	params = {'state':status}
 	req = urllib2.Request('%s/capture-admin/recordings/%s' % \
 			(config.ADMIN_SERVER_URL, rid),
@@ -66,9 +75,15 @@ def get_schedule():
 			config.ADMIN_SERVER_URL, config.CAPTURE_AGENT_NAME))
 	req.add_header('X-Requested-Auth', 'Digest')
 
-	u = get_url_opener().open(req)
-	vcal = u.read()
-	u.close()
+	try:
+		u = get_url_opener().open(req)
+		vcal = u.read()
+	except Exception as e:
+		sys.stderr.write('Error: Could not get schedule')
+		sys.stderr.write(' --> %s' % e.message)
+		return
+	finally:
+		u.close()
 
 	cal = None
 	try:
@@ -156,10 +171,15 @@ def start_capture(schedule):
 			f.write(value)
 			f.close()
 
+	# If we are a backup CA, we don't want to actually upload anything. So let's
+	# just quit here.
+	if config.BACKUP_AGENT:
+		return True
+
 	# Upload everything
 	register_ca(status='uploading')
 	recording_state(recording_id,'uploading')
-	
+
 	rec_data = {
 			'user':config.ADMIN_SERVER_USER,
 			'passwd':config.ADMIN_SERVER_PASSWD,
@@ -270,8 +290,12 @@ def control_loop():
 		if get_timestamp() - last_update > config.UPDATE_FREQUENCY:
 			schedule = get_schedule()
 			last_update = get_timestamp()
-			print '%i: updated schedule' % get_timestamp()
-			print ' > starting timestamps: ', [ x[0] for x in schedule ]
+			#print '%i: updated schedule' % get_timestamp()
+			#print ' > starting timestamps: ', [ x[0] for x in schedule ]
+			if schedule:
+				print 'Next scheduled recording: %s' % datetime.fromtimestamp(schedule[0][0])
+			else:
+				print 'No scheduled recording'
 		time.sleep(1.0)
 
 
@@ -282,11 +306,12 @@ def load_capture_plugin():
 		config.CAPTURE_PLUGIN ))
 	global recording_command
 	recording_command = mod.recording_command
-	print recording_command
+	if recording_command:
+		print 'Found recording plug-in'
 
 
 if __name__ == '__main__':
 	load_capture_plugin()
 	register_ca()
-	print get_schedule()
+	get_schedule()
 	control_loop()
