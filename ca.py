@@ -78,12 +78,11 @@ def get_schedule():
 	try:
 		u = get_url_opener().open(req)
 		vcal = u.read()
+		u.close()
 	except Exception as e:
 		sys.stderr.write('Error: Could not get schedule')
 		sys.stderr.write(' --> %s' % e.message)
 		return
-	finally:
-		u.close()
 
 	cal = None
 	try:
