@@ -298,19 +298,29 @@ def control_loop():
 		time.sleep(1.0)
 
 
-def load_capture_plugin():
-	import imp
-	mod = imp.load_source('capture', '%s/capture_plugins/%s.py' % (
-		os.path.dirname(os.path.abspath(__file__)),
-		config.CAPTURE_PLUGIN ))
-	global recording_command
-	recording_command = mod.recording_command
-	if recording_command:
-		print 'Found recording plug-in'
+def recording_command(rec_dir, rec_name, rec_duration):
+	s = {'time':rec_duration, 'recname':rec_name, 'recdir':rec_dir}
+	print(config.CAPTURE_COMMAND % s)
+	if os.system(config.CAPTURE_COMMAND % s):
+		raise Exception('Recording failed')
+
+	# Remove preview files:
+	for p in config.CAPTURE_PREVIEW:
+		try:
+			os.remove(p % {'recdir':config.CAPTURE_DIR})
+		except:
+			pass
+	return [(o[0], o[1] % s) for o in config.CAPTURE_OUTPUT]
 
 
 if __name__ == '__main__':
-	load_capture_plugin()
-	register_ca()
-	get_schedule()
-	control_loop()
+	if sys.argv[1:] == ['test']:
+		recording_name = 'test-%i' % get_timestamp()
+		recording_command(config.CAPTURE_DIR, recording_name, 60)
+		exit()
+	elif sys.argv[1:] == ['run']:
+		register_ca()
+		get_schedule()
+		control_loop()
+	else:
+		print('Usage: %s  test | run' % sys.argv[0])
