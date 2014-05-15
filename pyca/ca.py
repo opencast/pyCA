@@ -25,7 +25,7 @@ import icalendar
 from datetime import datetime
 import os.path
 
-import config
+from pyca import config
 
 
 def get_url_opener():
@@ -313,14 +313,12 @@ def recording_command(rec_dir, rec_name, rec_duration):
 	return [(o[0], o[1] % s) for o in config.CAPTURE_OUTPUT]
 
 
-if __name__ == '__main__':
-	if sys.argv[1:] == ['test']:
-		recording_name = 'test-%i' % get_timestamp()
-		recording_command(config.CAPTURE_DIR, recording_name, 60)
-		exit()
-	elif sys.argv[1:] == ['run']:
-		register_ca()
-		get_schedule()
-		control_loop()
-	else:
-		print('Usage: %s  test | run' % sys.argv[0])
+def test():
+	recording_name = 'test-%i' % get_timestamp()
+	recording_command(config.CAPTURE_DIR, recording_name, 60)
+
+
+def run():
+	register_ca()
+	get_schedule()
+	control_loop()

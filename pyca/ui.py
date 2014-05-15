@@ -6,7 +6,7 @@ import sys
 reload(sys)
 sys.setdefaultencoding('utf8')
 
-import config
+from pyca import config
 
 import os.path
 from jinja2 import Template
@@ -61,8 +61,3 @@ def img(img):
 	except:
 		pass
 	return '', 404
-
-
-
-if __name__ == "__main__":
-	app.run(host='0.0.0.0')
