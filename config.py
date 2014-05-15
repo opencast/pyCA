@@ -1,4 +1,3 @@
-#!/bin/env python
 # -*- coding: utf-8 -*-
 import os
 
@@ -73,6 +72,21 @@ BACKUP_AGENT        = False
 #   -c:a flac -c:v copy \
 #   -t %(time)s -y %(recdir)s/%(recname)s.mp4'''
 #
+#
+# Confidence monitoring
+# =====================
+#
+# A preview image can be generated during the capture process so that the
+# currently captured content can be inspected. If FFmpeg is used for capturing
+# a commandline for writing such a preview image could look like this:
+#
+#   ... -t %(time)s -map 0:v -filter:v select='not(mod(n\,50))' \
+#       -updatefirst 1 %(recdir)s/preview.jpg
+#
+# This would write every 50th frame as JPEG to disk.
+#
+# Example using a test source with confidence monitoring:
+
 CAPTURE_COMMAND = '''ffmpeg -re -f lavfi -r 25 -i testsrc \
 		-t %(time)s -map 0:v %(recdir)s/%(recname)s.mp4 \
 		-t %(time)s -map 0:v -filter:v select='not(mod(n\,50))' \
@@ -86,7 +100,15 @@ CAPTURE_OUTPUT = [('presenter/source', '%(recdir)s/%(recname)s.mp4')]
 # Specify a preview image to show in the web UI. If no image is specified, none
 # is shown. Multiple images can be specified. The only string substitution
 # ehich can be used in here is %(recdir)s.
+# Warning: Files specified in this list will be deleted after the recording is
+# finished.
 CAPTURE_PREVIEW = ['%(recdir)s/preview.jpg']
 
-CAPTURE_UI_USER = 'admin'
-CAPTURE_UI_PASSWD = 'opencast'
+
+########################################################################
+## UI configuration                                                    #
+########################################################################
+
+UI_USER = 'admin'
+UI_PASSWD = 'opencast'
+UI_REFRESH_RATE = 2
