@@ -4,7 +4,7 @@
 	python-matterhorn-ca
 	~~~~~~~~~~~~~~~~~~~~
 
-	:copyright: 2013, Lars Kiesow <lkiesow@uos.de>
+	:copyright: 2014, Lars Kiesow <lkiesow@uos.de>
 	:license: LGPL – see license.lgpl for more details.
 '''
 
@@ -15,73 +15,48 @@ sys.setdefaultencoding('utf8')
 
 import os
 import time
-import urllib
-import urllib2
+import pycurl
 import dateutil.tz
-from xml.dom.minidom import parseString
 from base64 import b64decode
 import logging
 import icalendar
 from datetime import datetime
 import os.path
+if sys.version_info[0] == 2:
+	from cStringIO import StringIO as bio
+else:
+	from io import BytesIO as bio
 
 from pyca import config
 
 
-def get_url_opener():
-	mgr = urllib2.HTTPPasswordMgrWithDefaultRealm()
-	mgr.add_password(None, config.ADMIN_SERVER_URL, config.ADMIN_SERVER_USER,
-			config.ADMIN_SERVER_PASSWD)
-	return urllib2.build_opener(urllib2.HTTPBasicAuthHandler(mgr),
-			urllib2.HTTPDigestAuthHandler(mgr))
-
-
-
-def register_ca(address='http://localhost:8080',status='idle'):
+def register_ca(address=config.UI_URI, status='idle'):
 	# If this is a backup CA we don't tell the Matterhorn core that we are here.
 	# We will just run silently in the background:
 	if config.BACKUP_AGENT:
 		return
-	params = {'address':address, 'state':status}
-	req = urllib2.Request('%s/capture-admin/agents/%s' % (
-			config.ADMIN_SERVER_URL, config.CAPTURE_AGENT_NAME),
-			urllib.urlencode(params))
-	req.add_header('X-Requested-Auth', 'Digest')
-
-	u = get_url_opener().open(req)
-	print u.read()
-	u.close()
+	params = [('address',address), ('state',status)]
+	print(http_request('/capture-admin/agents/%s' % \
+			config.CAPTURE_AGENT_NAME, params))
 
 
-def recording_state(rid, status='upcoming'):
+def recording_state(recording_id, status='upcoming'):
 	# If this is a backup CA we don't update the recording state. The actual CA
 	# does that and we don't want to mess with it.  We will just run silently in
 	# the background:
 	if config.BACKUP_AGENT:
 		return
-	params = {'state':status}
-	req = urllib2.Request('%s/capture-admin/recordings/%s' % \
-			(config.ADMIN_SERVER_URL, rid),
-			urllib.urlencode(params))
-	req.add_header('X-Requested-Auth', 'Digest')
-
-	u = get_url_opener().open(req)
-	print u.read()
-	u.close()
+	params = [('state',status)]
+	print(http_request('/capture-admin/recordings/%s' % \
+			recording_id, params))
 
 
 def get_schedule():
-	req = urllib2.Request('%s/recordings/calendars?agentid=%s' % (
-			config.ADMIN_SERVER_URL, config.CAPTURE_AGENT_NAME))
-	req.add_header('X-Requested-Auth', 'Digest')
-
 	try:
-		u = get_url_opener().open(req)
-		vcal = u.read()
-		u.close()
+		vcal = http_request('/recordings/calendars?agentid=%s' % \
+				config.CAPTURE_AGENT_NAME)
 	except Exception as e:
-		sys.stderr.write('Error: Could not get schedule')
-		sys.stderr.write(' --> %s' % e.message)
+		print('ERROR: Could not get schedule: %s' % e.message)
 		return
 
 	cal = None
@@ -115,13 +90,13 @@ def get_timestamp():
 
 
 def get_config_params(properties):
-	param = ''
+	param = []
 	wdef = 'full'
 	for prop in properties.split('\n'):
 		if prop.startswith('org.opencastproject.workflow.config'):
 			k,v = prop.split('=',1)
 			k = k.split('.')[-1]
-			param += '-F "%s=%s" ' % (k, v)
+			param.append((k, v))
 		elif prop.startswith('org.opencastproject.workflow.definition'):
 			wdef = prop.split('=',1)[-1]
 	return wdef, param
@@ -129,11 +104,15 @@ def get_config_params(properties):
 
 def start_capture(schedule):
 	now = get_timestamp()
-	print '%i: start_recording...' % now
+	print('%i: start_recording...' % now)
 	duration = schedule[1] - now
 	recording_id = schedule[2]
 	recording_name = 'recording-%s-%i' % (recording_id, now)
 	recording_dir  = '%s/%s' % (config.CAPTURE_DIR, recording_name)
+	try:
+		os.mkdir(config.CAPTURE_DIR)
+	except:
+		pass
 	os.mkdir(recording_dir)
 
 	# Set state
@@ -166,9 +145,8 @@ def start_capture(schedule):
 				f.close()
 		else:
 			workflow_def, workflow_config = get_config_params(value)
-			f = open('%s/recording.properties' % recording_dir, 'w')
-			f.write(value)
-			f.close()
+			with open('%s/recording.properties' % recording_dir, 'w') as f:
+				f.write(value)
 
 	# If we are a backup CA, we don't want to actually upload anything. So let's
 	# just quit here.
@@ -179,83 +157,9 @@ def start_capture(schedule):
 	register_ca(status='uploading')
 	recording_state(recording_id,'uploading')
 
-	rec_data = {
-			'user':config.ADMIN_SERVER_USER,
-			'passwd':config.ADMIN_SERVER_PASSWD,
-			'url':config.ADMIN_SERVER_URL,
-			'rec_dir':recording_dir,
-			'rec_name':recording_name,
-			'rec_id':recording_id,
-			'workflow_def':workflow_def,
-			'workflow_config':workflow_config }
-
 	try:
-		# create mediapackage
-		curlcmd = ('curl -f --digest -u %(user)s:%(passwd)s ' \
-				+ '-H "X-Requested-Auth: Digest" ' \
-				+ '"%(url)s/ingest/createMediaPackage" ' \
-				+ '-o "%(rec_dir)s/mediapackage.xml"') % rec_data
-		print curlcmd
-		if os.system(curlcmd):
-			raise Exception('curl failed: Tried to create Mediapackage')
-
-		# add episode dc catalog
-		if os.path.isfile('%s/episode.xml' % recording_dir):
-			curlcmd = ('curl -f --digest -u %(user)s:%(passwd)s ' \
-					+ '-H "X-Requested-Auth: Digest" "%(url)s/ingest/addDCCatalog" ' \
-					+ '-F "mediaPackage=<%(rec_dir)s/mediapackage.xml" ' \
-					+ '-F "flavor=dublincore/episode" ' \
-					+ '-F "dublinCore=@%(rec_dir)s/episode.xml" ' \
-					+ '-o "%(rec_dir)s/mediapackage-new.xml"') % rec_data
-			print curlcmd
-			if os.system(curlcmd):
-				raise Exception('curl failed: Tried to add episode DC catalog')
-			os.rename('%s/mediapackage-new.xml' % recording_dir,
-					'%s/mediapackage.xml' % recording_dir)
-
-		# add series dc catalog
-		if os.path.isfile('%s/series.xml' % recording_dir):
-			curlcmd = ('curl -f --digest -u %(user)s:%(passwd)s ' \
-					+ '-H "X-Requested-Auth: Digest" "%(url)s/ingest/addDCCatalog" ' \
-					+ '-F "mediaPackage=<%(rec_dir)s/mediapackage.xml" ' \
-					+ '-F "flavor=dublincore/series" ' \
-					+ '-F "dublinCore=@%(rec_dir)s/series.xml" ' \
-					+ '-o "%(rec_dir)s/mediapackage-new.xml"') % rec_data
-			print curlcmd
-			if os.system(curlcmd):
-				raise Exception('curl failed: Tried to add series DC catalog')
-			os.rename('%s/mediapackage-new.xml' % recording_dir,
-					'%s/mediapackage.xml' % recording_dir)
-
-		# add track
-		for (flavor, track) in tracks:
-			track_data = rec_data.copy()
-			track_data['flavor'] = flavor
-			track_data['track']  = track
-			curlcmd = ('curl -f --digest -u %(user)s:%(passwd)s ' \
-					+ '-H "X-Requested-Auth: Digest" "%(url)s/ingest/addTrack" ' \
-					+ '-F "flavor=%(flavor)s" ' \
-					+ '-F "mediaPackage=<%(rec_dir)s/mediapackage.xml" ' \
-					+ '-F "BODY1=@%(track)s" ' \
-					+ '-o "%(rec_dir)s/mediapackage-new.xml"') % track_data
-			print curlcmd
-			if os.system(curlcmd):
-				raise Exception('curl failed: Tried to upload track')
-			os.rename('%s/mediapackage-new.xml' % recording_dir,
-					'%s/mediapackage.xml' % recording_dir)
-
-		# ingest
-		curlcmd = ('curl -f --digest -u %(user)s:%(passwd)s ' \
-				+ '-H "X-Requested-Auth: Digest" "%(url)s/ingest/ingest" ' \
-				+ '-F "mediaPackage=<%(rec_dir)s/mediapackage.xml" ' \
-				+ '-F "workflowDefinitionId=%(workflow_def)s" ' \
-				+ '-F "workflowInstanceId=%(rec_id)s" ' \
-				+ '%(workflow_config)s ' \
-				+ '-o "%(rec_dir)s/worflowInstance.xml"') % rec_data
-		print curlcmd
-		if os.system(curlcmd):
-			raise Exception('curl failed: Tried to ingest')
-
+		ingest(tracks, recording_name, recording_dir, recording_id, workflow_def,
+				workflow_config)
 	except:
 		# Update state if something went wrong
 		recording_state(recording_id,'upload_error')
@@ -266,6 +170,73 @@ def start_capture(schedule):
 	recording_state(recording_id,'upload_finished')
 	register_ca(status='idle')
 	return True
+
+
+def http_request(endpoint, post_data=None):
+	buf = bio()
+	c = pycurl.Curl()
+	c.setopt(c.URL, '%s%s' % (config.ADMIN_SERVER_URL, endpoint))
+	if post_data:
+		c.setopt(c.HTTPPOST, post_data)
+	c.setopt(c.WRITEFUNCTION, buf.write)
+	c.setopt(pycurl.HTTPAUTH, pycurl.HTTPAUTH_DIGEST)
+	c.setopt(pycurl.USERPWD, "%s:%s" % \
+			(config.ADMIN_SERVER_USER, config.ADMIN_SERVER_PASSWD))
+	c.setopt(c.HTTPHEADER, ['X-Requested-Auth: Digest'])
+	c.perform()
+	status = c.getinfo(pycurl.HTTP_CODE)
+	c.close()
+	if status / 100 != 2:
+		raise Exception('ERROR: Request to %s failed (HTTP status code %i)' % \
+				(endpoint, status))
+	result = buf.getvalue()
+	buf.close()
+	return result
+
+
+def ingest(tracks, recording_name, recording_dir, recording_id, workflow_def,
+		workflow_config=[]):
+
+	# create mediapackage
+	print('Creating new mediapackage')
+	mediapackage = http_request('/ingest/createMediaPackage')
+
+	# add episode dc catalog
+	if os.path.isfile('%s/episode.xml' % recording_dir):
+		print('Adding episode DC catalog')
+		fields = [
+				('mediaPackage', mediapackage), ('flavor', 'dublincore/episode'),
+				('dublinCore', (pycurl.FORM_FILE, '%s/episode.xml' % recording_dir))
+			]
+		mediapackage = http_request('/ingest/addDCCatalog', fields)
+
+	# add series dc catalog
+	if os.path.isfile('%s/series.xml' % recording_dir):
+		print('Adding series DC catalog')
+		fields = [
+				('mediaPackage', mediapackage), ('flavor', 'dublincore/series'),
+				('dublinCore', (pycurl.FORM_FILE, '%s/series.xml' % recording_dir))
+			]
+		mediapackage = http_request('/ingest/addDCCatalog', fields)
+
+	# add track
+	for (flavor, track) in tracks:
+		print('Adding track (%s)' % flavor)
+		fields = [
+				('mediaPackage', mediapackage), ('flavor', flavor),
+				('BODY1', (pycurl.FORM_FILE, track))
+			]
+		mediapackage = http_request('/ingest/addTrack', fields)
+
+	# ingest
+	print('Ingest recording')
+	fields = [
+			('mediaPackage', mediapackage),
+			('workflowDefinitionId', workflow_def),
+			('workflowInstanceId', recording_id)
+			]
+	fields += workflow_config
+	mediapackage = http_request('/ingest/ingest', fields)
 
 
 def safe_start_capture(schedule):
@@ -284,13 +255,11 @@ def control_loop():
 		if len(schedule) and schedule[0][0] <= get_timestamp():
 			if not safe_start_capture(schedule[0]):
 				# Something went wrong but we do not want to restart the capture
-				# continuously
+				# continuously, thus we sleep for the rest of the recording.
 				time.sleep( schedule[0][1] - get_timestamp() )
 		if get_timestamp() - last_update > config.UPDATE_FREQUENCY:
 			schedule = get_schedule()
 			last_update = get_timestamp()
-			#print '%i: updated schedule' % get_timestamp()
-			#print ' > starting timestamps: ', [ x[0] for x in schedule ]
 			if schedule:
 				print 'Next scheduled recording: %s' % datetime.fromtimestamp(schedule[0][0])
 			else:
@@ -299,7 +268,8 @@ def control_loop():
 
 
 def recording_command(rec_dir, rec_name, rec_duration):
-	s = {'time':rec_duration, 'recname':rec_name, 'recdir':rec_dir}
+	s = {'time':rec_duration, 'recname':rec_name, 'recdir':rec_dir,
+			'previewdir':config.PREVIEW_DIR}
 	print(config.CAPTURE_COMMAND % s)
 	if os.system(config.CAPTURE_COMMAND % s):
 		raise Exception('Recording failed')
@@ -307,18 +277,30 @@ def recording_command(rec_dir, rec_name, rec_duration):
 	# Remove preview files:
 	for p in config.CAPTURE_PREVIEW:
 		try:
-			os.remove(p % {'recdir':config.CAPTURE_DIR})
+			os.remove(p % {'previewdir':config.PREVIEW_DIR})
 		except:
 			pass
+
+	# Return [(flavor,path),…]
 	return [(o[0], o[1] % s) for o in config.CAPTURE_OUTPUT]
 
 
 def test():
 	recording_name = 'test-%i' % get_timestamp()
-	recording_command(config.CAPTURE_DIR, recording_name, 60)
+	recording_dir  = '%s/%s' % (config.CAPTURE_DIR, recording_name)
+	try:
+		os.mkdir(config.CAPTURE_DIR)
+	except:
+		pass
+	os.mkdir(recording_dir)
+	recording_command(recording_dir, recording_name, 60)
 
 
 def run():
 	register_ca()
 	get_schedule()
-	control_loop()
+	try:
+		control_loop()
+	except KeyboardInterrupt:
+		pass
+	register_ca(status='unknown')

@@ -39,7 +39,7 @@ def home():
 		return Response('pyCA', 401, {'WWW-Authenticate': 'Basic realm="Login Required"'})
 
 	# Get IDs of existing preview images
-	preview = [p % {'recdir':config.CAPTURE_DIR} for p in config.CAPTURE_PREVIEW]
+	preview = [p % {'previewdir':config.PREVIEW_DIR} for p in config.CAPTURE_PREVIEW]
 	preview = zip(preview, range(len(preview)))
 	preview = [p[1] for p in preview if os.path.isfile(p[0])]
 
@@ -54,7 +54,7 @@ def img(img):
 	'''
 	f = ''
 	try:
-		f = config.CAPTURE_PREVIEW[int(img)] % {'recdir':config.CAPTURE_DIR}
+		f = config.CAPTURE_PREVIEW[int(img)] % {'previewdir':config.PREVIEW_DIR}
 		if os.path.isfile(f):
 			[path,filename] = f.rsplit('/' , 1)
 			return send_from_directory(path, filename)
