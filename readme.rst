@@ -24,12 +24,12 @@ Here is a short summary for Debian based OS like Raspian::
 
   git clone https://github.com/lkiesow/pyCA.git
   cd pyCA
-  sudo apt-get install python-virtualenv
+  sudo apt-get install python-virtualenv python-dev libcurl-gnutls-dev
   virtualenv venv
   . ./venv/bin/activate
-  pip install icalendar
-  vim config.py
-  python ca.py
+  pip install icalendar python-dateutil pycurl
+  vim pyca/config.py
+  python pyca.py run
 
 For RedHat bases systems like Fedora it's almost the same::
 
@@ -38,9 +38,9 @@ For RedHat bases systems like Fedora it's almost the same::
   sudo yum install python-virtualenv
   virtualenv venv
   . ./venv/bin/activate
-  pip install icalendar
-  vim config.py  <-- Edit the configuration
-  python ca.py
+  pip install icalendar python-dateutil pycurl
+  vim pyca/config.py  <-- Edit the configuration
+  python pyca.py run
 
 Todo
 ****
