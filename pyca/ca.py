@@ -175,7 +175,8 @@ def start_capture(schedule):
 def http_request(endpoint, post_data=None):
 	buf = bio()
 	c = pycurl.Curl()
-	c.setopt(c.URL, '%s%s' % (config.ADMIN_SERVER_URL, endpoint))
+	url = '%s%s' % (config.ADMIN_SERVER_URL, endpoint)
+	c.setopt(c.URL, url.encode('ascii', 'ignore'))
 	if post_data:
 		c.setopt(c.HTTPPOST, post_data)
 	c.setopt(c.WRITEFUNCTION, buf.write)
@@ -204,18 +205,26 @@ def ingest(tracks, recording_name, recording_dir, recording_id, workflow_def,
 	# add episode dc catalog
 	if os.path.isfile('%s/episode.xml' % recording_dir):
 		print('Adding episode DC catalog')
+		dc = ''
+		with open('%s/episode.xml' % recording_dir, 'r') as f:
+			dc = f.read()
 		fields = [
-				('mediaPackage', mediapackage), ('flavor', 'dublincore/episode'),
-				('dublinCore', (pycurl.FORM_FILE, '%s/episode.xml' % recording_dir))
+				('mediaPackage', mediapackage),
+				('flavor', 'dublincore/episode'),
+				('dublinCore', dc)
 			]
 		mediapackage = http_request('/ingest/addDCCatalog', fields)
 
 	# add series dc catalog
 	if os.path.isfile('%s/series.xml' % recording_dir):
 		print('Adding series DC catalog')
+		dc = ''
+		with open('%s/series.xml' % recording_dir, 'r') as f:
+			dc = f.read()
 		fields = [
-				('mediaPackage', mediapackage), ('flavor', 'dublincore/series'),
-				('dublinCore', (pycurl.FORM_FILE, '%s/series.xml' % recording_dir))
+				('mediaPackage', mediapackage),
+				('flavor', 'dublincore/series'),
+				('dublinCore', dc)
 			]
 		mediapackage = http_request('/ingest/addDCCatalog', fields)
 
@@ -224,7 +233,7 @@ def ingest(tracks, recording_name, recording_dir, recording_id, workflow_def,
 		print('Adding track (%s)' % flavor)
 		fields = [
 				('mediaPackage', mediapackage), ('flavor', flavor),
-				('BODY1', (pycurl.FORM_FILE, track))
+				('BODY1', (pycurl.FORM_FILE, track.encode('ascii', 'ignore')))
 			]
 		mediapackage = http_request('/ingest/addTrack', fields)
 
@@ -233,7 +242,7 @@ def ingest(tracks, recording_name, recording_dir, recording_id, workflow_def,
 	fields = [
 			('mediaPackage', mediapackage),
 			('workflowDefinitionId', workflow_def),
-			('workflowInstanceId', recording_id)
+			('workflowInstanceId', recording_id.encode('ascii', 'ignore'))
 			]
 	fields += workflow_config
 	mediapackage = http_request('/ingest/ingest', fields)
@@ -252,11 +261,11 @@ def control_loop():
 	last_update = 0
 	schedule = []
 	while True:
-		if len(schedule) and schedule[0][0] <= get_timestamp():
-			if not safe_start_capture(schedule[0]):
-				# Something went wrong but we do not want to restart the capture
-				# continuously, thus we sleep for the rest of the recording.
-				time.sleep( schedule[0][1] - get_timestamp() )
+		if len(schedule) and schedule[0][0] <= get_timestamp() < schedule[0][1]:
+			start_capture(schedule[0])
+			# If something went wrong, we do not want to restart the capture
+			# continuously, thus we sleep for the rest of the recording.
+			time.sleep(max(0, schedule[0][1] - get_timestamp()))
 		if get_timestamp() - last_update > config.UPDATE_FREQUENCY:
 			schedule = get_schedule()
 			last_update = get_timestamp()
