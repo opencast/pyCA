@@ -57,7 +57,7 @@ def get_schedule():
 				config.CAPTURE_AGENT_NAME)
 	except Exception as e:
 		print('ERROR: Could not get schedule: %s' % e.message)
-		return
+		return []
 
 	cal = None
 	try:
@@ -306,7 +306,11 @@ def test():
 
 
 def run():
-	register_ca()
+	try:
+		register_ca()
+	except:
+		print('ERROR: Could not register capture agent. No connection?')
+		exit(1)
 	get_schedule()
 	try:
 		control_loop()
