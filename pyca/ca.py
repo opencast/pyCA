@@ -116,8 +116,14 @@ def start_capture(schedule):
 	os.mkdir(recording_dir)
 
 	# Set state
-	register_ca(status='capturing')
-	recording_state(recording_id,'capturing')
+	try:
+		register_ca(status='capturing')
+		recording_state(recording_id,'capturing')
+	except:
+		# Ignore it if it does not work (e.g. network issues) as it's more
+		# important to get the recording as to set the correct current state in
+		# the admin ui
+		pass
 
 	tracks = []
 	try:
@@ -154,21 +160,40 @@ def start_capture(schedule):
 		return True
 
 	# Upload everything
-	register_ca(status='uploading')
-	recording_state(recording_id,'uploading')
+	try:
+		register_ca(status='uploading')
+		recording_state(recording_id,'uploading')
+	except:
+		# Ignore it if it does not work (e.g. network issues) as it's more
+		# important to get the recording as to set the correct current state in
+		# the admin ui
+		pass
 
 	try:
 		ingest(tracks, recording_name, recording_dir, recording_id, workflow_def,
 				workflow_config)
 	except:
+		print('ERROR: Something went wrong during the upload')
 		# Update state if something went wrong
-		recording_state(recording_id,'upload_error')
-		register_ca(status='idle')
+		try:
+			recording_state(recording_id,'upload_error')
+			register_ca(status='idle')
+		except:
+			# Ignore it if it does not work (e.g. network issues) as it's more
+			# important to get the recording as to set the correct current state
+			# in the admin ui
+			pass
 		return False
 
 	# Update state
-	recording_state(recording_id,'upload_finished')
-	register_ca(status='idle')
+	try:
+		recording_state(recording_id,'upload_finished')
+		register_ca(status='idle')
+	except:
+		# Ignore it if it does not work (e.g. network issues) as it's more
+		# important to get the recording as to set the correct current state in
+		# the admin ui
+		pass
 	return True
 
 
@@ -267,7 +292,7 @@ def control_loop():
 			# continuously, thus we sleep for the rest of the recording.
 			time.sleep(max(0, schedule[0][1] - get_timestamp()))
 		if get_timestamp() - last_update > config.UPDATE_FREQUENCY:
-			schedule = get_schedule()
+			schedule = get_schedule() or schedule
 			last_update = get_timestamp()
 			if schedule:
 				print 'Next scheduled recording: %s' % datetime.fromtimestamp(schedule[0][0])

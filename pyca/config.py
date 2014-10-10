@@ -3,7 +3,7 @@ import os
 
 CAPTURE_AGENT_NAME  = 'PyCA-test'
 IGNORE_TZ           = False
-ADMIN_SERVER_URL    = 'http://testallinone.usask.ca:8080'
+ADMIN_SERVER_URL    = 'http://mhtest.virtuos.uos.de:8080'
 ADMIN_SERVER_USER   = 'matterhorn_system_account'
 ADMIN_SERVER_PASSWD = 'CHANGE_ME'
 UPDATE_FREQUENCY    = 60
