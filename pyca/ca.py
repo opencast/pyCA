@@ -333,7 +333,8 @@ def test():
 def run():
 	try:
 		register_ca()
-	except:
+	except Exception as e:
+		print(e)
 		print('ERROR: Could not register capture agent. No connection?')
 		exit(1)
 	get_schedule()
