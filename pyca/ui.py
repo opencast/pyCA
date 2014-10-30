@@ -23,6 +23,8 @@ site = '''
 <body style="text-align: center;">
 	{% for p in preview %}
 		<img style="max-width: 90%;" src="/img/{{ p }}" />
+	{% else %}
+		The capture agent is currently not recording.
 	{% endfor %}
 </body>
 </html>
