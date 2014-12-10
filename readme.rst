@@ -24,11 +24,11 @@ Here is a short summary for Debian based OS like Raspian::
 
   git clone https://github.com/lkiesow/pyCA.git
   cd pyCA
-  sudo apt-get install python-virtualenv python-dev libcurl-gnutls-dev
+  sudo apt-get install python-virtualenv python-dev libcurl4-gnutls-dev
   virtualenv venv
   . ./venv/bin/activate
   pip install icalendar python-dateutil pycurl
-  vim pyca/config.py
+  vim pyca/config.py  <-- Edit the configuration
   python pyca.py run
 
 For RedHat bases systems like Fedora it's almost the same::
@@ -44,8 +44,6 @@ For RedHat bases systems like Fedora it's almost the same::
 
 Todo
 ****
-* Configuration
-* Confidence monitoring
 * Control page (manually start a recording, etc.)
 * Create daemon mode
 
