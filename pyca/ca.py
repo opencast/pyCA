@@ -26,6 +26,7 @@ if sys.version_info[0] == 2:
 	from cStringIO import StringIO as bio
 else:
 	from io import BytesIO as bio
+import traceback
 
 from pyca import config
 
@@ -55,15 +56,21 @@ def get_schedule():
 	try:
 		vcal = http_request('/recordings/calendars?agentid=%s' % \
 				config.CAPTURE_AGENT_NAME)
-	except Exception as e:
-		print('ERROR: Could not get schedule: %s' % e.message)
-		return []
+	except:
+		print('ERROR: Could not get schedule')
+		print(traceback.format_exc())
+		return None
 
 	cal = None
 	try:
 		cal = icalendar.Calendar.from_string(vcal)
 	except:
-		cal = icalendar.Calendar.from_ical(vcal)
+		try:
+			cal = icalendar.Calendar.from_ical(vcal)
+		except Exception as e:
+			print('ERROR: Could not parse ical')
+			print(traceback.format_exc())
+			return None
 	events = []
 	for event in cal.walk('vevent'):
 		dtstart = unix_ts(event.get('dtstart').dt.astimezone(dateutil.tz.tzutc()))
@@ -123,13 +130,15 @@ def start_capture(schedule):
 		# Ignore it if it does not work (e.g. network issues) as it's more
 		# important to get the recording as to set the correct current state in
 		# the admin ui
-		pass
+		print('WARN: Could not set recording state before capturing')
+		print(traceback.format_exc())
 
 	tracks = []
 	try:
 		tracks = recording_command(recording_dir, recording_name, duration)
 	except Exception as e:
-		print str(e)
+		print('ERROR: Recording command failed')
+		print(traceback.format_exc())
 		# Update state
 		recording_state(recording_id,'capture_error')
 		register_ca(status='idle')
@@ -167,13 +176,15 @@ def start_capture(schedule):
 		# Ignore it if it does not work (e.g. network issues) as it's more
 		# important to get the recording as to set the correct current state in
 		# the admin ui
-		pass
+		print('WARN: Could not set recording state before capturing')
+		print(traceback.format_exc())
 
 	try:
 		ingest(tracks, recording_name, recording_dir, recording_id, workflow_def,
 				workflow_config)
 	except:
 		print('ERROR: Something went wrong during the upload')
+		print(traceback.format_exc())
 		# Update state if something went wrong
 		try:
 			recording_state(recording_id,'upload_error')
@@ -182,7 +193,8 @@ def start_capture(schedule):
 			# Ignore it if it does not work (e.g. network issues) as it's more
 			# important to get the recording as to set the correct current state
 			# in the admin ui
-			pass
+			print('WARN: Could not set recording state')
+			print(traceback.format_exc())
 		return False
 
 	# Update state
@@ -193,7 +205,8 @@ def start_capture(schedule):
 		# Ignore it if it does not work (e.g. network issues) as it's more
 		# important to get the recording as to set the correct current state in
 		# the admin ui
-		pass
+		print('WARN: Could not set recording state before capturing')
+		print(traceback.format_exc())
 	return True
 
 
@@ -277,7 +290,8 @@ def safe_start_capture(schedule):
 	try:
 		return start_capture(schedule)
 	except Exception as e:
-		print str(e)
+		print('ERROR: Start capture failed')
+		print(traceback.format_exc())
 		register_ca(status='idle')
 		return False
 
@@ -292,10 +306,14 @@ def control_loop():
 			# continuously, thus we sleep for the rest of the recording.
 			time.sleep(max(0, schedule[0][1] - get_timestamp()))
 		if get_timestamp() - last_update > config.UPDATE_FREQUENCY:
-			schedule = get_schedule() or schedule
+			new_schedule = get_schedule()
+			if not new_schedule is None:
+				schedule = new_schedule
 			last_update = get_timestamp()
 			if schedule:
-				print 'Next scheduled recording: %s' % datetime.fromtimestamp(schedule[0][0])
+				print 'Next scheduled recording: %s (now: %s)' % (
+						datetime.fromtimestamp(schedule[0][0]),
+						datetime.fromtimestamp(get_timestamp()))
 			else:
 				print 'No scheduled recording'
 		time.sleep(1.0)
@@ -313,7 +331,8 @@ def recording_command(rec_dir, rec_name, rec_duration):
 		try:
 			os.remove(p % {'previewdir':config.PREVIEW_DIR})
 		except:
-			pass
+			print('WARN: Could not remove preview files')
+			print(traceback.format_exc())
 
 	# Return [(flavor,path),…]
 	return [(o[0], o[1] % s) for o in config.CAPTURE_OUTPUT]
