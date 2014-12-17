@@ -54,8 +54,11 @@ def recording_state(recording_id, status='upcoming'):
 
 def get_schedule():
 	try:
-		vcal = http_request('/recordings/calendars?agentid=%s' % \
-				config.CAPTURE_AGENT_NAME)
+		cutoff = ''
+		if config.CAL_LOOKAHEAD:
+			cutoff = '&cutoff=%i' % ((get_timestamp() + config.CAL_LOOKAHEAD * 24 * 60 * 60) * 1000)
+		vcal = http_request('/recordings/calendars?agentid=%s%s' % \
+				(config.CAPTURE_AGENT_NAME, cutoff))
 	except:
 		print('ERROR: Could not get schedule')
 		print(traceback.format_exc())

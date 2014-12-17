@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
 
-CAPTURE_AGENT_NAME  = 'PyCA-test'
+CAPTURE_AGENT_NAME  = 'PyCA-test-2'
 IGNORE_TZ           = False
 ADMIN_SERVER_URL    = 'http://mhtest.virtuos.uos.de:8080'
 ADMIN_SERVER_USER   = 'matterhorn_system_account'
@@ -9,6 +9,13 @@ ADMIN_SERVER_PASSWD = 'CHANGE_ME'
 UPDATE_FREQUENCY    = 60
 CAPTURE_DIR         = '%s/../recordings' % os.path.dirname(os.path.abspath(__file__))
 PREVIEW_DIR         = CAPTURE_DIR
+
+# Define how many events shall be requested from Matterhorn. The value defines
+# a cutoff date in days from now. E.g. a value of 7 would make pyCA request the
+# recording schedule for the upcomming week. Setting this to 0 will make pyCA
+# request all scheduled events. It makes sense to limit this if you have a lot
+# of scheduled events.
+CAL_LOOKAHEAD       = 14
 
 # Setting this to true will cause the pyCA to not register itself or ingest
 # stuff to the admin server. It's useful if you want it as cbackup to another
