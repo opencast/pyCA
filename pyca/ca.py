@@ -4,7 +4,7 @@
 	python-matterhorn-ca
 	~~~~~~~~~~~~~~~~~~~~
 
-	:copyright: 2014, Lars Kiesow <lkiesow@uos.de>
+	:copyright: 2014-2015, Lars Kiesow <lkiesow@uos.de>
 	:license: LGPL – see license.lgpl for more details.
 '''
 
@@ -27,8 +27,14 @@ if sys.version_info[0] == 2:
 else:
 	from io import BytesIO as bio
 import traceback
+import logging
 
 from pyca import config
+
+# Set up logging
+logging.basicConfig(level=logging.INFO,
+		format='%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)s:%(funcName)s()] %(message)s',
+		datefmt='%Y-%m-%d %H:%M:%S')
 
 
 def register_ca(address=config.UI_URI, status='idle'):
@@ -37,7 +43,7 @@ def register_ca(address=config.UI_URI, status='idle'):
 	if config.BACKUP_AGENT:
 		return
 	params = [('address',address), ('state',status)]
-	print(http_request('/capture-admin/agents/%s' % \
+	logging.info(http_request('/capture-admin/agents/%s' % \
 			config.CAPTURE_AGENT_NAME, params))
 
 
@@ -48,7 +54,7 @@ def recording_state(recording_id, status='upcoming'):
 	if config.BACKUP_AGENT:
 		return
 	params = [('state',status)]
-	print(http_request('/capture-admin/recordings/%s' % \
+	logging.info(http_request('/capture-admin/recordings/%s' % \
 			recording_id, params))
 
 
@@ -56,12 +62,13 @@ def get_schedule():
 	try:
 		cutoff = ''
 		if config.CAL_LOOKAHEAD:
-			cutoff = '&cutoff=%i' % ((get_timestamp() + config.CAL_LOOKAHEAD * 24 * 60 * 60) * 1000)
+			lookahead = config.CAL_LOOKAHEAD * 24 * 60 * 60
+			cutoff = '&cutoff=%i' % ((get_timestamp() + lookahead) * 1000)
 		vcal = http_request('/recordings/calendars?agentid=%s%s' % \
 				(config.CAPTURE_AGENT_NAME, cutoff))
 	except:
-		print('ERROR: Could not get schedule')
-		print(traceback.format_exc())
+		logging.error('Could not get schedule')
+		logging.error(traceback.format_exc())
 		return None
 
 	cal = None
@@ -71,8 +78,8 @@ def get_schedule():
 		try:
 			cal = icalendar.Calendar.from_ical(vcal)
 		except Exception as e:
-			print('ERROR: Could not parse ical')
-			print(traceback.format_exc())
+			logging.error('Could not parse ical')
+			logging.error(traceback.format_exc())
 			return None
 	events = []
 	for event in cal.walk('vevent'):
@@ -114,7 +121,7 @@ def get_config_params(properties):
 
 def start_capture(schedule):
 	now = get_timestamp()
-	print('%i: start_recording...' % now)
+	logging.info('Start recording')
 	duration = schedule[1] - now
 	recording_id = schedule[2]
 	recording_name = 'recording-%s-%i' % (recording_id, now)
@@ -133,15 +140,15 @@ def start_capture(schedule):
 		# Ignore it if it does not work (e.g. network issues) as it's more
 		# important to get the recording as to set the correct current state in
 		# the admin ui
-		print('WARN: Could not set recording state before capturing')
-		print(traceback.format_exc())
+		logging.warning('Could not set recording state before capturing')
+		logging.warning(traceback.format_exc())
 
 	tracks = []
 	try:
 		tracks = recording_command(recording_dir, recording_name, duration)
 	except Exception as e:
-		print('ERROR: Recording command failed')
-		print(traceback.format_exc())
+		logging.error('Recording command failed')
+		logging.error(traceback.format_exc())
 		# Update state
 		recording_state(recording_id,'capture_error')
 		register_ca(status='idle')
@@ -179,15 +186,15 @@ def start_capture(schedule):
 		# Ignore it if it does not work (e.g. network issues) as it's more
 		# important to get the recording as to set the correct current state in
 		# the admin ui
-		print('WARN: Could not set recording state before capturing')
-		print(traceback.format_exc())
+		logging.warning('Could not set recording state before capturing')
+		logging.warning(traceback.format_exc())
 
 	try:
 		ingest(tracks, recording_name, recording_dir, recording_id, workflow_def,
 				workflow_config)
 	except:
-		print('ERROR: Something went wrong during the upload')
-		print(traceback.format_exc())
+		logging.error('Something went wrong during the upload')
+		logging.error(traceback.format_exc())
 		# Update state if something went wrong
 		try:
 			recording_state(recording_id,'upload_error')
@@ -196,8 +203,8 @@ def start_capture(schedule):
 			# Ignore it if it does not work (e.g. network issues) as it's more
 			# important to get the recording as to set the correct current state
 			# in the admin ui
-			print('WARN: Could not set recording state')
-			print(traceback.format_exc())
+			logging.warning('Could not set recording state')
+			logging.warning(traceback.format_exc())
 		return False
 
 	# Update state
@@ -208,8 +215,8 @@ def start_capture(schedule):
 		# Ignore it if it does not work (e.g. network issues) as it's more
 		# important to get the recording as to set the correct current state in
 		# the admin ui
-		print('WARN: Could not set recording state before capturing')
-		print(traceback.format_exc())
+		logging.warning('Could not set recording state before capturing')
+		logging.warning(traceback.format_exc())
 	return True
 
 
@@ -240,12 +247,12 @@ def ingest(tracks, recording_name, recording_dir, recording_id, workflow_def,
 		workflow_config=[]):
 
 	# create mediapackage
-	print('Creating new mediapackage')
+	logging.info('Creating new mediapackage')
 	mediapackage = http_request('/ingest/createMediaPackage')
 
 	# add episode dc catalog
 	if os.path.isfile('%s/episode.xml' % recording_dir):
-		print('Adding episode DC catalog')
+		logging.info('Adding episode DC catalog')
 		dc = ''
 		with open('%s/episode.xml' % recording_dir, 'r') as f:
 			dc = f.read()
@@ -258,7 +265,7 @@ def ingest(tracks, recording_name, recording_dir, recording_id, workflow_def,
 
 	# add series dc catalog
 	if os.path.isfile('%s/series.xml' % recording_dir):
-		print('Adding series DC catalog')
+		logging.info('Adding series DC catalog')
 		dc = ''
 		with open('%s/series.xml' % recording_dir, 'r') as f:
 			dc = f.read()
@@ -271,7 +278,7 @@ def ingest(tracks, recording_name, recording_dir, recording_id, workflow_def,
 
 	# add track
 	for (flavor, track) in tracks:
-		print('Adding track (%s)' % flavor)
+		logging.info('Adding track (%s)' % flavor)
 		fields = [
 				('mediaPackage', mediapackage), ('flavor', flavor),
 				('BODY1', (pycurl.FORM_FILE, track.encode('ascii', 'ignore')))
@@ -279,7 +286,7 @@ def ingest(tracks, recording_name, recording_dir, recording_id, workflow_def,
 		mediapackage = http_request('/ingest/addTrack', fields)
 
 	# ingest
-	print('Ingest recording')
+	logging.info('Ingest recording')
 	fields = [
 			('mediaPackage', mediapackage),
 			('workflowDefinitionId', workflow_def),
@@ -293,8 +300,8 @@ def safe_start_capture(schedule):
 	try:
 		return start_capture(schedule)
 	except Exception as e:
-		print('ERROR: Start capture failed')
-		print(traceback.format_exc())
+		logging.error('Start capture failed')
+		logging.error(traceback.format_exc())
 		register_ca(status='idle')
 		return False
 
@@ -304,28 +311,31 @@ def control_loop():
 	schedule = []
 	while True:
 		if len(schedule) and schedule[0][0] <= get_timestamp() < schedule[0][1]:
-			start_capture(schedule[0])
+			safe_start_capture(schedule[0])
 			# If something went wrong, we do not want to restart the capture
-			# continuously, thus we sleep for the rest of the recording.
-			time.sleep(max(0, schedule[0][1] - get_timestamp()))
+			# continuously, thus we sleep for the rest of the recording time.
+			spare_time = max(0, schedule[0][1] - get_timestamp())
+			if spare_time:
+				logger.warning('Capture command finished but there are %i seconds'
+						+ 'remaining. Sleeping...', spare_time)
+				time.sleep(spare_time)
 		if get_timestamp() - last_update > config.UPDATE_FREQUENCY:
 			new_schedule = get_schedule()
 			if not new_schedule is None:
 				schedule = new_schedule
 			last_update = get_timestamp()
 			if schedule:
-				print 'Next scheduled recording: %s (now: %s)' % (
-						datetime.fromtimestamp(schedule[0][0]),
-						datetime.fromtimestamp(get_timestamp()))
+				logging.info('Next scheduled recording: %s',
+						datetime.fromtimestamp(schedule[0][0]))
 			else:
-				print 'No scheduled recording'
+				logging.info('No scheduled recording')
 		time.sleep(1.0)
 
 
 def recording_command(rec_dir, rec_name, rec_duration):
 	s = {'time':rec_duration, 'recname':rec_name, 'recdir':rec_dir,
 			'previewdir':config.PREVIEW_DIR}
-	print(config.CAPTURE_COMMAND % s)
+	logging.info(config.CAPTURE_COMMAND % s)
 	if os.system(config.CAPTURE_COMMAND % s):
 		raise Exception('Recording failed')
 
@@ -334,30 +344,36 @@ def recording_command(rec_dir, rec_name, rec_duration):
 		try:
 			os.remove(p % {'previewdir':config.PREVIEW_DIR})
 		except:
-			print('WARN: Could not remove preview files')
-			print(traceback.format_exc())
+			logging.warning('Could not remove preview files')
+			logging.warning(traceback.format_exc())
 
 	# Return [(flavor,path),…]
 	return [(o[0], o[1] % s) for o in config.CAPTURE_OUTPUT]
 
 
 def test():
+	logging.info('Starting test recording (10sec)')
 	recording_name = 'test-%i' % get_timestamp()
+	logging.info('Recording name: %s', recording_name)
 	recording_dir  = '%s/%s' % (config.CAPTURE_DIR, recording_name)
+	logging.info('Recording directory: %s', recording_dir)
 	try:
 		os.mkdir(config.CAPTURE_DIR)
 	except:
 		pass
 	os.mkdir(recording_dir)
-	recording_command(recording_dir, recording_name, 60)
+	logging.info('Created recording directory')
+	logging.info('Start recording')
+	recording_command(recording_dir, recording_name, 10)
+	logging.info('Finished recording')
 
 
 def run():
 	try:
 		register_ca()
-	except Exception as e:
-		print(e)
-		print('ERROR: Could not register capture agent. No connection?')
+	except:
+		logging.error('ERROR: Could not register capture agent. No connection?')
+		logging.error(traceback.format_exc())
 		exit(1)
 	get_schedule()
 	try:
