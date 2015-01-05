@@ -13,8 +13,6 @@ if __name__ == '__main__':
 	if sys.argv[1:] == ['run']:
 		from pyca import ca
 		ca.run()
-	elif sys.argv[1:] == ['daemon']:
-		print('daemon…')
 	elif sys.argv[1:] == ['test']:
 		from pyca import ca
 		ca.test()
@@ -29,4 +27,4 @@ if __name__ == '__main__':
 		from pyca import ui
 		ui.app.run(host='0.0.0.0')
 	else:
-		print('Usage: %s run | daemon | test | ui' % sys.argv[0])
+		print('Usage: %s run | test | ui' % sys.argv[0])
