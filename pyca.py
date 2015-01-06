@@ -1,11 +1,6 @@
 #!/bin/env python
 # -*- coding: utf-8 -*-
-
-# Set default encoding to UTF-8
 import sys
-reload(sys)
-sys.setdefaultencoding('utf8')
-
 import getopt
 import os
 
