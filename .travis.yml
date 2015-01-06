@@ -1,0 +1,18 @@
+language: python
+
+python:
+  - "2.6"
+  - "2.7"
+  - "3.3"
+  - "3.4"
+
+before_install:
+  - sudo apt-get update
+  - sudo apt-get install -y libcurl4-gnutls-dev
+  - curl -s $(curl -s http://johnvansickle.com/ffmpeg/ | grep 64bit-static.tar.xz | grep -v git | cut -d'"' -f2) -o /tmp/ffmpeg.tar.xz
+  - tar -xf /tmp/ffmpeg.tar.xz
+  - sudo mv ffmpeg-*-64bit-static /opt/ffmpeg
+  - export PATH=$PATH:/opt/ffmpeg/
+
+script:
+  - python pyca.py test
