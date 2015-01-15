@@ -1,11 +1,19 @@
 PyCA – Matterhorn Capture Agent
 ===============================
 
-**PyCA** is a fully functional Opencast Matterhorn [MH]_ Capture Agent written
-in about 300 lines Python code. It is free software licenced under the terms of
-both the FreeBSD license and the LGPL. The target systems are primarily small
-devices like the Raspberry Pi [RPi]_ although it can, of course, also run on a
-normal PC without a problem.
+**PyCA** is a fully functional Opencast Matterhorn [MH]_ capture agent written
+in Python. It is free software licenced under the terms of the GNU Lesser
+General Public License [LGPL]_.
+
+The goals of pyCA are to be…
+
+ - flexible for any kind of capture device
+ - simplistic and minimalistic in code and functionality
+ - unrestrictive in terms of choosing capture software
+
+PyCA can be run on almost any kind of devices: A regular PC equipped with
+capture cards, a server to capture network streams, small boards or embedded
+devices like Raspberry Pi [RPi]_, Beagleboard, Cubieboard, …
 
 Backup Mode
 ***********
@@ -42,11 +50,7 @@ For RedHat bases systems like Fedora it's almost the same::
   vim pyca/config.py  <-- Edit the configuration
   python pyca.py run
 
-Todo
-****
-* Control page (manually start a recording, etc.)
-* Create daemon mode
-
 
 .. [MH] http://opencast.org/matterhorn
+.. [LGPL] https://raw.githubusercontent.com/lkiesow/pyCA/master/license.lgpl
 .. [RPi] http://www.raspberrypi.org/
