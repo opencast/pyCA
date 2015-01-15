@@ -98,8 +98,7 @@ BACKUP_AGENT        = False
 CAPTURE_COMMAND = '''ffmpeg -nostats -re -f lavfi -r 25 -i testsrc \
 		-t %(time)s -map 0:v %(recdir)s/%(recname)s.mp4 \
 		-t %(time)s -map 0:v -filter:v select='not(mod(n\,50))' \
-			-updatefirst 1 %(previewdir)s/preview.jpg \
-			&> %(recdir)s/%(recname)s.log'''
+			-updatefirst 1 %(previewdir)s/preview.jpg'''
 
 # Specify the names of the output files as well as their flavor. Multiple
 # output files can be specified. The same string substitutions can be made as
