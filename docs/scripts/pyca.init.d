@@ -3,26 +3,16 @@
 # matterhorn   Start/Stop the Opencast Matterhorn system
 #
 # chkconfig:   - 60 40
-# description: Matterhorn is a free, open-source platform to support the \
-#              management of educational audio and video content. Institutions \
-#              will use Matterhorn to produce lecture recordings, manage \
-#              existing video, serve designated distribution channels, and \
-#              provide user interfaces to engage students with educational \
-#              videos.
+# description: 
 
 ### BEGIN INIT INFO
-# Provides: matterhorn
+# Provides: pyCA
 # Required-Start: $local_fs $remote_fs $syslog $network
 # Required-Stop:
 # Default-Start:
 # Default-Stop:
-# Short-Description: run matterhorn
-# Description: Matterhorn is a free, open-source platform to support the
-#              management of educational audio and video content. Institutions
-#              will use Matterhorn to produce lecture recordings, manage
-#              existing video, serve designated distribution channels, and
-#              provide user interfaces to engage students with educational
-#              videos.
+# Short-Description: run pyca
+# Description: 
 ### END INIT INFO
 
 pyca="python /opt/pyCA/pyca.py run"
