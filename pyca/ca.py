@@ -121,7 +121,7 @@ def start_capture(schedule):
 	logging.info('Start recording')
 	duration = schedule[1] - now
 	recording_id = schedule[2]
-	recording_name = 'recording-%s-%i' % (recording_id, now)
+	recording_name = 'recording-%i-%s' % (now, recording_id)
 	recording_dir  = '%s/%s' % (config.CAPTURE_DIR, recording_name)
 	try:
 		os.mkdir(config.CAPTURE_DIR)
