@@ -15,4 +15,4 @@ before_install:
   - export PATH=$PATH:/opt/ffmpeg/
 
 script:
-  - python pyca.py test
+   - python -m pyca test
