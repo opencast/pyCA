@@ -1,4 +1,4 @@
-#!/bin/env python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 '''
 	python-matterhorn-ca
@@ -26,7 +26,6 @@ else:
 import traceback
 import logging
 
-from pyca import config
 
 # Set up logging
 logging.basicConfig(level=logging.INFO,
@@ -34,21 +33,39 @@ logging.basicConfig(level=logging.INFO,
 		datefmt='%Y-%m-%d %H:%M:%S')
 
 
-def register_ca(address=config.UI_URI, status='idle'):
+def update_configuration(cfgfile):
+	'''Update configuration from file.
+
+	:param cfgfile: Configuration file to load.
+	'''
+	global config
+	from configobj import ConfigObj
+	from pyca.config import cfgspec
+	from validate import Validator
+	config = ConfigObj(cfgfile, configspec=cfgspec)
+	validator = Validator()
+	config.validate(validator)
+	return config
+
+# Set up configuration
+config = update_configuration('/etc/pyca.conf')
+
+
+def register_ca(address=config['ui']['url'], status='idle'):
 	# If this is a backup CA we don't tell the Matterhorn core that we are here.
 	# We will just run silently in the background:
-	if config.BACKUP_AGENT:
+	if config['agent']['backup_mode']:
 		return
 	params = [('address',address), ('state',status)]
 	logging.info(http_request('/capture-admin/agents/%s' % \
-			config.CAPTURE_AGENT_NAME, params))
+			config['agent']['name'], params))
 
 
 def recording_state(recording_id, status='upcoming'):
 	# If this is a backup CA we don't update the recording state. The actual CA
 	# does that and we don't want to mess with it.  We will just run silently in
 	# the background:
-	if config.BACKUP_AGENT:
+	if config['agent']['backup_mode']:
 		return
 	params = [('state',status)]
 	logging.info(http_request('/capture-admin/recordings/%s' % \
@@ -58,11 +75,11 @@ def recording_state(recording_id, status='upcoming'):
 def get_schedule():
 	try:
 		cutoff = ''
-		if config.CAL_LOOKAHEAD:
-			lookahead = config.CAL_LOOKAHEAD * 24 * 60 * 60
+		lookahead = config['agent']['cal_lookahead'] * 24 * 60 * 60
+		if lookahead:
 			cutoff = '&cutoff=%i' % ((get_timestamp() + lookahead) * 1000)
 		vcal = http_request('/recordings/calendars?agentid=%s%s' % \
-				(config.CAPTURE_AGENT_NAME, cutoff))
+				(config['agent']['name'], cutoff))
 	except:
 		logging.error('Could not get schedule')
 		logging.error(traceback.format_exc())
@@ -98,7 +115,7 @@ def unix_ts(dt):
 
 
 def get_timestamp():
-	if config.IGNORE_TZ:
+	if config['agent']['ignore_timezone']:
 		return unix_ts(datetime.now())
 	return unix_ts(datetime.now(dateutil.tz.tzutc()))
 
@@ -117,14 +134,14 @@ def get_config_params(properties):
 
 
 def start_capture(schedule):
-	now = get_timestamp()
 	logging.info('Start recording')
-	duration = schedule[1] - now
-	recording_id = schedule[2]
+	now            = get_timestamp()
+	duration       = schedule[1] - now
+	recording_id   = schedule[2]
 	recording_name = 'recording-%i-%s' % (now, recording_id)
-	recording_dir  = '%s/%s' % (config.CAPTURE_DIR, recording_name)
+	recording_dir  = '%s/%s' % (config['capture']['directory'], recording_name)
 	try:
-		os.mkdir(config.CAPTURE_DIR)
+		os.mkdir(config['capture']['directory'])
 	except:
 		pass
 	os.mkdir(recording_dir)
@@ -172,7 +189,7 @@ def start_capture(schedule):
 
 	# If we are a backup CA, we don't want to actually upload anything. So let's
 	# just quit here.
-	if config.BACKUP_AGENT:
+	if config['agent']['backup_mode']:
 		return True
 
 	# Upload everything
@@ -220,14 +237,14 @@ def start_capture(schedule):
 def http_request(endpoint, post_data=None):
 	buf = bio()
 	c = pycurl.Curl()
-	url = '%s%s' % (config.ADMIN_SERVER_URL, endpoint)
+	url = '%s%s' % (config['server']['url'], endpoint)
 	c.setopt(c.URL, url.encode('ascii', 'ignore'))
 	if post_data:
 		c.setopt(c.HTTPPOST, post_data)
 	c.setopt(c.WRITEFUNCTION, buf.write)
 	c.setopt(pycurl.HTTPAUTH, pycurl.HTTPAUTH_DIGEST)
 	c.setopt(pycurl.USERPWD, "%s:%s" % \
-			(config.ADMIN_SERVER_USER, config.ADMIN_SERVER_PASSWD))
+			(config['server']['username'], config['server']['password']))
 	c.setopt(c.HTTPHEADER, ['X-Requested-Auth: Digest'])
 	c.perform()
 	status = c.getinfo(pycurl.HTTP_CODE)
@@ -316,7 +333,7 @@ def control_loop():
 				logger.warning('Capture command finished but there are %i seconds'
 						+ 'remaining. Sleeping...', spare_time)
 				time.sleep(spare_time)
-		if get_timestamp() - last_update > config.UPDATE_FREQUENCY:
+		if get_timestamp() - last_update > config['agent']['update_frequency']:
 			new_schedule = get_schedule()
 			if not new_schedule is None:
 				schedule = new_schedule
@@ -329,39 +346,47 @@ def control_loop():
 		time.sleep(1.0)
 
 
-def recording_command(rec_dir, rec_name, rec_duration):
-	s = {'time':rec_duration, 'recname':rec_name, 'recdir':rec_dir,
-			'previewdir':config.PREVIEW_DIR}
-	logging.info(config.CAPTURE_COMMAND % s)
-	if os.system(config.CAPTURE_COMMAND % s):
+def recording_command(directory, name, duration):
+	preview_dir = config['capture']['preview_dir']
+	cmd = config['capture']['command']
+	cmd = cmd.replace('{{time}}',       str(duration))
+	cmd = cmd.replace('{{dir}}',        directory)
+	cmd = cmd.replace('{{name}}',       name)
+	cmd = cmd.replace('{{previewdir}}', preview_dir)
+	logging.info(cmd)
+	if os.system(cmd):
 		raise Exception('Recording failed')
 
 	# Remove preview files:
-	for p in config.CAPTURE_PREVIEW:
+	for preview in config['capture']['preview']:
 		try:
-			os.remove(p % {'previewdir':config.PREVIEW_DIR})
+			os.remove(preview.replace('{{previewdir}}', preview_dir))
 		except:
 			logging.warning('Could not remove preview files')
 			logging.warning(traceback.format_exc())
 
 	# Return [(flavor,path),…]
-	return [(o[0], o[1] % s) for o in config.CAPTURE_OUTPUT]
+	flavors = config['capture']['flavors']
+	files   = config['capture']['files']
+	files   = [f.replace('{{dir}}',  directory) for f in files]
+	files   = [f.replace('{{name}}', name)      for f in files]
+	return zip(flavors, files)
 
 
 def test():
 	logging.info('Starting test recording (10sec)')
-	recording_name = 'test-%i' % get_timestamp()
-	logging.info('Recording name: %s', recording_name)
-	recording_dir  = '%s/%s' % (config.CAPTURE_DIR, recording_name)
-	logging.info('Recording directory: %s', recording_dir)
+	name = 'test-%i' % get_timestamp()
+	logging.info('Recording name: %s', name)
+	directory  = '%s/%s' % (config['capture']['directory'], name)
+	logging.info('Recording directory: %s', directory)
 	try:
-		os.mkdir(config.CAPTURE_DIR)
+		os.mkdir(config['capture']['directory'])
 	except:
 		pass
-	os.mkdir(recording_dir)
+	os.mkdir(directory)
 	logging.info('Created recording directory')
 	logging.info('Start recording')
-	recording_command(recording_dir, recording_name, 10)
+	recording_command(directory, name, 10)
 	logging.info('Finished recording')
 
 
