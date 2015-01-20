@@ -52,6 +52,12 @@ config = update_configuration('/etc/pyca.conf')
 
 
 def register_ca(address=config['ui']['url'], status='idle'):
+	'''Register this capture agent at the Matterhorn admin server so that it
+	shows up in the admin interface.
+
+	:param address: Address of the capture agent web ui
+	:param status: Current status of the capture agent
+	'''
 	# If this is a backup CA we don't tell the Matterhorn core that we are here.
 	# We will just run silently in the background:
 	if config['agent']['backup_mode']:
@@ -62,6 +68,11 @@ def register_ca(address=config['ui']['url'], status='idle'):
 
 
 def recording_state(recording_id, status='upcoming'):
+	'''Send the state of the current recording to the Matterhorn core.
+
+	:param recording_id: ID of the current recording
+	:param status: Status of the recording
+	'''
 	# If this is a backup CA we don't update the recording state. The actual CA
 	# does that and we don't want to mess with it.  We will just run silently in
 	# the background:
@@ -73,6 +84,9 @@ def recording_state(recording_id, status='upcoming'):
 
 
 def get_schedule():
+	'''Try to load schedule from the Matterhorn core. Returns a valid schedule
+	or None on failure.
+	'''
 	try:
 		cutoff = ''
 		lookahead = config['agent']['cal_lookahead'] * 24 * 60 * 60
@@ -109,12 +123,18 @@ def get_schedule():
 
 
 def unix_ts(dt):
+	'''Convert datetime into a unix timestamp.
+
+	:param dt: datetime to convert
+	'''
 	epoch = datetime(1970, 1, 1, 0, 0, tzinfo = dateutil.tz.tzutc())
 	delta = (dt - epoch)
 	return delta.days * 24 * 3600 + delta.seconds
 
 
 def get_timestamp():
+	'''Get current unix timestamp
+	'''
 	if config['agent']['ignore_timezone']:
 		return unix_ts(datetime.now())
 	return unix_ts(datetime.now(dateutil.tz.tzutc()))
