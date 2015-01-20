@@ -343,6 +343,7 @@ def safe_start_capture(schedule):
 def control_loop():
 	last_update = 0
 	schedule = []
+	register = False
 	while True:
 		if len(schedule) and schedule[0][0] <= get_timestamp() < schedule[0][1]:
 			safe_start_capture(schedule[0])
@@ -354,8 +355,20 @@ def control_loop():
 						+ 'remaining. Sleeping...', spare_time)
 				time.sleep(spare_time)
 		if get_timestamp() - last_update > config['agent']['update_frequency']:
+			# Make sure capture agent is registered before asking for a schedule
+			if register:
+				try:
+					register_ca()
+					register = False
+				except:
+					logging.error('Could not register capture agent. No connection?')
+					logging.error(traceback.format_exc())
+			# ry getting an updated schedult
 			new_schedule = get_schedule()
-			if not new_schedule is None:
+			if new_schedule is None:
+				# Re-register before next try if there was a connection error
+				register = True
+			else:
 				schedule = new_schedule
 			last_update = get_timestamp()
 			if schedule:
@@ -414,7 +427,7 @@ def run():
 	try:
 		register_ca()
 	except:
-		logging.error('ERROR: Could not register capture agent. No connection?')
+		logging.error('Could not register capture agent. No connection?')
 		logging.error(traceback.format_exc())
 		exit(1)
 	get_schedule()
