@@ -29,7 +29,7 @@ CONFIGURATION:
   PyCA will try to find a configuration in the following order:
    - Configuration specified on the command line
    - /etc/pyca.conf
-   - ./pyca.conf
+   - ./etc/pyca.conf
 '''
 
 def usage(retval=0):
@@ -41,7 +41,7 @@ def usage(retval=0):
 
 if __name__ == '__main__':
 
-	cfg = '/etc/pyca.conf' if os.path.isfile('/etc/pyca.conf') else './pyca.conf'
+	cfg = '/etc/pyca.conf' if os.path.isfile('/etc/pyca.conf') else './etc/pyca.conf'
 
 	try:
 		opts, args = getopt.getopt(sys.argv[1:], 'hc:', ['help', 'config='])

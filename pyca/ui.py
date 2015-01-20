@@ -31,22 +31,43 @@ site = '''
 '''
 
 
-@app.route("/")
+def update_configuration(cfgfile):
+	'''Update configuration from file.
+
+	:param cfgfile: Configuration file to load.
+	'''
+	global config
+	from configobj import ConfigObj
+	from pyca.config import cfgspec
+	from validate import Validator
+	config = ConfigObj(cfgfile, configspec=cfgspec)
+	validator = Validator()
+	config.validate(validator)
+	return config
+
+
+# Set up configuration
+config = update_configuration('/etc/pyca.conf')
+
+
+@app.route('/')
 def home():
 
 	# Check credentials:
-	if config.UI_PASSWD and not request.authorization \
-			or request.authorization.username != config.UI_USER \
-			or request.authorization.password != config.UI_PASSWD:
+	if config['ui']['password'] and not request.authorization \
+			or request.authorization.username != config['ui']['username'] \
+			or request.authorization.password != config['ui']['password']:
 		return Response('pyCA', 401, {'WWW-Authenticate': 'Basic realm="Login Required"'})
 
 	# Get IDs of existing preview images
-	preview = [p % {'previewdir':config.PREVIEW_DIR} for p in config.CAPTURE_PREVIEW]
+	preview = config['capture']['preview']
+	previewdir = config['capture']['preview_dir']
+	preview = [p.replace('{{previewdir}}', previewdir) for p in preview]
 	preview = zip(preview, range(len(preview)))
 	preview = [p[1] for p in preview if os.path.isfile(p[0])]
 
 	template = Template(site)
-	return template.render(preview=preview, refresh=config.UI_REFRESH_RATE)
+	return template.render(preview=preview, refresh=config['ui']['refresh_rate'])
 
 
 
@@ -56,7 +77,7 @@ def img(img):
 	'''
 	f = ''
 	try:
-		f = config.CAPTURE_PREVIEW[int(img)] % {'previewdir':config.PREVIEW_DIR}
+		f = config['capture']['preview'][int(img)].replace('{{previewdir}}', config['capture']['preview_dir'])
 		if os.path.isfile(f):
 			[path,filename] = f.rsplit('/' , 1)
 			return send_from_directory(path, filename)

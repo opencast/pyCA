@@ -22,8 +22,8 @@ username         = string(default='matterhorn_system_account')
 password         = string(default='CHANGE_ME')
 
 [ui]
-user             = string(default='admin')
-passwd           = string(default='opencast')
+username         = string(default='admin')
+password         = string(default='opencast')
 refresh_rate     = integer(min=1, default=2)
 url              = string(default='http://localhost:5000')
 '''
