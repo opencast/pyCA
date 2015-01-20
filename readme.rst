@@ -18,10 +18,10 @@ devices like Raspberry Pi [RPi]_, Beagleboard, Cubieboard, …
 Backup Mode
 ***********
 
-By setting ``BACKUP_AGENT = False`` in the configuration file, the PyCA will go
+By setting ``backup_mode = False`` in the configuration file, the PyCA will go
 into a backup mode. This means that capture agent will neither register itself
 at the matterhorn core, nor try to ingest any of the recorded media or set the
-capture state. This is useful if the CA shall be used as back-up in case a
+capture state. This is useful if the CA shall be used as backup in case a
 regular capture agent fails to record (for whatever reasons). Just match the
 name of the pyCA to that of the regular capture agent.
 
@@ -36,8 +36,8 @@ Here is a short summary for Debian based OS like Raspian::
   virtualenv venv
   . ./venv/bin/activate
   pip install icalendar python-dateutil pycurl
-  vim pyca/config.py  <-- Edit the configuration
-  python pyca.py run
+  vim etc/pyca.conf  <-- Edit the configuration
+  ./start.sh
 
 For RedHat bases systems like Fedora it's almost the same::
 
@@ -47,8 +47,8 @@ For RedHat bases systems like Fedora it's almost the same::
   virtualenv venv
   . ./venv/bin/activate
   pip install icalendar python-dateutil pycurl
-  vim pyca/config.py  <-- Edit the configuration
-  python pyca.py run
+  vim etc/pyca.conf  <-- Edit the configuration
+  ./start.sh
 
 
 .. [MH] http://opencast.org/matterhorn
