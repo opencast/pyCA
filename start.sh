@@ -1,3 +1,3 @@
 #!/bin/bash
 
-python -m pyca.__main__ $@
+exec python -m pyca.__main__ ${1+"$@"}
