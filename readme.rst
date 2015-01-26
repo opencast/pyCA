@@ -35,7 +35,7 @@ Here is a short summary for Debian based OS like Raspian::
   sudo apt-get install python-virtualenv python-dev libcurl4-gnutls-dev
   virtualenv venv
   . ./venv/bin/activate
-  pip install icalendar python-dateutil pycurl
+  pip install icalendar python-dateutil pycurl configobj
   vim etc/pyca.conf  <-- Edit the configuration
   ./start.sh
 
@@ -46,7 +46,7 @@ For RedHat bases systems like Fedora it's almost the same::
   sudo yum install python-virtualenv
   virtualenv venv
   . ./venv/bin/activate
-  pip install icalendar python-dateutil pycurl
+  pip install icalendar python-dateutil pycurl configobj
   vim etc/pyca.conf  <-- Edit the configuration
   ./start.sh
 
