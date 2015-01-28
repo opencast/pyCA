@@ -24,7 +24,6 @@ if sys.version_info[0] == 2:
 else:
 	from io import BytesIO as bio
 import traceback
-import logging
 
 
 # Set up logging
