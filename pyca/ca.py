@@ -351,7 +351,7 @@ def control_loop():
 			# continuously, thus we sleep for the rest of the recording time.
 			spare_time = max(0, schedule[0][1] - get_timestamp())
 			if spare_time:
-				logger.warning('Capture command finished but there are %i seconds'
+				logging.warning('Capture command finished but there are %i seconds'
 						+ 'remaining. Sleeping...', spare_time)
 				time.sleep(spare_time)
 		if get_timestamp() - last_update > config['agent']['update_frequency']:
