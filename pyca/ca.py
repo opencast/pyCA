@@ -27,7 +27,8 @@ import traceback
 
 
 # Set up logging
-logging.basicConfig(level=logging.INFO,
+logging.basicConfig(
+		level=logging.INFO,
 		format='%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)s:%(funcName)s()] %(message)s',
 		datefmt='%Y-%m-%d %H:%M:%S')
 
@@ -61,7 +62,7 @@ def register_ca(address=config['ui']['url'], status='idle'):
 	# We will just run silently in the background:
 	if config['agent']['backup_mode']:
 		return
-	params = [('address',address), ('state',status)]
+	params = [('address', address), ('state', status)]
 	logging.info(http_request('/capture-admin/agents/%s' % \
 			config['agent']['name'], params))
 
@@ -77,7 +78,7 @@ def recording_state(recording_id, status='upcoming'):
 	# the background:
 	if config['agent']['backup_mode']:
 		return
-	params = [('state',status)]
+	params = [('state', status)]
 	logging.info(http_request('/capture-admin/recordings/%s' % \
 			recording_id, params))
 
@@ -111,12 +112,12 @@ def get_schedule():
 	events = []
 	for event in cal.walk('vevent'):
 		dtstart = unix_ts(event.get('dtstart').dt.astimezone(dateutil.tz.tzutc()))
-		dtend   = unix_ts(event.get('dtend').dt.astimezone(dateutil.tz.tzutc()))
-		uid     = event.get('uid').decode()
+		dtend = unix_ts(event.get('dtend').dt.astimezone(dateutil.tz.tzutc()))
+		uid = event.get('uid').decode()
 
 		# Ignore events that have already ended
 		if dtend > get_timestamp():
-			events.append( (dtstart,dtend,uid,event) )
+			events.append((dtstart, dtend, uid, event))
 
 	return sorted(events, key=lambda x: x[0])
 
@@ -126,7 +127,7 @@ def unix_ts(dt):
 
 	:param dt: datetime to convert
 	'''
-	epoch = datetime(1970, 1, 1, 0, 0, tzinfo = dateutil.tz.tzutc())
+	epoch = datetime(1970, 1, 1, 0, 0, tzinfo=dateutil.tz.tzutc())
 	delta = (dt - epoch)
 	return delta.days * 24 * 3600 + delta.seconds
 
@@ -140,25 +141,31 @@ def get_timestamp():
 
 
 def get_config_params(properties):
+	'''Extract the set of configuration parameters from the properties attached
+	to the schedule
+	'''
 	param = []
 	wdef = 'full'
 	for prop in properties.split('\n'):
 		if prop.startswith('org.opencastproject.workflow.config'):
-			k,v = prop.split('=',1)
+			k, v = prop.split('=', 1)
 			k = k.split('.')[-1]
 			param.append((k, v))
 		elif prop.startswith('org.opencastproject.workflow.definition'):
-			wdef = prop.split('=',1)[-1]
+			wdef = prop.split('=', 1)[-1]
 	return wdef, param
 
 
 def start_capture(schedule):
+	'''Start the capture process, creating all necessary files and directories
+	as well as ingesting the captured files if no backup mode is configured.
+	'''
 	logging.info('Start recording')
-	now            = get_timestamp()
-	duration       = schedule[1] - now
-	recording_id   = schedule[2]
+	now = get_timestamp()
+	duration = schedule[1] - now
+	recording_id = schedule[2]
 	recording_name = 'recording-%i-%s' % (now, recording_id)
-	recording_dir  = '%s/%s' % (config['capture']['directory'], recording_name)
+	recording_dir = '%s/%s' % (config['capture']['directory'], recording_name)
 	try:
 		os.mkdir(config['capture']['directory'])
 	except:
@@ -168,7 +175,7 @@ def start_capture(schedule):
 	# Set state
 	try:
 		register_ca(status='capturing')
-		recording_state(recording_id,'capturing')
+		recording_state(recording_id, 'capturing')
 	except:
 		# Ignore it if it does not work (e.g. network issues) as it's more
 		# important to get the recording as to set the correct current state in
@@ -183,13 +190,13 @@ def start_capture(schedule):
 		logging.error('Recording command failed')
 		logging.error(traceback.format_exc())
 		# Update state
-		recording_state(recording_id,'capture_error')
+		recording_state(recording_id, 'capture_error')
 		register_ca(status='idle')
 		return False
 
 	# Put metadata files on disk
 	attachments = schedule[-1].get('attach')
-	workflow_config=''
+	workflow_config = ''
 	for a in attachments:
 		value = b64decode(a.decode())
 		if value.startswith('<'):
@@ -214,7 +221,7 @@ def start_capture(schedule):
 	# Upload everything
 	try:
 		register_ca(status='uploading')
-		recording_state(recording_id,'uploading')
+		recording_state(recording_id, 'uploading')
 	except:
 		# Ignore it if it does not work (e.g. network issues) as it's more
 		# important to get the recording as to set the correct current state in
@@ -223,14 +230,14 @@ def start_capture(schedule):
 		logging.warning(traceback.format_exc())
 
 	try:
-		ingest(tracks, recording_name, recording_dir, recording_id, workflow_def,
+		ingest(tracks, recording_dir, recording_id, workflow_def,
 				workflow_config)
 	except:
 		logging.error('Something went wrong during the upload')
 		logging.error(traceback.format_exc())
 		# Update state if something went wrong
 		try:
-			recording_state(recording_id,'upload_error')
+			recording_state(recording_id, 'upload_error')
 			register_ca(status='idle')
 		except:
 			# Ignore it if it does not work (e.g. network issues) as it's more
@@ -242,7 +249,7 @@ def start_capture(schedule):
 
 	# Update state
 	try:
-		recording_state(recording_id,'upload_finished')
+		recording_state(recording_id, 'upload_finished')
 		register_ca(status='idle')
 	except:
 		# Ignore it if it does not work (e.g. network issues) as it's more
@@ -254,6 +261,9 @@ def start_capture(schedule):
 
 
 def http_request(endpoint, post_data=None):
+	'''Make an HTTP GET request to a given REST endpoint with optional
+	parameters.
+	'''
 	buf = bio()
 	c = pycurl.Curl()
 	url = '%s%s' % (config['server']['url'], endpoint)
@@ -276,36 +286,38 @@ def http_request(endpoint, post_data=None):
 	return result
 
 
-def ingest(tracks, recording_name, recording_dir, recording_id, workflow_def,
+def ingest(tracks, recording_dir, recording_id, workflow_def,
 		workflow_config=[]):
+	'''Ingest a finished recording to the Matterhorn server.
+	'''
 
 	# create mediapackage
 	logging.info('Creating new mediapackage')
 	mediapackage = http_request('/ingest/createMediaPackage')
 
-	# add episode dc catalog
+	# add episode DublinCore catalog
 	if os.path.isfile('%s/episode.xml' % recording_dir):
 		logging.info('Adding episode DC catalog')
-		dc = ''
+		dublincore = ''
 		with open('%s/episode.xml' % recording_dir, 'r') as f:
-			dc = f.read()
+			dublincore = f.read()
 		fields = [
 				('mediaPackage', mediapackage),
 				('flavor', 'dublincore/episode'),
-				('dublinCore', dc)
+				('dublinCore', dublincore)
 			]
 		mediapackage = http_request('/ingest/addDCCatalog', fields)
 
-	# add series dc catalog
+	# add series DublinCore catalog
 	if os.path.isfile('%s/series.xml' % recording_dir):
 		logging.info('Adding series DC catalog')
-		dc = ''
+		dublincore = ''
 		with open('%s/series.xml' % recording_dir, 'r') as f:
-			dc = f.read()
+			dublincore = f.read()
 		fields = [
 				('mediaPackage', mediapackage),
 				('flavor', 'dublincore/series'),
-				('dublinCore', dc)
+				('dublinCore', dublincore)
 			]
 		mediapackage = http_request('/ingest/addDCCatalog', fields)
 
@@ -330,9 +342,12 @@ def ingest(tracks, recording_name, recording_dir, recording_id, workflow_def,
 
 
 def safe_start_capture(schedule):
+	'''Start a capture process but make sure to catch any errors during this
+	process, log them but otherwise ignore them.
+	'''
 	try:
 		return start_capture(schedule)
-	except Exception as e:
+	except:
 		logging.error('Start capture failed')
 		logging.error(traceback.format_exc())
 		register_ca(status='idle')
@@ -340,6 +355,9 @@ def safe_start_capture(schedule):
 
 
 def control_loop():
+	'''Main loop of the capture agent, retrieving and checking the schedule as
+	well as starting the capture process if necessry.
+	'''
 	last_update = 0
 	schedule = []
 	register = False
@@ -379,11 +397,13 @@ def control_loop():
 
 
 def recording_command(directory, name, duration):
+	'''Run the actual command to record the a/v material.
+	'''
 	preview_dir = config['capture']['preview_dir']
 	cmd = config['capture']['command']
-	cmd = cmd.replace('{{time}}',       str(duration))
-	cmd = cmd.replace('{{dir}}',        directory)
-	cmd = cmd.replace('{{name}}',       name)
+	cmd = cmd.replace('{{time}}', str(duration))
+	cmd = cmd.replace('{{dir}}', directory)
+	cmd = cmd.replace('{{name}}', name)
 	cmd = cmd.replace('{{previewdir}}', preview_dir)
 	logging.info(cmd)
 	if os.system(cmd):
@@ -399,13 +419,15 @@ def recording_command(directory, name, duration):
 
 	# Return [(flavor,path),…]
 	flavors = config['capture']['flavors']
-	files   = config['capture']['files']
-	files   = [f.replace('{{dir}}',  directory) for f in files]
-	files   = [f.replace('{{name}}', name)      for f in files]
+	files = config['capture']['files']
+	files = [f.replace('{{dir}}', directory) for f in files]
+	files = [f.replace('{{name}}', name) for f in files]
 	return zip(flavors, files)
 
 
 def test():
+	'''Make a test run doing a 10sec recording.
+	'''
 	logging.info('Starting test recording (10sec)')
 	name = 'test-%i' % get_timestamp()
 	logging.info('Recording name: %s', name)
@@ -423,6 +445,8 @@ def test():
 
 
 def run():
+	'''Start the capture agent.
+	'''
 	try:
 		register_ca()
 	except:
