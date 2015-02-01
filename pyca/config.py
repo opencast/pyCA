@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
+'''
+Default configuration for pyCA.
+'''
 
-_cfg = '''
+__CFG = '''
 [agent]
 name             = string(default='pyca')
 ignore_timezone  = boolean(default=False)
@@ -28,4 +31,4 @@ refresh_rate     = integer(min=1, default=2)
 url              = string(default='http://localhost:5000')
 '''
 
-cfgspec = _cfg.split('\n')
+cfgspec = __CFG.split('\n')

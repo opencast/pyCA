@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 '''
-	python-matterhorn-ca
-	~~~~~~~~~~~~~~~~~~~~
+    python-matterhorn-ca
+    ~~~~~~~~~~~~~~~~~~~~
 
-	:copyright: 2014-2015, Lars Kiesow <lkiesow@uos.de>
-	:license: LGPL – see license.lgpl for more details.
+    :copyright: 2014-2015, Lars Kiesow <lkiesow@uos.de>
+    :license: LGPL – see license.lgpl for more details.
 '''
 
 import sys
@@ -33,43 +33,43 @@ CONFIGURATION:
 '''
 
 def usage(retval=0):
-	'''Print usage information to stdout and exit.
-	'''
-	print(USAGE % sys.argv[0])
-	sys.exit(retval)
+    '''Print usage information to stdout and exit.
+    '''
+    print(USAGE % sys.argv[0])
+    sys.exit(retval)
 
 
 if __name__ == '__main__':
 
-	cfg = '/etc/pyca.conf' if os.path.isfile('/etc/pyca.conf') else './etc/pyca.conf'
+    cfg = '/etc/pyca.conf' if os.path.isfile('/etc/pyca.conf') else './etc/pyca.conf'
 
-	try:
-		opts, args = getopt.getopt(sys.argv[1:], 'hc:', ['help', 'config='])
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], 'hc:', ['help', 'config='])
 
-		for opt, arg in opts:
-			if opt in ("-h", "--help"):
-				usage()
-			if opt in ('-c', '--config'):
-				cfg = arg
-				break
-	except (getopt.GetoptError, ValueError):
-		usage(1)
+        for opt, arg in opts:
+            if opt in ("-h", "--help"):
+                usage()
+            if opt in ('-c', '--config'):
+                cfg = arg
+                break
+    except (getopt.GetoptError, ValueError):
+        usage(1)
 
-	# Make sure we got only one command
-	if len(args) > 1:
-		usage(2)
+    # Make sure we got only one command
+    if len(args) > 1:
+        usage(2)
 
-	cmd = (args + ['run'])[0]
+    cmd = (args + ['run'])[0]
 
-	if cmd == 'run':
-		ca.update_configuration(cfg)
-		ca.run()
-	elif cmd == 'test':
-		ca.update_configuration(cfg)
-		ca.test()
-	elif cmd == 'ui':
-		import ui
-		ui.app.run(host='0.0.0.0')
-	else:
-		# Invalid command
-		usage(3)
+    if cmd == 'run':
+        ca.update_configuration(cfg)
+        ca.run()
+    elif cmd == 'test':
+        ca.update_configuration(cfg)
+        ca.test()
+    elif cmd == 'ui':
+        import pyca.ui
+        pyca.ui.app.run(host='0.0.0.0')
+    else:
+        # Invalid command
+        usage(3)
