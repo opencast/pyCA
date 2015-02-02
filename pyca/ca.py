@@ -9,8 +9,7 @@
 '''
 
 # Set default encoding to UTF-8
-import sys
-import os
+import sys, os, errno
 import time
 import pycurl
 from dateutil.tz import tzutc
@@ -51,7 +50,7 @@ def update_configuration(cfgfile):
 config = update_configuration('/etc/pyca.conf')
 
 
-def register_ca(address=config['ui']['url'], status='idle'):
+def register_ca(status='idle', ignore_error=True):
     '''Register this capture agent at the Matterhorn admin server so that it
     shows up in the admin interface.
 
@@ -62,16 +61,28 @@ def register_ca(address=config['ui']['url'], status='idle'):
     # We will just run silently in the background:
     if config['agent']['backup_mode']:
         return
-    params = [('address', address), ('state', status)]
-    logging.info(http_request('/capture-admin/agents/%s' % \
-            config['agent']['name'], params))
+    params = [('address', config['ui']['url']), ('state', status)]
+    endpoint = '/capture-admin/agents/%s' % config['agent']['name']
+    try:
+        response = http_request(endpoint, params)
+        logging.info(response)
+    except Exception as err:
+        if not ignore_error:
+            raise err
+        # Ignore errors (e.g. network issues) as it's more important to get
+        # the recording as to set the correct current state in the admin ui.
+        logging.warning('Could not set capture agent state')
+        logging.warning(traceback.format_exc())
+        return False
+    return True
 
 
-def recording_state(recording_id, status='upcoming'):
+def recording_state(recording_id, status='upcoming', ignore_error=True):
     '''Send the state of the current recording to the Matterhorn core.
 
     :param recording_id: ID of the current recording
     :param status: Status of the recording
+    :param ignore_error: Catch all exceptions
     '''
     # If this is a backup CA we don't update the recording state. The actual CA
     # does that and we don't want to mess with it.  We will just run silently in
@@ -79,8 +90,17 @@ def recording_state(recording_id, status='upcoming'):
     if config['agent']['backup_mode']:
         return
     params = [('state', status)]
-    logging.info(http_request('/capture-admin/recordings/%s' % \
-            recording_id, params))
+    endpoint = '/capture-admin/recordings/%s' % recording_id
+    try:
+        result = http_request(endpoint, params)
+        logging.info(result)
+    except Exception as err:
+        if not ignore_error:
+            raise err
+        # Ignore errors (e.g. network issues) as it's more important to get
+        # the recording as to set the correct current state in the admin ui.
+        logging.warning('Could not set recording state')
+        logging.warning(traceback.format_exc())
 
 
 def get_schedule():
@@ -166,22 +186,12 @@ def start_capture(schedule):
     recording_id = schedule[2]
     recording_name = 'recording-%i-%s' % (now, recording_id)
     recording_dir = '%s/%s' % (config['capture']['directory'], recording_name)
-    try:
-        os.mkdir(config['capture']['directory'])
-    except:
-        pass
+    try_mkdir(config['capture']['directory'])
     os.mkdir(recording_dir)
 
     # Set state
-    try:
-        register_ca(status='capturing')
-        recording_state(recording_id, 'capturing')
-    except:
-        # Ignore it if it does not work (e.g. network issues) as it's more
-        # important to get the recording as to set the correct current state in
-        # the admin ui
-        logging.warning('Could not set recording state before capturing')
-        logging.warning(traceback.format_exc())
+    register_ca(status='capturing')
+    recording_state(recording_id, 'capturing')
 
     tracks = []
     try:
@@ -216,15 +226,8 @@ def start_capture(schedule):
         return True
 
     # Upload everything
-    try:
-        register_ca(status='uploading')
-        recording_state(recording_id, 'uploading')
-    except:
-        # Ignore it if it does not work (e.g. network issues) as it's more
-        # important to get the recording as to set the correct current state in
-        # the admin ui
-        logging.warning('Could not set recording state before capturing')
-        logging.warning(traceback.format_exc())
+    register_ca(status='uploading')
+    recording_state(recording_id, 'uploading')
 
     try:
         ingest(tracks, recording_dir, recording_id, workflow_def,
@@ -233,27 +236,13 @@ def start_capture(schedule):
         logging.error('Something went wrong during the upload')
         logging.error(traceback.format_exc())
         # Update state if something went wrong
-        try:
-            recording_state(recording_id, 'upload_error')
-            register_ca(status='idle')
-        except:
-            # Ignore it if it does not work (e.g. network issues) as it's more
-            # important to get the recording as to set the correct current state
-            # in the admin ui
-            logging.warning('Could not set recording state')
-            logging.warning(traceback.format_exc())
+        recording_state(recording_id, 'upload_error')
+        register_ca(status='idle')
         return False
 
     # Update state
-    try:
-        recording_state(recording_id, 'upload_finished')
-        register_ca(status='idle')
-    except:
-        # Ignore it if it does not work (e.g. network issues) as it's more
-        # important to get the recording as to set the correct current state in
-        # the admin ui
-        logging.warning('Could not set recording state before capturing')
-        logging.warning(traceback.format_exc())
+    recording_state(recording_id, 'upload_finished')
+    register_ca(status='idle')
     return True
 
 
@@ -364,14 +353,13 @@ def control_loop():
         if get_timestamp() - last_update > config['agent']['update_frequency']:
             # Make sure capture agent is registered before asking for a schedule
             if register:
-                try:
-                    register_ca()
+                if register_ca():
                     register = False
-                except:
+                else:
                     logging.error('Could not register capture agent. '
                                   'This might be a connection issue.')
                     logging.error(traceback.format_exc())
-            # ry getting an updated schedult
+            # Try getting an updated schedult
             new_schedule = get_schedule()
             if new_schedule is None:
                 # Re-register before next try if there was a connection error
@@ -404,7 +392,7 @@ def recording_command(directory, name, duration):
     for preview in config['capture']['preview']:
         try:
             os.remove(preview.replace('{{previewdir}}', preview_dir))
-        except:
+        except OSError:
             logging.warning('Could not remove preview files')
             logging.warning(traceback.format_exc())
 
@@ -424,10 +412,7 @@ def test():
     logging.info('Recording name: %s', name)
     directory = '%s/%s' % (config['capture']['directory'], name)
     logging.info('Recording directory: %s', directory)
-    try:
-        os.mkdir(config['capture']['directory'])
-    except:
-        pass
+    try_mkdir(config['capture']['directory'])
     os.mkdir(directory)
     logging.info('Created recording directory')
     logging.info('Start recording')
@@ -435,15 +420,20 @@ def test():
     logging.info('Finished recording')
 
 
+def try_mkdir(directory):
+    '''Try to create a directory. Pass without error if it already exists.
+    '''
+    try:
+        os.mkdir(directory)
+    except OSError as err:
+        if err.errno != errno.EEXIST:
+            raise err
+
+
 def run():
     '''Start the capture agent.
     '''
-    try:
-        register_ca()
-    except:
-        logging.error('Could not register capture agent. No connection?')
-        logging.error(traceback.format_exc())
-        exit(1)
+    register_ca(ignore_error=False)
     get_schedule()
     try:
         control_loop()
