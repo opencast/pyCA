@@ -14,7 +14,7 @@ import os
 from pyca import ca
 
 USAGE = '''
-Usage %s [OPTIONS] COMMAND
+Usage pyca [OPTIONS] COMMAND
 
 COMMANDS:
   run  --  Start pyCA as capture agent (default)
@@ -35,7 +35,7 @@ CONFIGURATION:
 def usage(retval=0):
     '''Print usage information to stdout and exit.
     '''
-    print(USAGE % sys.argv[0])
+    print(USAGE)
     sys.exit(retval)
 
 

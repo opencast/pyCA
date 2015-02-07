@@ -18,6 +18,7 @@ import logging
 import icalendar
 from datetime import datetime
 import os.path
+from pyca.version import VERSION_STR
 if sys.version_info[0] == 2:
     from cStringIO import StringIO as bio
 else:
@@ -28,7 +29,7 @@ import traceback
 # Set up logging
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s %(levelname)-8s '
-                    + '[%(filename)s:%(lineno)s:%(funcName)s()] %(message)s',
+                    '[%(filename)s:%(lineno)s:%(funcName)s()] %(message)s',
                     datefmt='%Y-%m-%d %H:%M:%S')
 
 
@@ -41,6 +42,7 @@ def update_configuration(cfgfile):
     from configobj import ConfigObj
     from pyca.config import cfgspec
     from validate import Validator
+    logging.info('Reloading configuration from %s', cfgfile)
     config = ConfigObj(cfgfile, configspec=cfgspec)
     validator = Validator()
     config.validate(validator)
@@ -431,6 +433,9 @@ def try_mkdir(directory):
 def run():
     '''Start the capture agent.
     '''
+    logging.info('Starting pyCA %s [http://lkiesow.github.io/pyCA]',
+            VERSION_STR)
+    logging.info('Registering at %s', config['server']['url'])
     register_ca(ignore_error=False)
     get_schedule()
     try:

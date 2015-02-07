@@ -1,0 +1,2 @@
+include license.lgpl readme.rst requirements.txt start.sh
+recursive-include etc *.conf
