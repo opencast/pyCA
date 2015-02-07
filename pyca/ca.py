@@ -155,8 +155,6 @@ def unix_ts(dtval):
 def get_timestamp():
     '''Get current unix timestamp
     '''
-    if config['agent']['ignore_timezone']:
-        return unix_ts(datetime.now())
     return unix_ts(datetime.now(tzutc()))
 
 
