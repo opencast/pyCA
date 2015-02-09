@@ -254,6 +254,8 @@ def http_request(endpoint, post_data=None):
     curl = pycurl.Curl()
     url = '%s%s' % (config['server']['url'], endpoint)
     curl.setopt(curl.URL, url.encode('ascii', 'ignore'))
+    if config.insecure:
+        curl.setopt(curl.SSL_VERIFYPEER, 0)
     if post_data:
         curl.setopt(curl.HTTPPOST, post_data)
     curl.setopt(curl.WRITEFUNCTION, buf.write)
