@@ -451,9 +451,9 @@ def run():
                         'CONNECTION IS NOT GUARANTEED')
     if config['server']['certificate']:
         try:
-            with open(config['server']['certificate'], 'r') as cafile:
+            with open(config['server']['certificate'], 'r'):
                 pass
-        except IOError, err:
+        except IOError as err:
             logging.warning('Could not read certificate file: %s', err)
 
     register_ca(ignore_error=False)
