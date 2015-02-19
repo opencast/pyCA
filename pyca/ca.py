@@ -254,8 +254,9 @@ def http_request(endpoint, post_data=None):
     curl = pycurl.Curl()
     url = '%s%s' % (config['server']['url'], endpoint)
     curl.setopt(curl.URL, url.encode('ascii', 'ignore'))
-    if config.insecure:
+    if config['server']['insecure']:
         curl.setopt(curl.SSL_VERIFYPEER, 0)
+        curl.setopt(curl.SSL_VERIFYHOST, 0)
     if post_data:
         curl.setopt(curl.HTTPPOST, post_data)
     curl.setopt(curl.WRITEFUNCTION, buf.write)
@@ -435,6 +436,9 @@ def try_mkdir(directory):
 def run():
     '''Start the capture agent.
     '''
+    if config['server']['insecure']:
+        logging.warning('INSECURE: HTTPS CHECKS ARE TURNED OFF. A SECURE '
+                        'CONNECTION IS NOT GUARANTEED')
     register_ca(ignore_error=False)
     get_schedule()
     try:
