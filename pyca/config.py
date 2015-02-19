@@ -21,9 +21,10 @@ preview          = list(default=list())
 
 [server]
 url              = string(default='http://mhtest.virtuos.uos.de:8080')
-insecure         = boolean(default=False)
 username         = string(default='matterhorn_system_account')
 password         = string(default='CHANGE_ME')
+insecure         = boolean(default=False)
+certificate      = string(default='')
 
 [ui]
 username         = string(default='admin')

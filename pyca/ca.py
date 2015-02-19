@@ -254,9 +254,19 @@ def http_request(endpoint, post_data=None):
     curl = pycurl.Curl()
     url = '%s%s' % (config['server']['url'], endpoint)
     curl.setopt(curl.URL, url.encode('ascii', 'ignore'))
+
+    # Disable HTTPS verification methods if insecure is set
     if config['server']['insecure']:
         curl.setopt(curl.SSL_VERIFYPEER, 0)
         curl.setopt(curl.SSL_VERIFYHOST, 0)
+
+    if config['server']['certificate']:
+        # Make sure verification methods are turned on
+        curl.setopt(curl.SSL_VERIFYPEER, 1)
+        curl.setopt(curl.SSL_VERIFYHOST, 2)
+        # Import your certificates
+        curl.setopt(pycurl.CAINFO, config['server']['certificate'])
+
     if post_data:
         curl.setopt(curl.HTTPPOST, post_data)
     curl.setopt(curl.WRITEFUNCTION, buf.write)
@@ -439,6 +449,13 @@ def run():
     if config['server']['insecure']:
         logging.warning('INSECURE: HTTPS CHECKS ARE TURNED OFF. A SECURE '
                         'CONNECTION IS NOT GUARANTEED')
+    if config['server']['certificate']:
+        try:
+            with open(config['server']['certificate'], 'r') as cafile:
+                pass
+        except IOError, err:
+            logging.warning('Could not read certificate file: %s', err)
+
     register_ca(ignore_error=False)
     get_schedule()
     try:
