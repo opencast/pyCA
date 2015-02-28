@@ -9,20 +9,21 @@
 '''
 
 # Set default encoding to UTF-8
-import sys, os, errno
-import time
-import pycurl
-from dateutil.tz import tzutc
 from base64 import b64decode
-import logging
-import icalendar
 from datetime import datetime
-import os.path
+from dateutil.tz import tzutc
+import errno
+import icalendar
+import logging
+import os
+import pycurl
+import sys
+import time
+import traceback
 if sys.version_info[0] == 2:
     from cStringIO import StringIO as bio
 else:
     from io import BytesIO as bio
-import traceback
 
 
 # Set up logging
@@ -37,17 +38,18 @@ def update_configuration(cfgfile):
 
     :param cfgfile: Configuration file to load.
     '''
-    global config
     from configobj import ConfigObj
     from pyca.config import cfgspec
     from validate import Validator
-    config = ConfigObj(cfgfile, configspec=cfgspec)
+    cfg = ConfigObj(cfgfile, configspec=cfgspec)
     validator = Validator()
-    config.validate(validator)
-    return config
+    cfg.validate(validator)
+    globals()['CONFIG'] = cfg
+    return cfg
 
 # Set up configuration
-config = update_configuration('/etc/pyca.conf')
+CONFIG = update_configuration('/etc/pyca.conf')
+
 
 
 def register_ca(status='idle', ignore_error=True):
@@ -59,10 +61,10 @@ def register_ca(status='idle', ignore_error=True):
     '''
     # If this is a backup CA we don't tell the Matterhorn core that we are here.
     # We will just run silently in the background:
-    if config['agent']['backup_mode']:
+    if CONFIG['agent']['backup_mode']:
         return
-    params = [('address', config['ui']['url']), ('state', status)]
-    endpoint = '/capture-admin/agents/%s' % config['agent']['name']
+    params = [('address', CONFIG['ui']['url']), ('state', status)]
+    endpoint = '/capture-admin/agents/%s' % CONFIG['agent']['name']
     try:
         response = http_request(endpoint, params)
         logging.info(response)
@@ -87,7 +89,7 @@ def recording_state(recording_id, status='upcoming', ignore_error=True):
     # If this is a backup CA we don't update the recording state. The actual CA
     # does that and we don't want to mess with it.  We will just run silently in
     # the background:
-    if config['agent']['backup_mode']:
+    if CONFIG['agent']['backup_mode']:
         return
     params = [('state', status)]
     endpoint = '/capture-admin/recordings/%s' % recording_id
@@ -109,11 +111,11 @@ def get_schedule():
     '''
     try:
         cutoff = ''
-        lookahead = config['agent']['cal_lookahead'] * 24 * 60 * 60
+        lookahead = CONFIG['agent']['cal_lookahead'] * 24 * 60 * 60
         if lookahead:
             cutoff = '&cutoff=%i' % ((get_timestamp() + lookahead) * 1000)
         vcal = http_request('/recordings/calendars?agentid=%s%s' % \
-                (config['agent']['name'], cutoff))
+                (CONFIG['agent']['name'], cutoff))
     except:
         logging.error('Could not get schedule')
         logging.error(traceback.format_exc())
@@ -155,7 +157,7 @@ def unix_ts(dtval):
 def get_timestamp():
     '''Get current unix timestamp
     '''
-    if config['agent']['ignore_timezone']:
+    if CONFIG['agent']['ignore_timezone']:
         return unix_ts(datetime.now())
     return unix_ts(datetime.now(tzutc()))
 
@@ -185,8 +187,8 @@ def start_capture(schedule):
     duration = schedule[1] - now
     recording_id = schedule[2]
     recording_name = 'recording-%i-%s' % (now, recording_id)
-    recording_dir = '%s/%s' % (config['capture']['directory'], recording_name)
-    try_mkdir(config['capture']['directory'])
+    recording_dir = '%s/%s' % (CONFIG['capture']['directory'], recording_name)
+    try_mkdir(CONFIG['capture']['directory'])
     os.mkdir(recording_dir)
 
     # Set state
@@ -222,7 +224,7 @@ def start_capture(schedule):
 
     # If we are a backup CA, we don't want to actually upload anything. So let's
     # just quit here.
-    if config['agent']['backup_mode']:
+    if CONFIG['agent']['backup_mode']:
         return True
 
     # Upload everything
@@ -252,27 +254,27 @@ def http_request(endpoint, post_data=None):
     '''
     buf = bio()
     curl = pycurl.Curl()
-    url = '%s%s' % (config['server']['url'], endpoint)
+    url = '%s%s' % (CONFIG['server']['url'], endpoint)
     curl.setopt(curl.URL, url.encode('ascii', 'ignore'))
 
     # Disable HTTPS verification methods if insecure is set
-    if config['server']['insecure']:
+    if CONFIG['server']['insecure']:
         curl.setopt(curl.SSL_VERIFYPEER, 0)
         curl.setopt(curl.SSL_VERIFYHOST, 0)
 
-    if config['server']['certificate']:
+    if CONFIG['server']['certificate']:
         # Make sure verification methods are turned on
         curl.setopt(curl.SSL_VERIFYPEER, 1)
         curl.setopt(curl.SSL_VERIFYHOST, 2)
         # Import your certificates
-        curl.setopt(pycurl.CAINFO, config['server']['certificate'])
+        curl.setopt(pycurl.CAINFO, CONFIG['server']['certificate'])
 
     if post_data:
         curl.setopt(curl.HTTPPOST, post_data)
     curl.setopt(curl.WRITEFUNCTION, buf.write)
     curl.setopt(pycurl.HTTPAUTH, pycurl.HTTPAUTH_DIGEST)
     curl.setopt(pycurl.USERPWD, "%s:%s" % \
-            (config['server']['username'], config['server']['password']))
+            (CONFIG['server']['username'], CONFIG['server']['password']))
     curl.setopt(curl.HTTPHEADER, ['X-Requested-Auth: Digest'])
     curl.perform()
     status = curl.getinfo(pycurl.HTTP_CODE)
@@ -363,7 +365,7 @@ def control_loop():
                 logging.warning('Capture command finished but there are %i '
                                 'seconds remaining. Sleeping...', spare_time)
                 time.sleep(spare_time)
-        if get_timestamp() - last_update > config['agent']['update_frequency']:
+        if get_timestamp() - last_update > CONFIG['agent']['update_frequency']:
             # Make sure capture agent is registered before asking for a schedule
             if register:
                 if register_ca():
@@ -391,8 +393,8 @@ def control_loop():
 def recording_command(directory, name, duration):
     '''Run the actual command to record the a/v material.
     '''
-    preview_dir = config['capture']['preview_dir']
-    cmd = config['capture']['command']
+    preview_dir = CONFIG['capture']['preview_dir']
+    cmd = CONFIG['capture']['command']
     cmd = cmd.replace('{{time}}', str(duration))
     cmd = cmd.replace('{{dir}}', directory)
     cmd = cmd.replace('{{name}}', name)
@@ -402,7 +404,7 @@ def recording_command(directory, name, duration):
         raise Exception('Recording failed')
 
     # Remove preview files:
-    for preview in config['capture']['preview']:
+    for preview in CONFIG['capture']['preview']:
         try:
             os.remove(preview.replace('{{previewdir}}', preview_dir))
         except OSError:
@@ -410,8 +412,8 @@ def recording_command(directory, name, duration):
             logging.warning(traceback.format_exc())
 
     # Return [(flavor,path),…]
-    flavors = config['capture']['flavors']
-    files = config['capture']['files']
+    flavors = CONFIG['capture']['flavors']
+    files = CONFIG['capture']['files']
     files = [f.replace('{{dir}}', directory) for f in files]
     files = [f.replace('{{name}}', name) for f in files]
     return zip(flavors, files)
@@ -423,9 +425,9 @@ def test():
     logging.info('Starting test recording (10sec)')
     name = 'test-%i' % get_timestamp()
     logging.info('Recording name: %s', name)
-    directory = '%s/%s' % (config['capture']['directory'], name)
+    directory = '%s/%s' % (CONFIG['capture']['directory'], name)
     logging.info('Recording directory: %s', directory)
-    try_mkdir(config['capture']['directory'])
+    try_mkdir(CONFIG['capture']['directory'])
     os.mkdir(directory)
     logging.info('Created recording directory')
     logging.info('Start recording')
@@ -446,12 +448,12 @@ def try_mkdir(directory):
 def run():
     '''Start the capture agent.
     '''
-    if config['server']['insecure']:
+    if CONFIG['server']['insecure']:
         logging.warning('INSECURE: HTTPS CHECKS ARE TURNED OFF. A SECURE '
                         'CONNECTION IS NOT GUARANTEED')
-    if config['server']['certificate']:
+    if CONFIG['server']['certificate']:
         try:
-            with open(config['server']['certificate'], 'r'):
+            with open(CONFIG['server']['certificate'], 'r'):
                 pass
         except IOError as err:
             logging.warning('Could not read certificate file: %s', err)
