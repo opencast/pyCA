@@ -52,7 +52,7 @@ CONFIG = update_configuration('/etc/pyca.conf')
 
 
 
-def register_ca(status='idle', ignore_error=True):
+def register_ca(status='idle'):
     '''Register this capture agent at the Matterhorn admin server so that it
     shows up in the admin interface.
 
@@ -68,9 +68,7 @@ def register_ca(status='idle', ignore_error=True):
     try:
         response = http_request(endpoint, params)
         logging.info(response)
-    except Exception as err:
-        if not ignore_error:
-            raise err
+    except:
         # Ignore errors (e.g. network issues) as it's more important to get
         # the recording as to set the correct current state in the admin ui.
         logging.warning('Could not set capture agent state')
@@ -79,12 +77,11 @@ def register_ca(status='idle', ignore_error=True):
     return True
 
 
-def recording_state(recording_id, status='upcoming', ignore_error=True):
+def recording_state(recording_id, status='upcoming'):
     '''Send the state of the current recording to the Matterhorn core.
 
     :param recording_id: ID of the current recording
     :param status: Status of the recording
-    :param ignore_error: Catch all exceptions
     '''
     # If this is a backup CA we don't update the recording state. The actual CA
     # does that and we don't want to mess with it.  We will just run silently in
@@ -96,9 +93,7 @@ def recording_state(recording_id, status='upcoming', ignore_error=True):
     try:
         result = http_request(endpoint, params)
         logging.info(result)
-    except Exception as err:
-        if not ignore_error:
-            raise err
+    except:
         # Ignore errors (e.g. network issues) as it's more important to get
         # the recording as to set the correct current state in the admin ui.
         logging.warning('Could not set recording state')
@@ -123,14 +118,14 @@ def get_schedule():
 
     cal = None
     try:
-        cal = icalendar.Calendar.from_string(vcal)
-    except:
         try:
+            cal = icalendar.Calendar.from_string(vcal)
+        except AttributeError:
             cal = icalendar.Calendar.from_ical(vcal)
-        except:
-            logging.error('Could not parse ical')
-            logging.error(traceback.format_exc())
-            return None
+    except:
+        logging.error('Could not parse ical')
+        logging.error(traceback.format_exc())
+        return None
     events = []
     for event in cal.walk('vevent'):
         dtstart = unix_ts(event.get('dtstart').dt.astimezone(tzutc()))
@@ -458,7 +453,9 @@ def run():
         except IOError as err:
             logging.warning('Could not read certificate file: %s', err)
 
-    register_ca(ignore_error=False)
+    if not register_ca():
+        return
+
     get_schedule()
     try:
         control_loop()
