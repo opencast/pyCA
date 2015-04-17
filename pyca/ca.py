@@ -62,7 +62,7 @@ def register_ca(status='idle'):
     # If this is a backup CA we don't tell the Matterhorn core that we are here.
     # We will just run silently in the background:
     if CONFIG['agent']['backup_mode']:
-        return
+        return True
     params = [('address', CONFIG['ui']['url']), ('state', status)]
     endpoint = '/capture-admin/agents/%s' % CONFIG['agent']['name']
     try:
