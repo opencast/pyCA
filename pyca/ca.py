@@ -210,7 +210,7 @@ def start_capture(schedule):
             workflow_def, workflow_config = get_config_params(value)
             with open('%s/recording.properties' % recording_dir, 'w') as prop:
                 prop.write(value)
-        elif '<dcterms:temporal>' in value:
+        elif '<dcterms:temporal' in value:
             with open('%s/episode.xml' % recording_dir, 'w') as dcfile:
                 dcfile.write(value)
         else:
