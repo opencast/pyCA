@@ -77,7 +77,7 @@ def register_ca(status='idle'):
     return True
 
 
-def recording_state(recording_id, status='upcoming'):
+def recording_state(recording_id, status='unknown'):
     '''Send the state of the current recording to the Matterhorn core.
 
     :param recording_id: ID of the current recording
