@@ -1,6 +1,9 @@
 PyCA – Matterhorn Capture Agent
 ===============================
 
+.. image:: https://travis-ci.org/lkiesow/pyCA.svg?branch=master
+    :target: https://travis-ci.org/lkiesow/pyCA
+
 **PyCA** is a fully functional Opencast Matterhorn [MH]_ capture agent written
 in Python. It is free software licenced under the terms of the GNU Lesser
 General Public License [LGPL]_.
