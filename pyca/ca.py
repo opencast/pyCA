@@ -130,7 +130,7 @@ def get_schedule():
     for event in cal.walk('vevent'):
         dtstart = unix_ts(event.get('dtstart').dt.astimezone(tzutc()))
         dtend = unix_ts(event.get('dtend').dt.astimezone(tzutc()))
-        uid = event.get('uid').decode()
+        uid = event.get('uid')
 
         # Ignore events that have already ended
         if dtend > get_timestamp():
@@ -205,7 +205,7 @@ def start_capture(schedule):
     attachments = schedule[-1].get('attach')
     workflow_config = ''
     for attachment in attachments:
-        value = b64decode(attachment.decode())
+        value = b64decode(attachment).decode('utf-8')
         if not value.startswith('<'):
             workflow_def, workflow_config = get_config_params(value)
             with open('%s/recording.properties' % recording_dir, 'w') as prop:
@@ -274,7 +274,7 @@ def http_request(endpoint, post_data=None):
     curl.perform()
     status = curl.getinfo(pycurl.HTTP_CODE)
     curl.close()
-    if status / 100 != 2:
+    if int(status / 100) != 2:
         raise Exception('ERROR: Request to %s failed (HTTP status code %i)' % \
                 (endpoint, status))
     result = buf.getvalue()
