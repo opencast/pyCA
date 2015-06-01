@@ -14,10 +14,12 @@ from datetime import datetime
 from dateutil.tz import tzutc
 import errno
 import icalendar
+import json
 import logging
 import os
 import pycurl
 import sys
+from random import randrange
 import time
 import traceback
 if sys.version_info[0] == 2:
@@ -51,6 +53,27 @@ def update_configuration(cfgfile):
 CONFIG = update_configuration('/etc/pyca.conf')
 
 
+def get_service(service_type):
+    '''Get available service endpoints for a given service type from the
+    Opencast Matterhorn ServiceRegistry.
+    '''
+    endpoint = '/services/available.json?serviceType=' + str(service_type)
+    url = '%s%s' % (CONFIG['server']['url'], endpoint)
+    response = http_request(url).decode('utf-8')
+    services = json.loads(response).get('services', {}).get('service', [])
+    # This will give us either a list or one element. Let us make sure, it is
+    # a list
+    try:
+        services.get('type')
+        services = [services]
+    except AttributeError:
+        pass
+    endpoints = [s['host'] + s['path'] for s in services
+                 if s['online'] and s['active']]
+    for endpoint in endpoints:
+        logging.info('Endpoint for %s: %s', service_type, endpoint)
+    return endpoints
+
 
 def register_ca(status='idle'):
     '''Register this capture agent at the Matterhorn admin server so that it
@@ -64,9 +87,9 @@ def register_ca(status='idle'):
     if CONFIG['agent']['backup_mode']:
         return True
     params = [('address', CONFIG['ui']['url']), ('state', status)]
-    endpoint = '/capture-admin/agents/%s' % CONFIG['agent']['name']
+    url = '%s/agents/%s' % (CONFIG['service-capture'][0], CONFIG['agent']['name'])
     try:
-        response = http_request(endpoint, params)
+        response = http_request(url, params).decode('utf-8')
         logging.info(response)
     except:
         # Ignore errors (e.g. network issues) as it's more important to get
@@ -89,9 +112,9 @@ def recording_state(recording_id, status):
     if CONFIG['agent']['backup_mode']:
         return
     params = [('state', status)]
-    endpoint = '/capture-admin/recordings/%s' % recording_id
+    url = '%s/recordings/%s' % (CONFIG['service-capture'][0], recording_id)
     try:
-        result = http_request(endpoint, params)
+        result = http_request(url, params)
         logging.info(result)
     except:
         # Ignore errors (e.g. network issues) as it's more important to get
@@ -109,8 +132,9 @@ def get_schedule():
         lookahead = CONFIG['agent']['cal_lookahead'] * 24 * 60 * 60
         if lookahead:
             cutoff = '&cutoff=%i' % ((get_timestamp() + lookahead) * 1000)
-        vcal = http_request('/recordings/calendars?agentid=%s%s' % \
-                (CONFIG['agent']['name'], cutoff))
+        uri = '%s/calendars?agentid=%s%s' % \
+                (CONFIG['service-scheduler'][0], CONFIG['agent']['name'], cutoff)
+        vcal = http_request(uri)
     except:
         logging.error('Could not get schedule')
         logging.error(traceback.format_exc())
@@ -243,13 +267,11 @@ def start_capture(schedule):
     return True
 
 
-def http_request(endpoint, post_data=None):
-    '''Make an HTTP GET request to a given REST endpoint with optional
-    parameters.
+def http_request(url, post_data=None):
+    '''Make an HTTP request to a given URL with optional parameters.
     '''
     buf = bio()
     curl = pycurl.Curl()
-    url = '%s%s' % (CONFIG['server']['url'], endpoint)
     curl.setopt(curl.URL, url.encode('ascii', 'ignore'))
 
     # Disable HTTPS verification methods if insecure is set
@@ -276,7 +298,7 @@ def http_request(endpoint, post_data=None):
     curl.close()
     if int(status / 100) != 2:
         raise Exception('ERROR: Request to %s failed (HTTP status code %i)' % \
-                (endpoint, status))
+                (url, status))
     result = buf.getvalue()
     buf.close()
     return result
@@ -287,9 +309,17 @@ def ingest(tracks, recording_dir, recording_id, workflow_def,
     '''Ingest a finished recording to the Matterhorn server.
     '''
 
+    # select ingest service
+    # The ingest service to use is selected at random from the available
+    # ingest services to ensure that not every capture agent uses the same
+    # service at the same time
+    service = CONFIG['service-ingest']
+    service = service[randrange(0, len(service))]
+    logging.info('Selecting ingest service to use: ' + service)
+
     # create mediapackage
     logging.info('Creating new mediapackage')
-    mediapackage = http_request('/ingest/createMediaPackage')
+    mediapackage = http_request(service + '/createMediaPackage')
 
     # add episode DublinCore catalog
     if os.path.isfile('%s/episode.xml' % recording_dir):
@@ -300,7 +330,7 @@ def ingest(tracks, recording_dir, recording_id, workflow_def,
         fields = [('mediaPackage', mediapackage),
                   ('flavor', 'dublincore/episode'),
                   ('dublinCore', dublincore)]
-        mediapackage = http_request('/ingest/addDCCatalog', fields)
+        mediapackage = http_request(service + '/addDCCatalog', fields)
 
     # add series DublinCore catalog
     if os.path.isfile('%s/series.xml' % recording_dir):
@@ -311,7 +341,7 @@ def ingest(tracks, recording_dir, recording_id, workflow_def,
         fields = [('mediaPackage', mediapackage),
                   ('flavor', 'dublincore/series'),
                   ('dublinCore', dublincore)]
-        mediapackage = http_request('/ingest/addDCCatalog', fields)
+        mediapackage = http_request(service + '/addDCCatalog', fields)
 
     # add track
     for (flavor, track) in tracks:
@@ -319,7 +349,7 @@ def ingest(tracks, recording_dir, recording_id, workflow_def,
         track = track.encode('ascii', 'ignore')
         fields = [('mediaPackage', mediapackage), ('flavor', flavor),
                   ('BODY1', (pycurl.FORM_FILE, track))]
-        mediapackage = http_request('/ingest/addTrack', fields)
+        mediapackage = http_request(service + '/addTrack', fields)
 
     # ingest
     logging.info('Ingest recording')
@@ -327,7 +357,7 @@ def ingest(tracks, recording_dir, recording_id, workflow_def,
               ('workflowDefinitionId', workflow_def),
               ('workflowInstanceId', recording_id.encode('ascii', 'ignore'))]
     fields += workflow_config
-    mediapackage = http_request('/ingest/ingest', fields)
+    mediapackage = http_request(service + '/ingest', fields)
 
 
 def safe_start_capture(schedule):
@@ -443,6 +473,7 @@ def try_mkdir(directory):
 def run():
     '''Start the capture agent.
     '''
+    # TODO:   url = '%s%s' % (CONFIG['server']['url'], endpoint)
     if CONFIG['server']['insecure']:
         logging.warning('INSECURE: HTTPS CHECKS ARE TURNED OFF. A SECURE '
                         'CONNECTION IS NOT GUARANTEED')
@@ -453,8 +484,19 @@ def run():
         except IOError as err:
             logging.warning('Could not read certificate file: %s', err)
 
-    if not register_ca():
-        return
+    while not CONFIG.get('service-ingest') or not CONFIG.get('service-capture') \
+          or not CONFIG.get('service-scheduler'):
+        try:
+            CONFIG['service-ingest'] = get_service('org.opencastproject.ingest')
+            CONFIG['service-capture'] = get_service('org.opencastproject.capture.admin')
+            CONFIG['service-scheduler'] = get_service('org.opencastproject.scheduler')
+        except pycurl.error:
+            logging.error('Could not get service endpoints. Retrying in 5s')
+            logging.error(traceback.format_exc())
+            time.sleep(5.0)
+
+    while not register_ca():
+        time.sleep(5.0)
 
     get_schedule()
     try:
