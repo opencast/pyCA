@@ -20,8 +20,8 @@ preview_dir      = string(default='./recordings')
 preview          = list(default=list())
 
 [server]
-url              = string(default='http://mhtest.virtuos.uos.de:8080')
-username         = string(default='matterhorn_system_account')
+url              = string(default='http://octestallinone.virtuos.uos.de:8080')
+username         = string(default='opencast_system_account')
 password         = string(default='CHANGE_ME')
 insecure         = boolean(default=False)
 certificate      = string(default='')
