@@ -99,6 +99,45 @@ def register_ca(status='idle'):
         return False
     return True
 
+def set_configuration():
+    '''Set configuration so that capabilities show up in the admin interface.'''
+
+    agent_name = CONFIG['agent']['name']
+    url = '%s/agents/%s/configuration' % (CONFIG['service-capture'][0], agent_name)
+    xml_structure = """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+                             <!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+                             <properties version="1.0">{comment}{entries}</properties>"""
+    xml_comment = '<comment>Capabilities for '+ agent_name +'</comment>'
+    xml_entry = '<entry key="{key}">{value}</entry>'
+    entries = ""
+    conf = {}
+    devices = {}
+    names = CONFIG['capture']['names']
+
+    # Set up device keys
+    for i, name in enumerate(names):
+        outputfile = CONFIG['capture']['files'][i]
+        devices['capture.device.' + name + '.src'] = CONFIG['capture']['sources'][i]
+        devices['capture.device.'+ name +'.flavor'] = CONFIG['capture']['flavors'][i]
+        devices['capture.device.'+ name +'.outputfile'] = outputfile[outputfile.rfind('/')+1:]
+    devices['capture.device.names'] = ','.join(names)
+
+    # Update configuration
+    conf.update(devices)
+
+    # Build XML
+    for k, v in conf.iteritems():
+        entries += xml_entry.format(key=k, value=v)
+    conf = xml_structure.format(comment=xml_comment, entries=entries)
+
+    try:
+         response = http_request(url, [('configuration', conf)]).decode('utf-8')
+         logging.info(response)
+    except:
+        logging.warning('Could not set configuration')
+        logging.warning(traceback.format_exc())
+        return False
+    return True
 
 def recording_state(recording_id, status):
     '''Send the state of the current recording to the Matterhorn core.
@@ -498,6 +537,7 @@ def run():
     while not register_ca():
         time.sleep(5.0)
 
+    set_configuration()
     get_schedule()
     try:
         control_loop()
