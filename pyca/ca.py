@@ -326,7 +326,7 @@ def ingest(tracks, recording_dir, recording_id, workflow_def,
         logging.info('Adding episode DC catalog')
         dublincore = ''
         with open('%s/episode.xml' % recording_dir, 'r') as episodefile:
-            dublincore = episodefile.read()
+            dublincore = episodefile.read().encode('utf8', 'ignore')
         fields = [('mediaPackage', mediapackage),
                   ('flavor', 'dublincore/episode'),
                   ('dublinCore', dublincore)]
@@ -337,7 +337,7 @@ def ingest(tracks, recording_dir, recording_id, workflow_def,
         logging.info('Adding series DC catalog')
         dublincore = ''
         with open('%s/series.xml' % recording_dir, 'r') as seriesfile:
-            dublincore = seriesfile.read()
+            dublincore = seriesfile.read().encode('utf8', 'ignore')
         fields = [('mediaPackage', mediapackage),
                   ('flavor', 'dublincore/series'),
                   ('dublinCore', dublincore)]
