@@ -35,7 +35,7 @@ Here is a short summary for Debian based OS like Raspian::
 
   git clone https://github.com/lkiesow/pyCA.git
   cd pyCA
-  sudo apt-get install python-virtualenv python-dev libcurl4-gnutls-dev
+  sudo apt-get install python-virtualenv python-dev libcurl4-gnutls-dev gnutls-dev
   virtualenv venv
   . ./venv/bin/activate
   pip install icalendar python-dateutil pycurl configobj
