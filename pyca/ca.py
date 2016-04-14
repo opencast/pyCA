@@ -82,12 +82,13 @@ def register_ca(status='idle'):
     :param address: Address of the capture agent web ui
     :param status: Current status of the capture agent
     '''
-    # If this is a backup CA we don't tell the Matterhorn core that we are here.
-    # We will just run silently in the background:
+    # If this is a backup CA we don't tell the Matterhorn core that we are
+    # here.  We will just run silently in the background:
     if CONFIG['agent']['backup_mode']:
         return True
     params = [('address', CONFIG['ui']['url']), ('state', status)]
-    url = '%s/agents/%s' % (CONFIG['service-capture'][0], CONFIG['agent']['name'])
+    url = '%s/agents/%s' % (CONFIG['service-capture'][0],
+                            CONFIG['agent']['name'])
     try:
         response = http_request(url, params).decode('utf-8')
         logging.info(response)
@@ -106,9 +107,10 @@ def recording_state(recording_id, status):
     :param recording_id: ID of the current recording
     :param status: Status of the recording
     '''
-    # If this is a backup CA we don't update the recording state. The actual CA
-    # does that and we don't want to mess with it.  We will just run silently in
-    # the background:
+    # If this is a backup CA we don't update the recording state. The actual
+    # CA does that and we don't want to mess with it.  We will just run
+    # silently
+    # in the background:
     if CONFIG['agent']['backup_mode']:
         return
     params = [('state', status)]
@@ -132,8 +134,8 @@ def get_schedule():
         lookahead = CONFIG['agent']['cal_lookahead'] * 24 * 60 * 60
         if lookahead:
             cutoff = '&cutoff=%i' % ((get_timestamp() + lookahead) * 1000)
-        uri = '%s/calendars?agentid=%s%s' % \
-                (CONFIG['service-scheduler'][0], CONFIG['agent']['name'], cutoff)
+        uri = '%s/calendars?agentid=%s%s' % (CONFIG['service-scheduler'][0],
+                                             CONFIG['agent']['name'], cutoff)
         vcal = http_request(uri)
     except:
         logging.error('Could not get schedule')
@@ -241,8 +243,8 @@ def start_capture(schedule):
             with open('%s/series.xml' % recording_dir, 'w') as dcfile:
                 dcfile.write(value)
 
-    # If we are a backup CA, we don't want to actually upload anything. So let's
-    # just quit here.
+    # If we are a backup CA, we don't want to actually upload anything. So
+    # let's just quit here.
     if CONFIG['agent']['backup_mode']:
         return True
 
@@ -290,15 +292,15 @@ def http_request(url, post_data=None):
         curl.setopt(curl.HTTPPOST, post_data)
     curl.setopt(curl.WRITEFUNCTION, buf.write)
     curl.setopt(pycurl.HTTPAUTH, pycurl.HTTPAUTH_DIGEST)
-    curl.setopt(pycurl.USERPWD, "%s:%s" % \
-            (CONFIG['server']['username'], CONFIG['server']['password']))
+    curl.setopt(pycurl.USERPWD, "%s:%s" % (CONFIG['server']['username'],
+                                           CONFIG['server']['password']))
     curl.setopt(curl.HTTPHEADER, ['X-Requested-Auth: Digest'])
     curl.perform()
     status = curl.getinfo(pycurl.HTTP_CODE)
     curl.close()
     if int(status / 100) != 2:
-        raise Exception('ERROR: Request to %s failed (HTTP status code %i)' % \
-                (url, status))
+        raise Exception('ERROR: Request to %s failed (HTTP status code %i)' %
+                        (url, status))
     result = buf.getvalue()
     buf.close()
     return result
@@ -381,7 +383,8 @@ def control_loop():
     schedule = []
     register = False
     while True:
-        if len(schedule) and schedule[0][0] <= get_timestamp() < schedule[0][1]:
+        if len(schedule) \
+           and schedule[0][0] <= get_timestamp() < schedule[0][1]:
             safe_start_capture(schedule[0])
             # If something went wrong, we do not want to restart the capture
             # continuously, thus we sleep for the rest of the recording time.
@@ -391,7 +394,7 @@ def control_loop():
                                 'seconds remaining. Sleeping...', spare_time)
                 time.sleep(spare_time)
         if get_timestamp() - last_update > CONFIG['agent']['update_frequency']:
-            # Make sure capture agent is registered before asking for a schedule
+            # Ensure capture agent is registered before asking for a schedule
             if register:
                 if register_ca():
                     register = False
@@ -490,12 +493,16 @@ def run():
         except IOError as err:
             logging.warning('Could not read certificate file: %s', err)
 
-    while not CONFIG.get('service-ingest') or not CONFIG.get('service-capture') \
-          or not CONFIG.get('service-scheduler'):
+    while (not CONFIG.get('service-ingest')
+           or not CONFIG.get('service-capture')
+           or not CONFIG.get('service-scheduler')):
         try:
-            CONFIG['service-ingest'] = get_service('org.opencastproject.ingest')
-            CONFIG['service-capture'] = get_service('org.opencastproject.capture.admin')
-            CONFIG['service-scheduler'] = get_service('org.opencastproject.scheduler')
+            CONFIG['service-ingest'] = \
+                get_service('org.opencastproject.ingest')
+            CONFIG['service-capture'] = \
+                get_service('org.opencastproject.capture.admin')
+            CONFIG['service-scheduler'] = \
+                get_service('org.opencastproject.scheduler')
         except pycurl.error:
             logging.error('Could not get service endpoints. Retrying in 5s')
             logging.error(traceback.format_exc())
