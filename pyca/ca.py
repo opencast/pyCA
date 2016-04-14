@@ -30,8 +30,8 @@ else:
 
 # Set up logging
 logging.basicConfig(level=logging.INFO,
-                    format='%(asctime)s %(levelname)-8s '
-                    + '[%(filename)s:%(lineno)s:%(funcName)s()] %(message)s',
+                    format='%(asctime)s %(levelname)-8s ' +
+                    '[%(filename)s:%(lineno)s:%(funcName)s()] %(message)s',
                     datefmt='%Y-%m-%d %H:%M:%S')
 
 
@@ -493,9 +493,9 @@ def run():
         except IOError as err:
             logging.warning('Could not read certificate file: %s', err)
 
-    while (not CONFIG.get('service-ingest')
-           or not CONFIG.get('service-capture')
-           or not CONFIG.get('service-scheduler')):
+    while (not CONFIG.get('service-ingest') or
+           not CONFIG.get('service-capture') or
+           not CONFIG.get('service-scheduler')):
         try:
             CONFIG['service-ingest'] = \
                 get_service('org.opencastproject.ingest')
