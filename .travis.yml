@@ -8,7 +8,7 @@ python:
 
 before_install:
   - sudo apt-get update
-  - sudo apt-get install -y libcurl4-gnutls-dev
+  - sudo apt-get install -y libcurl4-gnutls-dev flake8
   - curl -s $(curl -s http://johnvansickle.com/ffmpeg/ | grep 64bit-static.tar.xz | grep -v git | cut -d'"' -f2) -o /tmp/ffmpeg.tar.xz
   - tar -xf /tmp/ffmpeg.tar.xz
   - sudo mv ffmpeg-*-64bit-static /opt/ffmpeg
@@ -16,3 +16,4 @@ before_install:
 
 script:
    - python -m pyca.__main__ test
+   - flake8 pyca/ca.py
