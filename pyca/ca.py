@@ -345,7 +345,7 @@ def ingest(tracks, recording_dir, recording_id, workflow_def,
 
     # add track
     for (flavor, track) in tracks:
-        logging.info('Adding track ({0})'.format(flavor))
+        logging.info('Adding track ({0} -> {1})'.format(flavor, track))
         track = track.encode('ascii', 'ignore')
         fields = [('mediaPackage', mediapackage), ('flavor', flavor),
                   ('BODY1', (pycurl.FORM_FILE, track))]
@@ -456,8 +456,13 @@ def test():
     os.mkdir(directory)
     logging.info('Created recording directory')
     logging.info('Start recording')
-    recording_command(directory, name, 10)
+    tracks = recording_command(directory, name, 2)
     logging.info('Finished recording')
+
+    logging.info('Testing Ingest')
+    CONFIG['service-ingest'] = ['']
+    sys.modules[__name__].http_request = lambda x, y=False: None
+    ingest(tracks, directory, '123', 'fast', '')
 
 
 def try_mkdir(directory):
