@@ -42,14 +42,23 @@ Here is a short summary for Debian based OS like Raspian::
   vim etc/pyca.conf  <-- Edit the configuration
   ./start.sh
 
-For RedHat bases systems like Fedora it's almost the same::
+On Fedora::
 
   git clone https://github.com/lkiesow/pyCA.git
   cd pyCA
-  sudo yum install python-virtualenv
-  virtualenv venv
-  . ./venv/bin/activate
-  pip install icalendar python-dateutil pycurl configobj
+  sudo yum install python-pycurl python-dateutil \
+    python-configobj python-icalendar
+  vim etc/pyca.conf  <-- Edit the configuration
+  ./start.sh
+
+On RHEL/CentOS 7::
+
+  git clone https://github.com/lkiesow/pyCA.git
+  cd pyCA
+  sudo yum install python-pycurl python-dateutil \
+    python-configobj
+  sudo yum install \
+    https://copr-be.cloud.fedoraproject.org/results/lkiesow/python-icalendar/epel-7-x86_64/00175425-python-icalendar/python-
   vim etc/pyca.conf  <-- Edit the configuration
   ./start.sh
 
