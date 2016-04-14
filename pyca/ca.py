@@ -437,8 +437,9 @@ def recording_command(directory, name, duration):
             logging.warning(traceback.format_exc())
 
     # Return [(flavor,path),…]
-    flavors = CONFIG['capture']['flavors']
-    files = CONFIG['capture']['files']
+    ensurelist = lambda x: x if type(x) == list else [x]
+    flavors = ensurelist(CONFIG['capture']['flavors'])
+    files = ensurelist(CONFIG['capture']['files'])
     files = [f.replace('{{dir}}', directory) for f in files]
     files = [f.replace('{{name}}', name) for f in files]
     return zip(flavors, files)
