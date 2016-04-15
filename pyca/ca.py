@@ -35,6 +35,13 @@ logging.basicConfig(level=logging.INFO,
                     datefmt='%Y-%m-%d %H:%M:%S')
 
 
+class Event:
+    start = 0
+    end = 0
+    uid = ''
+    data = {}
+
+
 def update_configuration(cfgfile):
     '''Update configuration from file.
 
@@ -154,15 +161,16 @@ def get_schedule():
         return None
     events = []
     for event in cal.walk('vevent'):
-        dtstart = unix_ts(event.get('dtstart').dt.astimezone(tzutc()))
-        dtend = unix_ts(event.get('dtend').dt.astimezone(tzutc()))
-        uid = event.get('uid')
-
+        e = Event()
+        e.end = unix_ts(event.get('dtend').dt.astimezone(tzutc()))
         # Ignore events that have already ended
-        if dtend > get_timestamp():
-            events.append((dtstart, dtend, uid, event))
+        if e.end > get_timestamp():
+            e.start = unix_ts(event.get('dtstart').dt.astimezone(tzutc()))
+            e.uid = event.get('uid')
+            e.data = event
+            events.append(e)
 
-    return sorted(events, key=lambda x: x[0])
+    return sorted(events, key=lambda e: e.start)
 
 
 def unix_ts(dtval):
@@ -199,14 +207,14 @@ def get_config_params(properties):
     return wdef, param
 
 
-def start_capture(schedule):
+def start_capture(event):
     '''Start the capture process, creating all necessary files and directories
     as well as ingesting the captured files if no backup mode is configured.
     '''
     logging.info('Start recording')
     now = get_timestamp()
-    duration = schedule[1] - now
-    recording_id = schedule[2]
+    duration = event.end - now
+    recording_id = event.uid
     recording_name = 'recording-%i-%s' % (now, recording_id)
     recording_dir = '%s/%s' % (CONFIG['capture']['directory'], recording_name)
     try_mkdir(CONFIG['capture']['directory'])
@@ -228,7 +236,7 @@ def start_capture(schedule):
         return False
 
     # Put metadata files on disk
-    attachments = schedule[-1].get('attach')
+    attachments = event.data.get('attach')
     workflow_config = ''
     for attachment in attachments:
         value = b64decode(attachment).decode('utf-8')
@@ -362,12 +370,12 @@ def ingest(tracks, recording_dir, recording_id, workflow_def,
     mediapackage = http_request(service + '/ingest', fields)
 
 
-def safe_start_capture(schedule):
+def safe_start_capture(event):
     '''Start a capture process but make sure to catch any errors during this
     process, log them but otherwise ignore them.
     '''
     try:
-        return start_capture(schedule)
+        return start_capture(event)
     except:
         logging.error('Start capture failed')
         logging.error(traceback.format_exc())
@@ -384,11 +392,11 @@ def control_loop():
     register = False
     while True:
         if len(schedule) \
-           and schedule[0][0] <= get_timestamp() < schedule[0][1]:
+           and schedule[0].start <= get_timestamp() < schedule[0].end:
             safe_start_capture(schedule[0])
             # If something went wrong, we do not want to restart the capture
             # continuously, thus we sleep for the rest of the recording time.
-            spare_time = max(0, schedule[0][1] - get_timestamp())
+            spare_time = max(0, schedule[0].end - get_timestamp())
             if spare_time:
                 logging.warning('Capture command finished but there are %i '
                                 'seconds remaining. Sleeping...', spare_time)
@@ -412,7 +420,7 @@ def control_loop():
             last_update = get_timestamp()
             if schedule:
                 logging.info('Next scheduled recording: %s',
-                             datetime.fromtimestamp(schedule[0][0]))
+                             datetime.fromtimestamp(schedule[0].start))
             else:
                 logging.info('No scheduled recording')
         time.sleep(1.0)
