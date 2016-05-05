@@ -39,8 +39,7 @@ def usage(retval=0):
     sys.exit(retval)
 
 
-if __name__ == '__main__':
-
+def main():
     cfg = '/etc/pyca.conf' if os.path.isfile('/etc/pyca.conf') else './etc/pyca.conf'
 
     try:
@@ -73,3 +72,7 @@ if __name__ == '__main__':
     else:
         # Invalid command
         usage(3)
+
+
+if __name__ == '__main__':
+    main()
