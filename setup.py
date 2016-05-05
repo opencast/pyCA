@@ -16,7 +16,6 @@ setup(
         "configobj>=5.0.0",
         "flask"
     ],
-    data_files=[("etc", ["etc/pyca.conf"])],
     entry_points={
         'console_scripts': [
             'pyca = pyca.__main__:main'
