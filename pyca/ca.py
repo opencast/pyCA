@@ -253,13 +253,13 @@ def start_capture(event):
                 dcfile.write(value)
     # write recording information needed for reingesting to disk
     with open('%s/recording.pyca' % recording_dir, 'wb') as infofile:
-        recording_info = {  'tracks' : tracks,
-                            'recording_dir' : recording_dir,
-                            'recording_id' : recording_id,
-                            'workflow_def' : workflow_def,
-                            'workflow_config' : workflow_config }
+        recording_info = {'tracks': tracks,
+                          'recording_dir': recording_dir,
+                          'recording_id': recording_id,
+                          'workflow_def': workflow_def,
+                          'workflow_config': workflow_config}
         pickle.dump(recording_info, infofile)
-    
+
     # If we are a backup CA, we don't want to actually upload anything. So
     # let's just quit here.
     if CONFIG['agent']['backup_mode']:
@@ -485,6 +485,7 @@ def test():
     sys.modules[__name__].http_request = lambda x, y=False: None
     ingest(tracks, directory, '123', 'fast', '')
 
+
 def reingest(name):
     ''' Retry ingesting a recording after a failed attempt (e.g. network error)
     '''
@@ -516,23 +517,25 @@ def reingest(name):
 
     while not register_ca():
         time.sleep(5.0)
-    
+
     # retrieve recording information from pickled file
     logging.info('Trying to reingest %s' % name)
-    
+
     recording_dir = '%s/%s' % (CONFIG['capture']['directory'], name)
     infofile = open('%s/recording.pyca' % recording_dir, 'rb')
     recording_info = pickle.load(infofile)
-    logging.info('recording id is %s' % recording_info['recording_id'] )
-    
+    logging.info('recording id is %s' % recording_info['recording_id'])
+
     # Upload everything
     register_ca(status='uploading')
     recording_state(recording_info['recording_id'], 'uploading')
 
     try:
-        ingest(recording_info['tracks'], recording_info['recording_dir'],
-                recording_info['recording_id'], recording_info['workflow_def'],
-                recording_info['workflow_config'])
+        ingest(recording_info['tracks'],
+               recording_info['recording_dir'],
+               recording_info['recording_id'],
+               recording_info['workflow_def'],
+               recording_info['workflow_config'])
     except:
         logging.error('Something went wrong during the upload')
         logging.error(traceback.format_exc())
@@ -544,6 +547,7 @@ def reingest(name):
     recording_state(recording_info['recording_id'], 'upload_finished')
     register_ca(status='idle')
     return True
+
 
 def try_mkdir(directory):
     '''Try to create a directory. Pass without error if it already exists.
