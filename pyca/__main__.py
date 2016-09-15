@@ -19,6 +19,7 @@ Usage %s [OPTIONS] COMMAND
 COMMANDS:
   run  --  Start pyCA as capture agent (default)
   test --  Test recording command
+  reingest [folder] --  Retry ingesting recording in [folder]
   ui   --  Start web based user interface
 
 OPTIONS:
@@ -56,8 +57,8 @@ if __name__ == '__main__':
         usage(1)
 
     # Make sure we got only one command
-    if len(args) > 1:
-        usage(2)
+    #if len(args) > 1:
+    #    usage(2)
 
     cmd = (args + ['run'])[0]
 
@@ -67,6 +68,11 @@ if __name__ == '__main__':
     elif cmd == 'test':
         ca.update_configuration(cfg)
         ca.test()
+    elif cmd == 'reingest':
+        if not len(args) == 2: usage(2)
+        ca.update_configuration(cfg)
+        recording_dir = args[1]
+        ca.reingest(recording_dir)
     elif cmd == 'ui':
         import pyca.ui
         pyca.ui.app.run(host='0.0.0.0')
