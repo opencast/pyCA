@@ -56,11 +56,11 @@ if __name__ == '__main__':
     except (getopt.GetoptError, ValueError):
         usage(1)
 
-    # Make sure we got only one command
-    #if len(args) > 1:
-    #    usage(2)
-
     cmd = (args + ['run'])[0]
+
+    # Make sure we got only one command
+    if len(args) > 1 and not cmd == 'reingest':
+        usage(2)
 
     if cmd == 'run':
         ca.update_configuration(cfg)
