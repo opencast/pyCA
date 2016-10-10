@@ -17,6 +17,7 @@ import icalendar
 import json
 import logging
 import os
+import pickle
 import pycurl
 import sys
 from random import randrange
@@ -250,6 +251,14 @@ def start_capture(event):
         else:
             with open('%s/series.xml' % recording_dir, 'w') as dcfile:
                 dcfile.write(value)
+    # write recording information needed for reingesting to disk
+    with open('%s/recording.pyca' % recording_dir, 'wb') as infofile:
+        recording_info = {'tracks': tracks,
+                          'recording_dir': recording_dir,
+                          'recording_id': recording_id,
+                          'workflow_def': workflow_def,
+                          'workflow_config': workflow_config}
+        pickle.dump(recording_info, infofile)
 
     # If we are a backup CA, we don't want to actually upload anything. So
     # let's just quit here.
@@ -475,6 +484,69 @@ def test():
     CONFIG['service-ingest'] = ['']
     sys.modules[__name__].http_request = lambda x, y=False: None
     ingest(tracks, directory, '123', 'fast', '')
+
+
+def reingest(name):
+    ''' Retry ingesting a recording after a failed attempt (e.g. network error)
+    '''
+    # config pyCA as if run() was called
+    if CONFIG['server']['insecure']:
+        logging.warning('INSECURE: HTTPS CHECKS ARE TURNED OFF. A SECURE '
+                        'CONNECTION IS NOT GUARANTEED')
+    if CONFIG['server']['certificate']:
+        try:
+            with open(CONFIG['server']['certificate'], 'r'):
+                pass
+        except IOError as err:
+            logging.warning('Could not read certificate file: %s', err)
+
+    while (not CONFIG.get('service-ingest') or
+           not CONFIG.get('service-capture') or
+           not CONFIG.get('service-scheduler')):
+        try:
+            CONFIG['service-ingest'] = \
+                get_service('org.opencastproject.ingest')
+            CONFIG['service-capture'] = \
+                get_service('org.opencastproject.capture.admin')
+            CONFIG['service-scheduler'] = \
+                get_service('org.opencastproject.scheduler')
+        except pycurl.error:
+            logging.error('Could not get service endpoints. Retrying in 5s')
+            logging.error(traceback.format_exc())
+            time.sleep(5.0)
+
+    while not register_ca():
+        time.sleep(5.0)
+
+    # retrieve recording information from pickled file
+    logging.info('Trying to reingest %s' % name)
+
+    recording_dir = '%s/%s' % (CONFIG['capture']['directory'], name)
+    infofile = open('%s/recording.pyca' % recording_dir, 'rb')
+    recording_info = pickle.load(infofile)
+    logging.info('recording id is %s' % recording_info['recording_id'])
+
+    # Upload everything
+    register_ca(status='uploading')
+    recording_state(recording_info['recording_id'], 'uploading')
+
+    try:
+        ingest(recording_info['tracks'],
+               recording_info['recording_dir'],
+               recording_info['recording_id'],
+               recording_info['workflow_def'],
+               recording_info['workflow_config'])
+    except:
+        logging.error('Something went wrong during the upload')
+        logging.error(traceback.format_exc())
+        # Update state if something went wrong
+        recording_state(recording_info['recording_id'], 'upload_error')
+        register_ca(status='idle')
+        return False
+    # Update state
+    recording_state(recording_info['recording_id'], 'upload_finished')
+    register_ca(status='idle')
+    return True
 
 
 def try_mkdir(directory):
