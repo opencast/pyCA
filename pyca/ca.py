@@ -8,7 +8,8 @@
     :license: LGPL – see license.lgpl for more details.
 '''
 
-# Set default encoding to UTF-8
+from config import config
+from db import get_session, Event
 from base64 import b64decode
 from datetime import datetime
 from dateutil.tz import tzutc
@@ -26,8 +27,6 @@ if sys.version_info[0] == 2:
     from cStringIO import StringIO as bio
 else:
     from io import BytesIO as bio
-from config import config
-from db import get_session, Event
 
 
 # Set up logging
@@ -136,11 +135,10 @@ def get_schedule():
         logging.error('Could not parse ical')
         logging.error(traceback.format_exc())
         return False
-    events = []
     db = get_session()
     db.query(Event).filter(Event.end > get_timestamp())\
                    .filter(Event.protected == False)\
-                   .delete()
+                   .delete()  # noqa
     for event in cal.walk('vevent'):
         e = Event()
         e.end = unix_ts(event.get('dtend').dt.astimezone(tzutc()))
@@ -197,7 +195,8 @@ def start_capture(event):
     duration = event.end - now
     recording_id = event.uid
     recording_name = 'recording-%i-%s' % (now, recording_id)
-    recording_dir = '%s/%s' % (config()['capture']['directory'], recording_name)
+    recording_dir = '%s/%s' % (config()['capture']['directory'],
+                               recording_name)
     try_mkdir(config()['capture']['directory'])
     os.mkdir(recording_dir)
 
@@ -386,7 +385,8 @@ def control_loop():
                                 'seconds remaining. Sleeping...', spare_time)
                 time.sleep(spare_time)
 
-        if get_timestamp() - last_update > config()['agent']['update_frequency']:
+        last_update_delta = get_timestamp() - last_update
+        if last_update_delta > config()['agent']['update_frequency']:
             # Ensure capture agent is registered before asking for a schedule
             if register:
                 if register_ca():
