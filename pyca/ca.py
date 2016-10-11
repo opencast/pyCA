@@ -1,15 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 '''
-    python-matterhorn-ca
+    python-capture-agent
     ~~~~~~~~~~~~~~~~~~~~
 
-    :copyright: 2014-2015, Lars Kiesow <lkiesow@uos.de>
+    :copyright: 2014-2016, Lars Kiesow <lkiesow@uos.de>
     :license: LGPL – see license.lgpl for more details.
 '''
 
 from pyca.config import config
-from pyca.db import get_session, Event
+from pyca.db import get_session, Event, Status
 from base64 import b64decode
 from datetime import datetime
 from dateutil.tz import tzutc
@@ -18,6 +18,7 @@ import errno
 import json
 import logging
 import os
+import os.path
 import pycurl
 import sys
 from random import randrange
@@ -38,7 +39,7 @@ logging.basicConfig(level=logging.INFO,
 
 def get_service(service_type):
     '''Get available service endpoints for a given service type from the
-    Opencast Matterhorn ServiceRegistry.
+    Opencast ServiceRegistry.
     '''
     endpoint = '/services/available.json?serviceType=' + str(service_type)
     url = '%s%s' % (config()['server']['url'], endpoint)
@@ -140,6 +141,16 @@ def parse_ical(vcal):
     return events
 
 
+def update_event_status(event, status):
+    '''Update the status of a particular event in the database.
+    '''
+    db = get_session()
+    db.query(Event).filter(Event.start == event.start)\
+                   .update({'status': status})
+    event.status = status
+    db.commit()
+
+
 def get_schedule():
     '''Try to load schedule from the Matterhorn core. Returns a valid schedule
     or None on failure.
@@ -164,18 +175,19 @@ def get_schedule():
         logging.error(traceback.format_exc())
         return False
     db = get_session()
-    db.query(Event).filter(Event.end > get_timestamp())\
+    db.query(Event).filter(Event.status == Status.UPCOMING)\
                    .filter(Event.protected == False)\
                    .delete()  # noqa
     for event in cal:
-        e = Event()
-        e.end = event['dtend']
         # Ignore events that have already ended
-        if e.end > get_timestamp():
-            e.start = event['dtstart']
-            e.uid = event.get('uid')
-            e.set_data(event)
-            db.add(e)
+        if event['dtend'] <= get_timestamp():
+            continue
+        e = Event()
+        e.start = event['dtstart']
+        e.end = event['dtend']
+        e.uid = event.get('uid')
+        e.set_data(event)
+        db.add(e)
     db.commit()
     return True
 
@@ -219,27 +231,24 @@ def start_capture(event):
     as well as ingesting the captured files if no backup mode is configured.
     '''
     logging.info('Start recording')
-    now = get_timestamp()
-    duration = event.end - now
-    recording_id = event.uid
-    recording_name = 'recording-%i-%s' % (now, recording_id)
-    recording_dir = '%s/%s' % (config()['capture']['directory'],
-                               recording_name)
+    duration = event.end - get_timestamp()
     try_mkdir(config()['capture']['directory'])
-    os.mkdir(recording_dir)
+    os.mkdir(event.directory())
 
     # Set state
     register_ca(status='capturing')
-    recording_state(recording_id, 'capturing')
+    recording_state(event.uid, 'capturing')
+    update_event_status(event, Status.RECORDING)
 
     tracks = []
     try:
-        tracks = recording_command(recording_dir, recording_name, duration)
+        tracks = recording_command(event.directory(), event.name(), duration)
     except:
         logging.error('Recording command failed')
         logging.error(traceback.format_exc())
         # Update state
-        recording_state(recording_id, 'capture_error')
+        recording_state(event.uid, 'capture_error')
+        update_event_status(event, Status.FAILED_RECORDING)
         register_ca(status='idle')
         return False
 
@@ -250,12 +259,9 @@ def start_capture(event):
         value = attachment.get('data')
         if attachment.get('fmttype') == 'application/text':
             workflow_def, workflow_config = get_config_params(value)
-            with open('%s/recording.properties' % recording_dir, 'w') as prop:
-                prop.write(value)
-        elif attachment.get('fmttype') == 'application/xml':
-            filename = attachment.get('x-apple-filename')
-            with open('%s/%s' % (recording_dir, filename), 'w') as dcfile:
-                dcfile.write(value)
+        filename = attachment.get('x-apple-filename')
+        with open(os.path.join(event.directory(), filename), 'w') as f:
+            f.write(value)
 
     # If we are a backup CA, we don't want to actually upload anything. So
     # let's just quit here.
@@ -264,21 +270,24 @@ def start_capture(event):
 
     # Upload everything
     register_ca(status='uploading')
-    recording_state(recording_id, 'uploading')
+    recording_state(event.uid, 'uploading')
+    update_event_status(event, Status.UPLOADING)
 
     try:
-        ingest(tracks, recording_dir, recording_id, workflow_def,
+        ingest(tracks, event.directory(), event.uid, workflow_def,
                workflow_config)
     except:
         logging.error('Something went wrong during the upload')
         logging.error(traceback.format_exc())
         # Update state if something went wrong
-        recording_state(recording_id, 'upload_error')
+        recording_state(event.uid, 'upload_error')
+        update_event_status(event, Status.FAILED_UPLOADING)
         register_ca(status='idle')
         return False
 
     # Update state
-    recording_state(recording_id, 'upload_finished')
+    recording_state(event.uid, 'upload_finished')
+    update_event_status(event, Status.SUCCESS)
     register_ca(status='idle')
     return True
 
