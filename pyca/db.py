@@ -6,8 +6,9 @@
     Database specification for pyCA
 '''
 
+import sys
 import json
-from config import config
+from pyca.config import config
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Boolean, Integer, String, LargeBinary
 from sqlalchemy import create_engine
@@ -52,7 +53,10 @@ class Event(Base):
         return json.loads(self.data)
 
     def set_data(self, data):
-        self.data = json.dumps(data)
+        if sys.version_info[0] == 2:
+            self.data = json.dumps(data)
+        else:
+            self.data = bytes(json.dumps(data), 'utf-8')
 
     def __repr__(self):
         '''Return a string representation of an artist object.

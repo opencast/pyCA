@@ -8,8 +8,8 @@
     :license: LGPL – see license.lgpl for more details.
 '''
 
-from config import config
-from db import get_session, Event
+from pyca.config import config
+from pyca.db import get_session, Event
 from base64 import b64decode
 from datetime import datetime
 from dateutil.tz import tzutc
@@ -158,7 +158,7 @@ def get_schedule():
 
     cal = None
     try:
-        cal = parse_ical(vcal)
+        cal = parse_ical(vcal.decode('utf-8'))
     except:
         logging.error('Could not parse ical')
         logging.error(traceback.format_exc())

@@ -11,7 +11,7 @@
 import sys
 import getopt
 import os
-import ca, config
+from pyca import ca, config
 
 USAGE = '''
 Usage %s [OPTIONS] COMMAND
