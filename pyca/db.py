@@ -50,9 +50,14 @@ class Event(Base):
     protected = Column('protected', Boolean(), nullable=False, default=False)
 
     def get_data(self):
+        '''Load JSON data from event.
+        '''
         return json.loads(self.data)
 
     def set_data(self, data):
+        '''Store data as JSON.
+        '''
+        # Python 3 wants bytes
         if sys.version_info[0] == 2:
             self.data = json.dumps(data)
         else:
@@ -63,7 +68,7 @@ class Event(Base):
 
         :return: String representation of object.
         '''
-        return '<Build(id=%i, name="%s")>' % (self.start, self.end)
+        return '<Event(start=%i, uid="%s")>' % (self.start, self.uid)
 
     def serialize(self, expand=0):
         '''Serialize this object as dictionary usable for conversion to JSON.
