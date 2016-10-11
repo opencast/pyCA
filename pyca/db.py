@@ -6,6 +6,7 @@
     Database specification for pyCA
 '''
 
+import json
 from config import config
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Boolean, Integer, String, LargeBinary
@@ -46,6 +47,12 @@ class Event(Base):
     uid = Column('uid', String(255), nullable=False)
     data = Column('data', LargeBinary(), nullable=False)
     protected = Column('protected', Boolean(), nullable=False, default=False)
+
+    def get_data(self):
+        return json.loads(self.data)
+
+    def set_data(self, data):
+        self.data = json.dumps(data)
 
     def __repr__(self):
         '''Return a string representation of an artist object.

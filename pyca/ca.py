@@ -13,8 +13,8 @@ from db import get_session, Event
 from base64 import b64decode
 from datetime import datetime
 from dateutil.tz import tzutc
+import dateutil.parser
 import errno
-import icalendar
 import json
 import logging
 import os
@@ -108,17 +108,48 @@ def recording_state(recording_id, status):
         logging.warning(traceback.format_exc())
 
 
+def parse_ical(vcal):
+    '''Parse Opencast schedule iCalendar file and return events as dict
+    '''
+    vcal = vcal.replace('\r\n ', '').replace('\r\n\r\n', '\r\n')
+    vevents = vcal.split('\r\nBEGIN:VEVENT\r\n')
+    del(vevents[0])
+    events = []
+    for vevent in vevents:
+        event = {}
+        for line in vevent.split('\r\n'):
+            line = line.split(':', 1)
+            key = line[0].lower()
+            if len(line) <= 1 or key == 'end':
+                continue
+            if key.startswith('dt'):
+                event[key] = unix_ts(dateutil.parser.parse(line[1]))
+                continue
+            if not key.startswith('attach'):
+                event[key] = line[1]
+                continue
+            # finally handle attachments
+            event['attach'] = event.get('attach', [])
+            attachment = {}
+            for x in [x.split('=') for x in line[0].split(';')]:
+                if x[0].lower() in ['fmttype', 'x-apple-filename']:
+                    attachment[x[0].lower()] = x[1]
+            attachment['data'] = b64decode(line[1]).decode('utf-8')
+            event['attach'].append(attachment)
+        events.append(event)
+    return events
+
+
 def get_schedule():
     '''Try to load schedule from the Matterhorn core. Returns a valid schedule
     or None on failure.
     '''
     try:
-        cutoff = ''
+        uri = '%s/calendars?agentid=%s' % (config()['service-scheduler'][0],
+                                           config()['agent']['name'])
         lookahead = config()['agent']['cal_lookahead'] * 24 * 60 * 60
         if lookahead:
-            cutoff = '&cutoff=%i' % ((get_timestamp() + lookahead) * 1000)
-        uri = '%s/calendars?agentid=%s%s' % (config()['service-scheduler'][0],
-                                             config()['agent']['name'], cutoff)
+            uri += '&cutoff=%i' % ((get_timestamp() + lookahead) * 1000)
         vcal = http_request(uri)
     except:
         logging.error('Could not get schedule')
@@ -127,10 +158,7 @@ def get_schedule():
 
     cal = None
     try:
-        try:
-            cal = icalendar.Calendar.from_string(vcal)
-        except AttributeError:
-            cal = icalendar.Calendar.from_ical(vcal)
+        cal = parse_ical(vcal)
     except:
         logging.error('Could not parse ical')
         logging.error(traceback.format_exc())
@@ -139,14 +167,14 @@ def get_schedule():
     db.query(Event).filter(Event.end > get_timestamp())\
                    .filter(Event.protected == False)\
                    .delete()  # noqa
-    for event in cal.walk('vevent'):
+    for event in cal:
         e = Event()
-        e.end = unix_ts(event.get('dtend').dt.astimezone(tzutc()))
+        e.end = event['dtend']
         # Ignore events that have already ended
         if e.end > get_timestamp():
-            e.start = unix_ts(event.get('dtstart').dt.astimezone(tzutc()))
+            e.start = event['dtstart']
             e.uid = event.get('uid')
-            e.data = event.to_ical()
+            e.set_data(event)
             db.add(e)
     db.commit()
     return True
@@ -216,19 +244,17 @@ def start_capture(event):
         return False
 
     # Put metadata files on disk
-    attachments = event.data.get('attach')
+    attachments = event.get_data().get('attach')
     workflow_config = ''
     for attachment in attachments:
-        value = b64decode(attachment).decode('utf-8')
-        if not value.startswith('<'):
+        value = attachment.get('data')
+        if attachment.get('fmttype') == 'application/text':
             workflow_def, workflow_config = get_config_params(value)
             with open('%s/recording.properties' % recording_dir, 'w') as prop:
                 prop.write(value)
-        elif '<dcterms:temporal' in value:
-            with open('%s/episode.xml' % recording_dir, 'w') as dcfile:
-                dcfile.write(value)
-        else:
-            with open('%s/series.xml' % recording_dir, 'w') as dcfile:
+        elif attachment.get('fmttype') == 'application/xml':
+            filename = attachment.get('x-apple-filename')
+            with open('%s/%s' % (recording_dir, filename), 'w') as dcfile:
                 dcfile.write(value)
 
     # If we are a backup CA, we don't want to actually upload anything. So
