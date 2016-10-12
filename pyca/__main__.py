@@ -1,17 +1,18 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 '''
-    python-matterhorn-ca
+    python-capture-agent
     ~~~~~~~~~~~~~~~~~~~~
 
-    :copyright: 2014-2015, Lars Kiesow <lkiesow@uos.de>
+    :copyright: 2014-2016, Lars Kiesow <lkiesow@uos.de>
     :license: LGPL – see license.lgpl for more details.
 '''
 
 import sys
 import getopt
 import os
-from pyca import ca, config
+import multiprocessing
+from pyca import capture, config, schedule
 
 USAGE = '''
 Usage %s [OPTIONS] COMMAND
@@ -31,6 +32,7 @@ CONFIGURATION:
    - ./etc/pyca.conf
 '''
 
+
 def usage(retval=0):
     '''Print usage information to stdout and exit.
     '''
@@ -39,7 +41,10 @@ def usage(retval=0):
 
 
 def main():
-    cfg = '/etc/pyca.conf' if os.path.isfile('/etc/pyca.conf') else './etc/pyca.conf'
+
+    cfg = '/etc/pyca.conf'
+    if not os.path.isfile(cfg):
+        cfg = './etc/pyca.conf'
 
     try:
         opts, args = getopt.getopt(sys.argv[1:], 'hc:', ['help', 'config='])
@@ -61,7 +66,15 @@ def main():
 
     if cmd == 'run':
         config.update_configuration(cfg)
-        ca.run()
+        p_schedule = multiprocessing.Process(target=schedule.run)
+        p_capture = multiprocessing.Process(target=capture.run)
+        p_schedule.start()
+        p_capture.start()
+        try:
+            p_schedule.join()
+            p_capture.join()
+        except KeyboardInterrupt:
+            pass
     elif cmd == 'ui':
         import pyca.ui
         pyca.ui.app.run(host='0.0.0.0')

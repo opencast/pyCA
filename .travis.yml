@@ -16,7 +16,8 @@ before_install:
   - export PATH=$PATH:/opt/ffmpeg/
 
 script:
-   - python -m unittest tests.test_ca
+   - python -m unittest tests.test_capture
    - python -m unittest tests.test_db
-   - flake8 --ignore=E731 pyca/ca.py
-   - flake8 --ignore=E731 pyca/db.py
+   - python -m unittest tests.test_utils
+   - flake8 --ignore=E731 pyca/*.py
+   - flake8 tests/*.py

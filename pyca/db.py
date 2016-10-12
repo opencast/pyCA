@@ -43,9 +43,16 @@ class Status():
     UPCOMING = 1
     RECORDING = 2
     FAILED_RECORDING = 3
-    UPLOADING = 4
-    FAILED_UPLOADING = 5
-    SUCCESS = 6
+    FINISHED_RECORDING = 4
+    UPLOADING = 5
+    FAILED_UPLOADING = 6
+    FINISHED_UPLOADING = 7
+
+    @classmethod
+    def str(cls, status):
+        for k, v in cls.__dict__.items():
+            if k[0] in 'FRSU' and v == status:
+                return k.lower().replace('_', ' ')
 
 
 # Database Schema Definition
