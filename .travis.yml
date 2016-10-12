@@ -18,3 +18,4 @@ before_install:
 script:
    - python -m pyca.__main__ test
    - flake8 --ignore=E731 pyca/ca.py
+   - flake8 --ignore=E731 pyca/db.py

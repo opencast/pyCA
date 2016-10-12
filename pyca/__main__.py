@@ -11,7 +11,7 @@
 import sys
 import getopt
 import os
-from pyca import ca
+from pyca import ca, config
 
 USAGE = '''
 Usage %s [OPTIONS] COMMAND
@@ -62,10 +62,10 @@ if __name__ == '__main__':
     cmd = (args + ['run'])[0]
 
     if cmd == 'run':
-        ca.update_configuration(cfg)
+        config.update_configuration(cfg)
         ca.run()
     elif cmd == 'test':
-        ca.update_configuration(cfg)
+        config.update_configuration(cfg)
         ca.test()
     elif cmd == 'ui':
         import pyca.ui
