@@ -62,7 +62,19 @@ On RHEL/CentOS 7::
   vim etc/pyca.conf  <-- Edit the configuration
   ./start.sh
 
+On Arch Linux::
+
+  git clone https://github.com/lkiesow/pyCA.git
+  cd pyCA
+  sudo pacman -S gnutls python-pycurl python-icalendar\
+    python-dateutil python-configobj
+  vim etc/pyca.conf  <-- Edit the configuration
+  ./start.sh
+
+... or use the available [AUR]_ package. Note that Arch Linux uses Python 3.5
+by default, so this method will use Python 3.5 for pyCA as well.
 
 .. [MH] http://opencast.org/matterhorn
 .. [LGPL] https://raw.githubusercontent.com/lkiesow/pyCA/master/license.lgpl
 .. [RPi] http://www.raspberrypi.org/
+.. [AUR] https://aur.archlinux.org/packages/pyca
