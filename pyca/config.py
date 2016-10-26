@@ -19,10 +19,10 @@ database         = string(default='sqlite:///pyca.db')
 [capture]
 directory        = string(default='./recordings')
 command          = string(default='ffmpeg -nostats -re -f lavfi -r 25 -i testsrc -t {{time}} {{dir}}/{{name}}.mp4')
-flavors          = list(default=list('presenter/source'))
-files            = list(default=list('{{dir}}/{{name}}.mp4'))
+flavors          = force_list(default=list('presenter/source'))
+files            = force_list(default=list('{{dir}}/{{name}}.mp4'))
 preview_dir      = string(default='./recordings')
-preview          = list(default=list())
+preview          = force_list(default=list())
 
 [server]
 url              = string(default='http://octestallinone.virtuos.uos.de:8080')
