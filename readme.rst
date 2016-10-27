@@ -35,21 +35,20 @@ Here is a short summary for Debian based OS like Raspian::
 
   git clone https://github.com/lkiesow/pyCA.git
   cd pyCA
-  sudo apt-get install python-virtualenv python-dev libcurl4-gnutls-dev gnutls-dev
+  sudo apt-get install python-virtualenv python-dev libcurl4-gnutls-dev gnutls-dev gcc
   virtualenv venv
-  . ./venv/bin/activate
-  pip install icalendar python-dateutil pycurl configobj
-  vim etc/pyca.conf  <-- Edit the configuration
-  ./start.sh
+  venv/bin/python setup.py install
+  $EDITOR /etc/pyca.conf <-- Edit the configuration
+  venv/bin/pyca
 
 On Fedora::
 
   git clone https://github.com/lkiesow/pyCA.git
   cd pyCA
-  sudo yum install python-pycurl python-dateutil \
-    python-configobj python-icalendar
-  vim etc/pyca.conf  <-- Edit the configuration
-  ./start.sh
+  dnf install python python-setuptools python-pycurl python-dateutil \
+    python-configobj python-icalendar python-flask python setup.py install
+  $EDITOR /etc/pyca.conf <-- Edit the configuration
+  pyca
 
 On RHEL/CentOS 7::
 
