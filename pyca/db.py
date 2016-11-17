@@ -66,7 +66,11 @@ class Event(Base):
     def get_data(self):
         '''Load JSON data from event.
         '''
-        return json.loads(self.data)
+        # Python 3 wants str
+        if sys.version_info[0] == 2:
+            return json.loads(self.data)
+        else:
+            return json.loads(self.data.decode('utf8'))
 
     def set_data(self, data):
         '''Store data as JSON.
