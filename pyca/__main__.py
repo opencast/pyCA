@@ -55,10 +55,10 @@ def main():
         usage(1)
 
     # Make sure we got only one command
-    if len(args) > 1:
-        usage(2)
-
     cmd = (args + ['run'])[0]
+    
+    if len(args) > 1 and not cmd == 'reingest':
+        usage(2)
 
     if cmd == 'run':
         config.update_configuration(cfg)
@@ -66,9 +66,14 @@ def main():
     elif cmd == 'test':
         config.update_configuration(cfg)
         ca.test()
-    elif cmd =='listfailed':
+    elif cmd == 'listfailed':
         config.update_configuration(cfg)
         ca.list_failed()
+    elif cmd == 'reingest':
+        # needs a uid as second argument
+        if not len(args) == 2: usage(2)
+        config.update_configuration(cfg)
+        ca.retry_ingest(args[1])
     elif cmd == 'ui':
         import pyca.ui
         pyca.ui.app.run(host='0.0.0.0')
