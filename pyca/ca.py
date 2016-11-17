@@ -398,6 +398,18 @@ def safe_start_capture(event):
         return False
 
 
+def list_failed():
+    '''List all recordings that either failed to upload or finish recording.'''
+    q = get_session().query(Event)\
+                     .filter((Event.status == Status.FAILED_UPLOADING) |
+                             (Event.status == Status.FAILED_RECORDING))
+    if q.count():
+        logging.info('found {0} failed recordings:'.format(q.count()))
+        for event in q:
+            logging.info('\t{0} at \t{1} with reason: \t{2}'.format(event.uid,
+                         time.ctime(event.start), event.status))
+
+
 def control_loop():
     '''Main loop of the capture agent, retrieving and checking the schedule as
     well as starting the capture process if necessry.

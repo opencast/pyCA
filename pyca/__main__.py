@@ -66,6 +66,9 @@ def main():
     elif cmd == 'test':
         config.update_configuration(cfg)
         ca.test()
+    elif cmd =='listfailed':
+        config.update_configuration(cfg)
+        ca.list_failed()
     elif cmd == 'ui':
         import pyca.ui
         pyca.ui.app.run(host='0.0.0.0')
