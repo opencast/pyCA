@@ -417,7 +417,7 @@ def retry_ingest(uid):
     if q.count():
         logging.info('retrying to ingest recording with uid {0}'.format(uid))
         event = q[0]
-        
+
         # duplicated code from run()
         # register ca and get services before anything can happen.
         while (not config().get('service-ingest') or
@@ -431,13 +431,14 @@ def retry_ingest(uid):
                 config()['service-scheduler'] = \
                     get_service('org.opencastproject.scheduler')
             except pycurl.error:
-                logging.error('Could not get service endpoints. Retrying in 5s')
+                logging.error('Could not get service endpoints.\
+                              Retrying in 5s')
                 logging.error(traceback.format_exc())
                 time.sleep(5.0)
 
         while not register_ca():
             time.sleep(5.0)
-        
+
         # duplicated code from recording_command()
         # Return [(flavor,path),…]
         ensurelist = lambda x: x if type(x) == list else [x]
@@ -446,7 +447,7 @@ def retry_ingest(uid):
         files = [f.replace('{{dir}}', event.directory()) for f in files]
         files = [f.replace('{{name}}', event.name()) for f in files]
         tracks = zip(flavors, files)
-        
+
         # duplicated code from start_capture()
         attachments = event.get_data().get('attach')
         workflow_config = ''
@@ -454,15 +455,16 @@ def retry_ingest(uid):
             value = attachment.get('data')
             if attachment.get('fmttype') == 'application/text':
                 workflow_def, workflow_config = get_config_params(value)
-                
+
         # duplicated code from start_capture()
         register_ca(status='uploading')
         recording_state(event.uid, 'uploading')
         update_event_status(event, Status.UPLOADING)
-        
+
         # duplicated code from start_capture()
         try:
-            ingest(tracks, event.directory(), event.uid, workflow_def, workflow_config)
+            ingest(tracks, event.directory(), event.uid, workflow_def,
+                   workflow_config)
         except:
             logging.error('Something went wrong during the upload')
             logging.error(traceback.format_exc())
@@ -470,7 +472,7 @@ def retry_ingest(uid):
             recording_state(event.uid, 'upload_error')
             update_event_status(event, Status.FAILED_UPLOADING)
             register_ca(status='idle')
-            return False            
+            return False
 
         # Update state
         recording_state(event.uid, 'upload_finished')
