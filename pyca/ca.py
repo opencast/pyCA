@@ -59,6 +59,25 @@ def get_service(service_type):
     return endpoints
 
 
+def config_services():
+    '''try to get and configure required services'''
+    while (not config().get('service-ingest') or
+           not config().get('service-capture') or
+           not config().get('service-scheduler')):
+        try:
+            config()['service-ingest'] = \
+                get_service('org.opencastproject.ingest')
+            config()['service-capture'] = \
+                get_service('org.opencastproject.capture.admin')
+            config()['service-scheduler'] = \
+                get_service('org.opencastproject.scheduler')
+        except pycurl.error:
+            logging.error('Could not get service endpoints.\
+                          Retrying in 5s')
+            logging.error(traceback.format_exc())
+            time.sleep(5.0)
+
+
 def register_ca(status='idle'):
     '''Register this capture agent at the Matterhorn admin server so that it
     shows up in the admin interface.
@@ -226,6 +245,16 @@ def get_config_params(properties):
     return wdef, param
 
 
+def get_tracks(directory, name):
+    # Return [(flavor,path),…]
+    ensurelist = lambda x: x if type(x) == list else [x]
+    flavors = ensurelist(config()['capture']['flavors'])
+    files = ensurelist(config()['capture']['files'])
+    files = [f.replace('{{dir}}', directory) for f in files]
+    files = [f.replace('{{name}}', name) for f in files]
+    return zip(flavors, files)
+
+
 def start_capture(event):
     '''Start the capture process, creating all necessary files and directories
     as well as ingesting the captured files if no backup mode is configured.
@@ -385,6 +414,54 @@ def ingest(tracks, recording_dir, recording_id, workflow_def,
     mediapackage = http_request(service + '/ingest', fields)
 
 
+def retry_ingest(uid):
+    '''Search for recording with uid, if known, try to ingest it again'''
+    q = get_session().query(Event).filter(Event.uid == uid)
+    if q.count():
+        logging.info('retrying to ingest recording with uid {0}'.format(uid))
+        event = q[0]
+
+        # register ca and get services before anything can happen.
+        config_services()
+        while not register_ca():
+            time.sleep(5.0)
+
+        tracks = get_tracks(event.directory(), event.name())
+        attachments = event.get_data().get('attach')
+        workflow_config = ''
+        for attachment in attachments:
+            value = attachment.get('data')
+            if attachment.get('fmttype') == 'application/text':
+                workflow_def, workflow_config = get_config_params(value)
+
+        # duplicated code from start_capture()
+        register_ca(status='uploading')
+        recording_state(event.uid, 'uploading')
+        update_event_status(event, Status.UPLOADING)
+
+        # duplicated code from start_capture()
+        try:
+            ingest(tracks, event.directory(), event.uid, workflow_def,
+                   workflow_config)
+        except:
+            logging.error('Something went wrong during the upload')
+            logging.error(traceback.format_exc())
+            # Update state if something went wrong
+            recording_state(event.uid, 'upload_error')
+            update_event_status(event, Status.FAILED_UPLOADING)
+            register_ca(status='idle')
+            return False
+
+        # Update state
+        recording_state(event.uid, 'upload_finished')
+        update_event_status(event, Status.SUCCESS)
+        register_ca(status='idle')
+        return True
+
+    else:
+        logging.error('no known recordng with uid {0}'.format(uid))
+
+
 def safe_start_capture(event):
     '''Start a capture process but make sure to catch any errors during this
     process, log them but otherwise ignore them.
@@ -396,6 +473,17 @@ def safe_start_capture(event):
         logging.error(traceback.format_exc())
         register_ca(status='idle')
         return False
+
+
+def list_failed():
+    '''List all recordings that failed to upload'''
+    q = get_session().query(Event)\
+                     .filter(Event.status == Status.FAILED_UPLOADING)
+    if q.count():
+        logging.info('found {0} failed recordings:'.format(q.count()))
+        for event in q:
+            logging.info('\t{0} at \t{1} with reason: \t{2}'.format(event.uid,
+                         time.ctime(event.start), event.status))
 
 
 def control_loop():
@@ -465,13 +553,7 @@ def recording_command(directory, name, duration):
             logging.warning('Could not remove preview files')
             logging.warning(traceback.format_exc())
 
-    # Return [(flavor,path),…]
-    ensurelist = lambda x: x if type(x) == list else [x]
-    flavors = ensurelist(config()['capture']['flavors'])
-    files = ensurelist(config()['capture']['files'])
-    files = [f.replace('{{dir}}', directory) for f in files]
-    files = [f.replace('{{name}}', name) for f in files]
-    return zip(flavors, files)
+    return get_tracks(directory, name)
 
 
 def test():
@@ -519,20 +601,7 @@ def run():
         except IOError as err:
             logging.warning('Could not read certificate file: %s', err)
 
-    while (not config().get('service-ingest') or
-           not config().get('service-capture') or
-           not config().get('service-scheduler')):
-        try:
-            config()['service-ingest'] = \
-                get_service('org.opencastproject.ingest')
-            config()['service-capture'] = \
-                get_service('org.opencastproject.capture.admin')
-            config()['service-scheduler'] = \
-                get_service('org.opencastproject.scheduler')
-        except pycurl.error:
-            logging.error('Could not get service endpoints. Retrying in 5s')
-            logging.error(traceback.format_exc())
-            time.sleep(5.0)
+    config_services()
 
     while not register_ca():
         time.sleep(5.0)
