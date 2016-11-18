@@ -476,7 +476,7 @@ def safe_start_capture(event):
 
 
 def list_failed():
-    '''List all recordings that either failed to upload or finish recording.'''
+    '''List all recordings that failed to upload'''
     q = get_session().query(Event)\
                      .filter(Event.status == Status.FAILED_UPLOADING)
     if q.count():
@@ -602,7 +602,7 @@ def run():
             logging.warning('Could not read certificate file: %s', err)
 
     config_services()
-    
+
     while not register_ca():
         time.sleep(5.0)
 
