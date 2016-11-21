@@ -6,7 +6,6 @@
     Database specification for pyCA
 '''
 
-import sys
 import json
 import os.path
 from pyca.config import config
@@ -66,16 +65,13 @@ class Event(Base):
     def get_data(self):
         '''Load JSON data from event.
         '''
-        return json.loads(self.data)
+        return json.loads(self.data.decode('utf-8'))
 
     def set_data(self, data):
         '''Store data as JSON.
         '''
         # Python 3 wants bytes
-        if sys.version_info[0] == 2:
-            self.data = json.dumps(data)
-        else:
-            self.data = bytes(json.dumps(data), 'utf-8')
+        self.data = json.dumps(data).encode('utf-8')
 
     def name(self):
         '''Returns the filesystem name of this event.
