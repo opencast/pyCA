@@ -29,6 +29,18 @@ class TestSequenceFunctions(unittest.TestCase):
     def test_get_service(self):
         assert 'autocommit' in db.get_session().__dict__.keys()
 
+    def test_event_data(self):
+        series = u'äöüßÄÖÜ'
+        title = u'„xyz“'
+
+        e = db.Event()
+        e.set_data({'series':series,'title':title})
+
+        # Check data serialization
+        data = e.get_data()
+        assert data['title'] == title
+        assert data['series'] == series
+
 
 if __name__ == '__main__':
     unittest.main()
