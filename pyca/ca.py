@@ -474,27 +474,6 @@ def recording_command(directory, name, duration):
     return zip(flavors, files)
 
 
-def test():
-    '''Make a test run doing a 10sec recording.
-    '''
-    logging.info('Starting test recording (10sec)')
-    name = 'test-%i' % get_timestamp()
-    logging.info('Recording name: %s', name)
-    directory = '%s/%s' % (config()['capture']['directory'], name)
-    logging.info('Recording directory: %s', directory)
-    try_mkdir(config()['capture']['directory'])
-    os.mkdir(directory)
-    logging.info('Created recording directory')
-    logging.info('Start recording')
-    tracks = recording_command(directory, name, 2)
-    logging.info('Finished recording')
-
-    logging.info('Testing Ingest')
-    config()['service-ingest'] = ['']
-    sys.modules[__name__].http_request = lambda x, y=False: None
-    ingest(tracks, directory, '123', 'fast', '')
-
-
 def try_mkdir(directory):
     '''Try to create a directory. Pass without error if it already exists.
     '''

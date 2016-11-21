@@ -18,7 +18,6 @@ Usage %s [OPTIONS] COMMAND
 
 COMMANDS:
   run  --  Start pyCA as capture agent (default)
-  test --  Test recording command
   ui   --  Start web based user interface
 
 OPTIONS:
@@ -63,9 +62,6 @@ def main():
     if cmd == 'run':
         config.update_configuration(cfg)
         ca.run()
-    elif cmd == 'test':
-        config.update_configuration(cfg)
-        ca.test()
     elif cmd == 'ui':
         import pyca.ui
         pyca.ui.app.run(host='0.0.0.0')
