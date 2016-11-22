@@ -260,8 +260,8 @@ def start_capture(event):
         if attachment.get('fmttype') == 'application/text':
             workflow_def, workflow_config = get_config_params(value)
         filename = attachment.get('x-apple-filename')
-        with open(os.path.join(event.directory(), filename), 'w') as f:
-            f.write(value)
+        with open(os.path.join(event.directory(), filename), 'wb') as f:
+            f.write(value.encode('utf-8'))
 
     # If we are a backup CA, we don't want to actually upload anything. So
     # let's just quit here.
@@ -351,7 +351,7 @@ def ingest(tracks, recording_dir, recording_id, workflow_def,
         logging.info('Adding episode DC catalog')
         dublincore = ''
         with open('%s/episode.xml' % recording_dir, 'r') as episodefile:
-            dublincore = episodefile.read().encode('utf8', 'ignore')
+            dublincore = episodefile.read().decode('utf8')
         fields = [('mediaPackage', mediapackage),
                   ('flavor', 'dublincore/episode'),
                   ('dublinCore', dublincore)]
@@ -362,7 +362,7 @@ def ingest(tracks, recording_dir, recording_id, workflow_def,
         logging.info('Adding series DC catalog')
         dublincore = ''
         with open('%s/series.xml' % recording_dir, 'r') as seriesfile:
-            dublincore = seriesfile.read().encode('utf8', 'ignore')
+            dublincore = seriesfile.read().decode('utf8')
         fields = [('mediaPackage', mediapackage),
                   ('flavor', 'dublincore/series'),
                   ('dublinCore', dublincore)]

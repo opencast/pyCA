@@ -4,40 +4,16 @@
 Tests for basic capturing
 '''
 
-import unittest
-import logging
-import tempfile
+import json
 import shutil
-import sys
+import tempfile
+import unittest
 
 from pyca import ca, config
+from pyca.db import Event
+
 
 class TestSequenceFunctions(unittest.TestCase):
-
-    def setUp(self):
-        cfg = './etc/pyca.conf'
-        config.update_configuration(cfg)
-
-
-    def test_capture(self):
-        logging.info('Starting test recording (10sec)')
-        directory = tempfile.mkdtemp()
-        try:
-            logging.info('Recording directory: %s', directory)
-            logging.info('Created recording directory')
-            logging.info('Start recording')
-            tracks = ca.recording_command(directory, 'testname', 2)
-            logging.info('Finished recording')
-
-            logging.info('Testing Ingest')
-
-            # Set some ingest endpoint
-            config.config()['service-ingest'] = ['']
-            # Mock http_request method
-            ca.http_request = lambda x, y=False: None
-            ca.ingest(tracks, directory, '123', 'fast', '')
-        finally:
-            shutil.rmtree(directory)
 
     def test_get_service(self):
         res = '''{"services":{
@@ -58,6 +34,34 @@ class TestSequenceFunctions(unittest.TestCase):
         ca.http_request = lambda x, y=False: res
         endpoint = u'https://octestallinone.virtuos.uos.de/capture-admin'
         assert ca.get_service('') == [endpoint]
+
+    def test_start_capture(self):
+        # Mock event
+        event = Event()
+        event.uid = '123123'
+        event.start = ca.get_timestamp()
+        event.end = event.start + 1
+        data = [{'data': u'äüÄÜß',
+                 'fmttype': 'application/xml',
+                 'x-apple-filename': 'episode.xml'},
+                {'data': u'event.title=äüÄÜß',
+                 'fmttype': 'application/text',
+                 'x-apple-filename': 'org.opencastproject.capture.agent'
+                                     + '.properties'}]
+        event.data = json.dumps({'attach': data}).encode('utf-8')
+
+        # Mock some methods
+        ca.http_request = lambda x, y=False: None
+        ca.recording_state = lambda x, y=False: None
+        ca.register_ca = lambda status=False: None
+        ca.update_event_status = lambda x, y=False: None
+
+        config.config()['capture']['directory'] = tempfile.mkdtemp()
+        config.config()['service-ingest'] = ['']
+        try:
+            ca.start_capture(event)
+        finally:
+            shutil.rmtree(config.config()['capture']['directory'])
 
 
 if __name__ == '__main__':
