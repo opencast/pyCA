@@ -1,21 +1,18 @@
 language: python
 
+sudo: false
+
 python:
-  - "2.7"
-  - "3.3"
-  - "3.4"
-  - "3.5"
+   - "2.7"
+   - "3.3"
+   - "3.4"
+   - "3.5"
 
 before_install:
-  - pip install flake8
-  - pip install python-coveralls coverage
-  - curl -s https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-64bit-static.tar.xz -o /tmp/ffmpeg.tar.xz
-  - tar -xf /tmp/ffmpeg.tar.xz
-  - sudo mv ffmpeg-*-64bit-static /opt/ffmpeg
-  - export PATH=$PATH:/opt/ffmpeg/
+   - pip install flake8 python-coveralls coverage
 
 script:
-   - coverage run --omit='/usr/*,tests/*' -m unittest discover -s tests
+   - coverage run --omit='*/lib/*,tests/*' -m unittest discover -s tests
    - flake8 tests/*.py pyca/*.py
 
 after_success:

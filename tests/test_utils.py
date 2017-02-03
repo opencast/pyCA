@@ -31,6 +31,10 @@ class TestPycaUtils(unittest.TestCase):
         endpoint = u'https://octestallinone.virtuos.uos.de/capture-admin'
         assert utils.get_service('') == [endpoint]
 
+    def test_ensurelist(self):
+        assert utils.ensurelist(1) == [1]
+        assert utils.ensurelist([1]) == [1]
+
 
 if __name__ == '__main__':
     unittest.main()

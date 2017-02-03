@@ -25,7 +25,7 @@ class TestPycaDb(unittest.TestCase):
     def tearDown(self):
         os.remove(self.dbfile)
 
-    def test_get_service(self):
+    def test_get_session(self):
         assert 'autocommit' in db.get_session().__dict__.keys()
 
     def test_event_data(self):
