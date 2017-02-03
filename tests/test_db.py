@@ -11,7 +11,7 @@ import os
 from pyca import db, config
 
 
-class TestSequenceFunctions(unittest.TestCase):
+class TestPycaDb(unittest.TestCase):
 
     dbfile = None
 
@@ -32,7 +32,7 @@ class TestSequenceFunctions(unittest.TestCase):
         series = u'äöüßÄÖÜ'
         title = u'„xyz“'
 
-        e = db.Event()
+        e = db.BaseEvent()
         e.set_data({'series': series, 'title': title})
 
         # Check data serialization

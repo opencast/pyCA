@@ -50,14 +50,15 @@ class Status():
 
     @classmethod
     def str(cls, status):
+        '''Convert status (id) to its string name.'''
         for k, v in cls.__dict__.items():
             if k[0] in 'FRSU' and v == status:
                 return k.lower().replace('_', ' ')
 
 
 # Database Schema Definition
-class Event(Base):
-    '''Database definition of an artist.'''
+class BaseEvent():
+    '''Database definition of an event.'''
 
     __tablename__ = 'event'
 
@@ -65,9 +66,6 @@ class Event(Base):
     start = Column('start', Integer(), primary_key=True)
     end = Column('end', Integer(), nullable=False)
     data = Column('data', LargeBinary(), nullable=False)
-    protected = Column('protected', Boolean(), nullable=False, default=False)
-    status = Column('status', Integer(), nullable=False,
-                    default=Status.UPCOMING)
 
     def get_data(self):
         '''Load JSON data from event.
@@ -107,3 +105,27 @@ class Event(Base):
                 'end': self.end,
                 'uid': self.uid,
                 'data': self.data}
+
+
+class UpcommingEvent(Base, BaseEvent):
+    '''List of upcomming events'''
+
+    __tablename__ = 'upcomming_event'
+
+
+class RecordedEvent(Base, BaseEvent):
+    '''List of events pyca tried to record.'''
+
+    __tablename__ = 'recorded_event'
+
+    status = Column('status', Integer(), nullable=False,
+                    default=Status.UPCOMING)
+
+    def __init__(self, event=None):
+        if event:
+            self.uid = event.uid
+            self.start = event.start
+            self.end = event.end
+            self.data = event.data
+            if hasattr(event, 'status'):
+                self.status = event.status

@@ -10,14 +10,14 @@ import tempfile
 import unittest
 
 from pyca import capture, config, utils
-from pyca.db import Event
+from pyca.db import BaseEvent
 
 
 class TestPycaCapture(unittest.TestCase):
 
     def test_start_capture(self):
         # Mock event
-        event = Event()
+        event = BaseEvent()
         event.uid = '123123'
         event.start = utils.timestamp()
         event.end = event.start + 1

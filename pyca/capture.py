@@ -4,13 +4,13 @@
     python-capture-agent
     ~~~~~~~~~~~~~~~~~~~~
 
-    :copyright: 2014-2016, Lars Kiesow <lkiesow@uos.de>
+    :copyright: 2014-2017, Lars Kiesow <lkiesow@uos.de>
     :license: LGPL – see license.lgpl for more details.
 '''
 
 from pyca.utils import http_request, timestamp, try_mkdir, configure_service
 from pyca.config import config
-from pyca.db import get_session, Event, Status
+from pyca.db import get_session, RecordedEvent, UpcommingEvent, Status
 import logging
 import os
 import os.path
@@ -75,8 +75,8 @@ def update_event_status(event, status):
     '''Update the status of a particular event in the database.
     '''
     db = get_session()
-    db.query(Event).filter(Event.start == event.start)\
-                   .update({'status': status})
+    db.query(RecordedEvent).filter(RecordedEvent.start == event.start)\
+                           .update({'status': status})
     event.status = status
     db.commit()
 
@@ -102,6 +102,13 @@ def start_capture(event):
     as well as ingesting the captured files if no backup mode is configured.
     '''
     logging.info('Start recording')
+
+    # First move event to recording_event table
+    db = get_session()
+    event = RecordedEvent(event)
+    db.add(event)
+    db.commit()
+
     duration = event.end - timestamp()
     try_mkdir(config()['capture']['directory'])
     os.mkdir(event.directory())
@@ -272,10 +279,9 @@ def control_loop():
     while True:
         # Get next recording
         register_ca()
-        events = get_session().query(Event)\
-                              .filter(Event.start <= timestamp())\
-                              .filter(Event.end > timestamp())\
-                              .filter(Event.status == Status.UPCOMING)
+        events = get_session().query(UpcommingEvent)\
+                              .filter(UpcommingEvent.start <= timestamp())\
+                              .filter(UpcommingEvent.end > timestamp())
         if events.count():
             safe_start_capture(events[0])
         time.sleep(1.0)
