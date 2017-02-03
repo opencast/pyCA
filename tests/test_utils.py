@@ -6,10 +6,19 @@ Tests for basic capturing
 
 import unittest
 
-from pyca import utils
+from pyca import utils, config
+import sys
+if sys.version_info.major > 2:
+    try:
+        from importlib import reload
+    except ImportError:
+        from imp import reload
 
 
 class TestPycaUtils(unittest.TestCase):
+
+    def setUp(self):
+        reload(utils)
 
     def test_get_service(self):
         res = '''{"services":{
@@ -34,6 +43,18 @@ class TestPycaUtils(unittest.TestCase):
     def test_ensurelist(self):
         assert utils.ensurelist(1) == [1]
         assert utils.ensurelist([1]) == [1]
+
+    def test_configure_service(self):
+        utils.get_service = lambda x: 'x'
+        utils.configure_service('x')
+        assert config.config()['service-x'] == 'x'
+
+    def test_http_request(self):
+        config.config()['server']['insecure'] = True
+        try:
+            utils.http_request('http://127.0.0.1:8', [('x', 'y')])
+        except Exception as e:
+            assert e.args[0] == 7  # connection error
 
 
 if __name__ == '__main__':

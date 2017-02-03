@@ -65,7 +65,7 @@ def check():
                         'CONNECTION IS NOT GUARANTEED')
     if config()['server']['certificate']:
         try:
-            with open(config()['server']['certificate'], 'r'):
+            with open(config()['server']['certificate'], 'rb'):
                 pass
         except IOError as err:
             logging.warning('Could not read certificate file: %s', err)

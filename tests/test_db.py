@@ -40,6 +40,9 @@ class TestPycaDb(unittest.TestCase):
         assert data['title'] == title
         assert data['series'] == series
 
+    def test_status(self):
+        assert db.Status.str(db.Status.UPCOMING) == 'upcoming'
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -87,7 +87,7 @@ def get_service(service_type):
     endpoints = [s['host'] + s['path'] for s in services
                  if s['online'] and s['active']]
     for endpoint in endpoints:
-        logging.info('Endpoint for %s: %s', service_type, endpoint)
+        logging.info(u'Endpoint for %s: %s', service_type, endpoint)
     return endpoints
 
 
@@ -131,7 +131,7 @@ def configure_service(service):
             logging.error('Could not get %s endpoint. Retrying in 5 seconds' %
                           service)
             logging.error(traceback.format_exc())
-        time.sleep(5.0)
+            time.sleep(5.0)
 
 
 def ensurelist(x):
