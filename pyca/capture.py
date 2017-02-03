@@ -86,7 +86,7 @@ def get_config_params(properties):
     to the schedule
     '''
     param = []
-    wdef = 'full'
+    wdef = ''
     for prop in properties.split('\n'):
         if prop.startswith('org.opencastproject.workflow.config'):
             key, val = prop.split('=', 1)
@@ -212,9 +212,12 @@ def ingest(tracks, recording_dir, recording_id, workflow_def,
 
     # ingest
     logging.info('Ingest recording')
-    fields = [('mediaPackage', mediapackage),
-              ('workflowDefinitionId', workflow_def),
-              ('workflowInstanceId', recording_id.encode('ascii', 'ignore'))]
+    fields = [('mediaPackage', mediapackage)]
+    if workflow_def:
+        fields.append(('workflowDefinitionId', workflow_def))
+    if recording_id:
+        fields.append(('workflowInstanceId',
+                       recording_id.encode('ascii', 'ignore')))
     fields += workflow_config
     mediapackage = http_request(service + '/ingest', fields)
 
