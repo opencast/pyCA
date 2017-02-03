@@ -9,6 +9,7 @@
 '''
 
 from pyca.utils import http_request, timestamp, try_mkdir, configure_service
+from pyca.utils import ensurelist
 from pyca.config import config
 from pyca.db import get_session, RecordedEvent, UpcommingEvent, Status
 import logging
@@ -264,7 +265,6 @@ def recording_command(directory, name, duration):
             logging.warning(traceback.format_exc())
 
     # Return [(flavor,path),…]
-    ensurelist = lambda x: x if type(x) == list else [x]
     flavors = ensurelist(config()['capture']['flavors'])
     files = ensurelist(config()['capture']['files'])
     files = [f.replace('{{dir}}', directory) for f in files]

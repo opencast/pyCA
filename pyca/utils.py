@@ -132,3 +132,8 @@ def configure_service(service):
                           service)
             logging.error(traceback.format_exc())
         time.sleep(5.0)
+
+
+def ensurelist(x):
+    '''Ensure an element is a list.'''
+    return x if type(x) == list else [x]
