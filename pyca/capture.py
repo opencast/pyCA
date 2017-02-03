@@ -158,7 +158,7 @@ def start_capture(event):
 
     # Update state
     recording_state(event.uid, 'upload_finished')
-    update_event_status(event, Status.SUCCESS)
+    update_event_status(event, Status.FINISHED_UPLOADING)
     register_ca(status='idle')
     return True
 
