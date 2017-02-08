@@ -18,8 +18,10 @@ USAGE = '''
 Usage %s [OPTIONS] COMMAND
 
 COMMANDS:
-  run  --  Start pyCA as capture agent (default)
-  ui   --  Start web based user interface
+  run      --  Start all pyCA components except ui (default)
+  capture  --  Start pyCA capturer
+  schedule --  Start pyCA scheduler
+  ui       --  Start web based user interface
 
 OPTIONS:
   --help, -h             -- Show this help',
@@ -40,12 +42,22 @@ def usage(retval=0):
     sys.exit(retval)
 
 
+def start_all(processes):
+    '''Start all processes which are not alive.
+    '''
+    for p in processes:
+        if not p.is_alive():
+            p.start()
+
+
 def main():
 
+    # Probe for configuration file location
     cfg = '/etc/pyca.conf'
     if not os.path.isfile(cfg):
         cfg = './etc/pyca.conf'
 
+    # Check command line options
     try:
         opts, args = getopt.getopt(sys.argv[1:], 'hc:', ['help', 'config='])
 
@@ -62,19 +74,26 @@ def main():
     if len(args) > 1:
         usage(2)
 
+    # Get the command with `run` as default
     cmd = (args + ['run'])[0]
 
+    config.update_configuration(cfg)
     if cmd == 'run':
-        config.update_configuration(cfg)
-        p_schedule = multiprocessing.Process(target=schedule.run)
-        p_capture = multiprocessing.Process(target=capture.run)
-        p_schedule.start()
-        p_capture.start()
+        processes = [multiprocessing.Process(target=schedule.run),
+                     multiprocessing.Process(target=capture.run)]
+        start_all(processes)
         try:
-            p_schedule.join()
-            p_capture.join()
+            # Ensure processes are restarted until all are dead
+            while [p for p in processes if p.is_alive()]:
+                start_all(processes)
+                for p in processes:
+                    p.join(2)
         except KeyboardInterrupt:
             pass
+    elif cmd == 'schedule':
+        schedule.run()
+    elif cmd == 'capture':
+        capture.run()
     elif cmd == 'ui':
         import pyca.ui
         pyca.ui.app.run(host='0.0.0.0')
