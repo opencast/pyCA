@@ -26,7 +26,7 @@ preview_dir      = string(default='./recordings')
 preview          = force_list(default=list())
 
 [server]
-url              = string(default='http://octestallinone.virtuos.uos.de:8080')
+url              = string(default='https://octestallinone.virtuos.uos.de')
 username         = string(default='opencast_system_account')
 password         = string(default='CHANGE_ME')
 insecure         = boolean(default=False)
