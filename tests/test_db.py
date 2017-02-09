@@ -25,7 +25,7 @@ class TestPycaDb(unittest.TestCase):
     def tearDown(self):
         os.remove(self.dbfile)
 
-    def test_get_service(self):
+    def test_get_session(self):
         assert 'autocommit' in db.get_session().__dict__.keys()
 
     def test_event_data(self):
@@ -39,6 +39,9 @@ class TestPycaDb(unittest.TestCase):
         data = e.get_data()
         assert data['title'] == title
         assert data['series'] == series
+
+    def test_status(self):
+        assert db.Status.str(db.Status.UPCOMING) == 'upcoming'
 
 
 if __name__ == '__main__':
