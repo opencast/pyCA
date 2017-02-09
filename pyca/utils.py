@@ -4,7 +4,7 @@
     python-capture-agent
     ~~~~~~~~~~~~~~~~~~~~
 
-    :copyright: 2014-2016, Lars Kiesow <lkiesow@uos.de>
+    :copyright: 2014-2017, Lars Kiesow <lkiesow@uos.de>
     :license: LGPL – see license.lgpl for more details.
 '''
 
