@@ -10,7 +10,7 @@
 
 from pyca.utils import http_request, configure_service, unix_ts, timestamp
 from pyca.config import config
-from pyca.db import get_session, UpcommingEvent
+from pyca.db import get_session, UpcomingEvent
 from base64 import b64decode
 from datetime import datetime
 import dateutil.parser
@@ -76,12 +76,12 @@ def get_schedule():
         logging.error(traceback.format_exc())
         return
     db = get_session()
-    db.query(UpcommingEvent).delete()
+    db.query(UpcomingEvent).delete()
     for event in cal:
         # Ignore events that have already ended
         if event['dtend'] <= timestamp():
             continue
-        e = UpcommingEvent()
+        e = UpcomingEvent()
         e.start = event['dtstart']
         e.end = event['dtend']
         e.uid = event.get('uid')
@@ -96,8 +96,8 @@ def control_loop():
     while True:
         # Try getting an updated schedult
         get_schedule()
-        q = get_session().query(UpcommingEvent)\
-                         .filter(UpcommingEvent.end > timestamp())
+        q = get_session().query(UpcomingEvent)\
+                         .filter(UpcomingEvent.end > timestamp())
         if q.count():
             logging.info('Next scheduled recording: %s',
                          datetime.fromtimestamp(q[0].start))

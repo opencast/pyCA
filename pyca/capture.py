@@ -11,7 +11,7 @@
 from pyca.utils import http_request, timestamp, try_mkdir, configure_service
 from pyca.utils import ensurelist
 from pyca.config import config
-from pyca.db import get_session, RecordedEvent, UpcommingEvent, Status
+from pyca.db import get_session, RecordedEvent, UpcomingEvent, Status
 import logging
 import os
 import os.path
@@ -279,9 +279,9 @@ def control_loop():
     while True:
         # Get next recording
         register_ca()
-        events = get_session().query(UpcommingEvent)\
-                              .filter(UpcommingEvent.start <= timestamp())\
-                              .filter(UpcommingEvent.end > timestamp())
+        events = get_session().query(UpcomingEvent)\
+                              .filter(UpcomingEvent.start <= timestamp())\
+                              .filter(UpcomingEvent.end > timestamp())
         if events.count():
             safe_start_capture(events[0])
         time.sleep(1.0)

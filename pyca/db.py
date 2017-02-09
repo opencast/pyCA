@@ -106,10 +106,10 @@ class BaseEvent():
                 'data': self.data}
 
 
-class UpcommingEvent(Base, BaseEvent):
-    '''List of upcomming events'''
+class UpcomingEvent(Base, BaseEvent):
+    '''List of upcoming events'''
 
-    __tablename__ = 'upcomming_event'
+    __tablename__ = 'upcoming_event'
 
 
 class RecordedEvent(Base, BaseEvent):
