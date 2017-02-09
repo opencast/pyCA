@@ -3,6 +3,7 @@
 Default configuration for pyCA.
 '''
 
+import logging
 from configobj import ConfigObj
 from validate import Validator
 
@@ -36,7 +37,7 @@ username         = string(default='admin')
 password         = string(default='opencast')
 refresh_rate     = integer(min=1, default=2)
 url              = string(default='http://localhost:5000')
-'''
+'''  # noqa
 
 cfgspec = __CFG.split('\n')
 
@@ -52,7 +53,22 @@ def update_configuration(cfgfile='/etc/pyca.conf'):
     validator = Validator()
     cfg.validate(validator)
     globals()['__config'] = cfg
+    check()
     return cfg
+
+
+def check():
+    '''Check configuration for sanity.
+    '''
+    if config()['server']['insecure']:
+        logging.warning('INSECURE: HTTPS CHECKS ARE TURNED OFF. A SECURE '
+                        'CONNECTION IS NOT GUARANTEED')
+    if config()['server']['certificate']:
+        try:
+            with open(config()['server']['certificate'], 'r'):
+                pass
+        except IOError as err:
+            logging.warning('Could not read certificate file: %s', err)
 
 
 def config(key=None):

@@ -10,8 +10,7 @@ import json
 import os.path
 from pyca.config import config
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Boolean, Integer, String, LargeBinary
-from sqlalchemy import create_engine
+from sqlalchemy import Column, Integer, String, LargeBinary, create_engine
 from sqlalchemy.orm import sessionmaker
 Base = declarative_base()
 
@@ -43,14 +42,22 @@ class Status():
     UPCOMING = 1
     RECORDING = 2
     FAILED_RECORDING = 3
-    UPLOADING = 4
-    FAILED_UPLOADING = 5
-    SUCCESS = 6
+    FINISHED_RECORDING = 4
+    UPLOADING = 5
+    FAILED_UPLOADING = 6
+    FINISHED_UPLOADING = 7
+
+    @classmethod
+    def str(cls, status):
+        '''Convert status (id) to its string name.'''
+        for k, v in cls.__dict__.items():
+            if k[0] in 'FRSU' and v == status:
+                return k.lower().replace('_', ' ')
 
 
 # Database Schema Definition
-class Event(Base):
-    '''Database definition of an artist.'''
+class BaseEvent():
+    '''Database definition of an event.'''
 
     __tablename__ = 'event'
 
@@ -58,9 +65,6 @@ class Event(Base):
     start = Column('start', Integer(), primary_key=True)
     end = Column('end', Integer(), nullable=False)
     data = Column('data', LargeBinary(), nullable=False)
-    protected = Column('protected', Boolean(), nullable=False, default=False)
-    status = Column('status', Integer(), nullable=False,
-                    default=Status.UPCOMING)
 
     def get_data(self):
         '''Load JSON data from event.
@@ -100,3 +104,27 @@ class Event(Base):
                 'end': self.end,
                 'uid': self.uid,
                 'data': self.data}
+
+
+class UpcomingEvent(Base, BaseEvent):
+    '''List of upcoming events'''
+
+    __tablename__ = 'upcoming_event'
+
+
+class RecordedEvent(Base, BaseEvent):
+    '''List of events pyca tried to record.'''
+
+    __tablename__ = 'recorded_event'
+
+    status = Column('status', Integer(), nullable=False,
+                    default=Status.UPCOMING)
+
+    def __init__(self, event=None):
+        if event:
+            self.uid = event.uid
+            self.start = event.start
+            self.end = event.end
+            self.data = event.data
+            if hasattr(event, 'status'):
+                self.status = event.status

@@ -5,14 +5,13 @@ Tests for database
 '''
 
 import unittest
-import logging
 import tempfile
 import os
-import sys
 
 from pyca import db, config
 
-class TestSequenceFunctions(unittest.TestCase):
+
+class TestPycaDb(unittest.TestCase):
 
     dbfile = None
 
@@ -33,8 +32,8 @@ class TestSequenceFunctions(unittest.TestCase):
         series = u'äöüßÄÖÜ'
         title = u'„xyz“'
 
-        e = db.Event()
-        e.set_data({'series':series,'title':title})
+        e = db.BaseEvent()
+        e.set_data({'series': series, 'title': title})
 
         # Check data serialization
         data = e.get_data()
