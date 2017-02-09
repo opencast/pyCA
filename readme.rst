@@ -35,27 +35,26 @@ Here is a short summary for Debian based OS like Raspian::
 
   git clone https://github.com/opencast/pyCA.git
   cd pyCA
-  sudo apt-get install python-virtualenv python-dev libcurl4-gnutls-dev gnutls-dev gcc
-  virtualenv venv
-  venv/bin/python setup.py install
-  $EDITOR /etc/pyca.conf <-- Edit the configuration
-  venv/bin/pyca
+  apt-get install python-configobj python-dateutil python-pycurl \
+    python-flask python-sqlalchemy
+  vim etc/pyca.conf <-- Edit the configuration
+  ./start.sh
 
 On Fedora::
 
   git clone https://github.com/opencast/pyCA.git
   cd pyCA
-  dnf install python python-pycurl python-dateutil \
-    python-configobj python-flask
-  vim /etc/pyca.conf <-- Edit the configuration
+  dnf install python-pycurl python-dateutil python-configobj \
+    python-flask python-sqlalchemy
+  vim etc/pyca.conf <-- Edit the configuration
   ./start.sh
 
 On RHEL/CentOS 7::
 
   git clone https://github.com/opencast/pyCA.git
   cd pyCA
-  sudo yum install python-pycurl python-dateutil \
-    python-configobj
+  yum install python-pycurl python-dateutil python-configobj \
+    python-flask python-sqlalchemy
   vim etc/pyca.conf  <-- Edit the configuration
   ./start.sh
 
@@ -63,12 +62,12 @@ On Arch Linux::
 
   git clone https://github.com/opencast/pyCA.git
   cd pyCA
-  sudo pacman -S gnutls python-pycurl python-icalendar\
-    python-dateutil python-configobj
+  sudo pacman -S python-pycurl python-dateutil \
+    python-configobj python-sqlalchemy
   vim etc/pyca.conf  <-- Edit the configuration
   ./start.sh
 
-... or use the available [AUR]_ package. Note that Arch Linux uses Python 3.5
+…or use the available [AUR]_ package. Note that Arch Linux uses Python 3.5
 by default, so this method will use Python 3.5 for pyCA as well.
 
 .. [OC] http://opencast.org/
