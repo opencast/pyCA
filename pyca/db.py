@@ -119,6 +119,7 @@ class RecordedEvent(Base, BaseEvent):
 
     status = Column('status', Integer(), nullable=False,
                     default=Status.UPCOMING)
+    tracks = Column('tracks', LargeBinary(), nullable=True)
 
     def __init__(self, event=None):
         if event:
@@ -128,3 +129,15 @@ class RecordedEvent(Base, BaseEvent):
             self.data = event.data
             if hasattr(event, 'status'):
                 self.status = event.status
+
+    def get_tracks(self):
+        '''Load JSON track data from event.
+        '''
+        if not self.tracks:
+            return []
+        return json.loads(self.tracks.decode('utf-8'))
+
+    def set_tracks(self, tracks):
+        '''Store track data as JSON.
+        '''
+        self.tracks = json.dumps(tracks).encode('utf-8')

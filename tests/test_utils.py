@@ -19,6 +19,8 @@ class TestPycaUtils(unittest.TestCase):
 
     def setUp(self):
         reload(utils)
+        reload(config)
+        config.config()['service-capture.admin'] = ['']
 
     def test_get_service(self):
         res = '''{"services":{
@@ -51,10 +53,28 @@ class TestPycaUtils(unittest.TestCase):
 
     def test_http_request(self):
         config.config()['server']['insecure'] = True
+        config.config()['server']['certificate'] = 'nowhere'
         try:
             utils.http_request('http://127.0.0.1:8', [('x', 'y')])
         except Exception as e:
             assert e.args[0] == 7  # connection error
+
+    def test_register_ca(self):
+        utils.http_request = lambda x, y=False: b'xxx'
+        assert utils.register_ca()
+        utils.http_request = 'fail'
+        assert not utils.register_ca()
+        config.config()['agent']['backup_mode'] = True
+        assert utils.register_ca()
+
+    def test_recording_state(self):
+        utils.http_request = lambda x, y=False: b'xxx'
+        config.config()['service-capture.admin'] = ['']
+        utils.recording_state('123', 'recording')
+        utils.http_request = 'fail'
+        utils.recording_state('123', 'recording')
+        config.config()['agent']['backup_mode'] = True
+        utils.recording_state('123', 'recording')
 
 
 if __name__ == '__main__':

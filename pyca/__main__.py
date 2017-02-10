@@ -12,7 +12,7 @@ import sys
 import getopt
 import os
 import multiprocessing
-from pyca import capture, config, schedule
+from pyca import capture, config, schedule, ingest
 
 USAGE = '''
 Usage %s [OPTIONS] COMMAND
@@ -80,7 +80,8 @@ def main():
     config.update_configuration(cfg)
     if cmd == 'run':
         processes = [multiprocessing.Process(target=schedule.run),
-                     multiprocessing.Process(target=capture.run)]
+                     multiprocessing.Process(target=capture.run),
+                     multiprocessing.Process(target=ingest.run)]
         start_all(processes)
         try:
             # Ensure processes are restarted until all are dead
@@ -94,6 +95,8 @@ def main():
         schedule.run()
     elif cmd == 'capture':
         capture.run()
+    elif cmd == 'ingest':
+        ingest.run()
     elif cmd == 'ui':
         import pyca.ui
         pyca.ui.app.run(host='0.0.0.0')

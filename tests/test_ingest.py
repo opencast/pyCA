@@ -11,7 +11,7 @@ import sys
 import tempfile
 import unittest
 
-from pyca import capture, config, db, utils
+from pyca import ingest, config, db, utils
 
 if sys.version_info.major > 2:
     try:
@@ -20,7 +20,7 @@ if sys.version_info.major > 2:
         from imp import reload
 
 
-class TestPycaCapture(unittest.TestCase):
+class TestPycaIngest(unittest.TestCase):
 
     dbfile = None
     cadir = None
@@ -28,22 +28,21 @@ class TestPycaCapture(unittest.TestCase):
 
     def setUp(self):
         reload(config)
-        reload(capture)
+        reload(ingest)
         reload(utils)
         reload(db)
         utils.http_request = lambda x, y=False: b'xxx'
+        ingest.http_request = lambda x, y=False: b'xxx'
         _, self.dbfile = tempfile.mkstemp()
         self.cadir = tempfile.mkdtemp()
         config.config()['agent']['database'] = 'sqlite:///' + self.dbfile
-        config.config()['capture']['command'] = 'touch {{dir}}/{{name}}.mp4'
         config.config()['capture']['directory'] = self.cadir
-        config.config()['capture']['preview'] = os.path.join(self.cadir, 'no')
+        config.config()['service-ingest'] = ['']
         config.config()['service-capture.admin'] = ['']
 
         # Mock event
-
         db.init()
-        self.event = db.BaseEvent()
+        self.event = db.RecordedEvent()
         self.event.uid = '123123'
         self.event.start = utils.timestamp()
         self.event.end = self.event.start + 1
@@ -61,26 +60,33 @@ class TestPycaCapture(unittest.TestCase):
                                      '.properties'}]
         self.event.set_data({'attach': data})
 
+        # Create recording
+        os.mkdir(self.event.directory())
+        with open(os.path.join(self.event.directory(), 'test.mp4'), 'wb') as f:
+            f.write(b'123')
+        self.event.set_tracks([('presenter/source',
+                                self.event.directory() + '/test.mp4')])
+
     def tearDown(self):
         os.remove(self.dbfile)
         shutil.rmtree(self.cadir)
 
-    def test_start_capture(self):
-        assert capture.start_capture(self.event)
+    def test_start_ingest(self):
+        assert ingest.start_ingest(self.event)
 
-    def test_start_capture_recording_command_failure(self):
-        config.config()['capture']['command'] = 'false'
-        assert not capture.start_capture(self.event)
+    def test_start_ingest_failure(self):
+        ingest.ingest = 'fail'
+        assert not ingest.start_ingest(self.event)
 
-    def test_safe_start_capture(self):
-        capture.start_capture = 'fail'
-        assert not capture.safe_start_capture(1)
-        capture.start_capture = lambda x: True
-        assert capture.safe_start_capture(1)
+    def test_safe_start_ingest(self):
+        ingest.start_ingest = 'fail'
+        assert not ingest.safe_start_ingest(1)
+        ingest.start_ingest = lambda x: True
+        assert ingest.safe_start_ingest(1)
 
-    def test_control_loop(self):
-        capture.control_loop = lambda: True
-        capture.run()
+    def test_run(self):
+        ingest.control_loop = lambda: True
+        ingest.run()
 
 
 if __name__ == '__main__':
