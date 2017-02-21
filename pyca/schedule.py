@@ -19,6 +19,9 @@ import time
 import traceback
 
 
+terminate = False
+
+
 def parse_ical(vcal):
     '''Parse Opencast schedule iCalendar file and return events as dict
     '''
@@ -71,7 +74,7 @@ def get_schedule():
 
     try:
         cal = parse_ical(vcal.decode('utf-8'))
-    except:
+    except Exception:
         logging.error('Could not parse ical')
         logging.error(traceback.format_exc())
         return
@@ -93,7 +96,7 @@ def get_schedule():
 def control_loop():
     '''Main loop, retrieving the schedule.
     '''
-    while True:
+    while not terminate:
         # Try getting an updated schedult
         get_schedule()
         q = get_session().query(UpcomingEvent)\
@@ -110,7 +113,4 @@ def run():
     '''Start the capture agent.
     '''
     configure_service('scheduler')
-    try:
-        control_loop()
-    except KeyboardInterrupt:
-        pass
+    control_loop()
