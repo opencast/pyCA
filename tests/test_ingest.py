@@ -12,6 +12,7 @@ import tempfile
 import unittest
 
 from pyca import ingest, config, db, utils
+from tests.tools import should_fail
 
 if sys.version_info.major > 2:
     try:
@@ -21,10 +22,6 @@ if sys.version_info.major > 2:
 
 
 class TestPycaIngest(unittest.TestCase):
-
-    dbfile = None
-    cadir = None
-    event = None
 
     def setUp(self):
         reload(config)
@@ -62,10 +59,10 @@ class TestPycaIngest(unittest.TestCase):
 
         # Create recording
         os.mkdir(self.event.directory())
-        with open(os.path.join(self.event.directory(), 'test.mp4'), 'wb') as f:
+        trackfile = os.path.join(self.event.directory(), 'test.mp4')
+        with open(trackfile, 'wb') as f:
             f.write(b'123')
-        self.event.set_tracks([('presenter/source',
-                                self.event.directory() + '/test.mp4')])
+        self.event.set_tracks([('presenter/source', trackfile)])
 
     def tearDown(self):
         os.remove(self.dbfile)
@@ -75,11 +72,11 @@ class TestPycaIngest(unittest.TestCase):
         assert ingest.start_ingest(self.event)
 
     def test_start_ingest_failure(self):
-        ingest.ingest = 'fail'
+        ingest.ingest = should_fail
         assert not ingest.start_ingest(self.event)
 
     def test_safe_start_ingest(self):
-        ingest.start_ingest = 'fail'
+        ingest.start_ingest = should_fail
         assert not ingest.safe_start_ingest(1)
         ingest.start_ingest = lambda x: True
         assert ingest.safe_start_ingest(1)

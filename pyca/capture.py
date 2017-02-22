@@ -15,8 +15,22 @@ from pyca.db import get_session, RecordedEvent, UpcomingEvent, Status
 import logging
 import os
 import os.path
+import shlex
+import signal
+import subprocess
 import time
 import traceback
+
+
+terminate = False
+captureproc = None
+
+
+def sigterm_handler(signum, frame):
+    '''Intercept sigterm and terminate all processes.
+    '''
+    if captureproc and captureproc.poll() is None:
+        captureproc.terminate()
 
 
 def start_capture(event):
@@ -70,7 +84,7 @@ def safe_start_capture(event):
     '''
     try:
         return start_capture(event)
-    except:
+    except Exception:
         logging.error('Start capture failed')
         logging.error(traceback.format_exc())
         register_ca(status='idle')
@@ -87,8 +101,12 @@ def recording_command(directory, name, duration):
     cmd = cmd.replace('{{name}}', name)
     cmd = cmd.replace('{{previewdir}}', preview_dir)
     logging.info(cmd)
-    if os.system(cmd):
-        raise Exception('Recording failed')
+    args = shlex.split(cmd)
+    captureproc = subprocess.Popen(args)
+    while captureproc.poll() is None:
+        time.sleep(0.1)
+    if captureproc.returncode > 0:
+        raise Exception('Recording failed (%i)' % captureproc.returncode)
 
     # Remove preview files:
     for preview in config()['capture']['preview']:
@@ -110,7 +128,7 @@ def control_loop():
     '''Main loop of the capture agent, retrieving and checking the schedule as
     well as starting the capture process if necessry.
     '''
-    while True:
+    while not terminate:
         # Get next recording
         register_ca()
         events = get_session().query(UpcomingEvent)\
@@ -124,13 +142,11 @@ def control_loop():
 def run():
     '''Start the capture agent.
     '''
+    signal.signal(signal.SIGTERM, sigterm_handler)
     configure_service('capture.admin')
 
     while not register_ca():
         time.sleep(5.0)
 
-    try:
-        control_loop()
-    except KeyboardInterrupt:
-        pass
+    control_loop()
     register_ca(status='unknown')

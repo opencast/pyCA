@@ -21,6 +21,9 @@ import time
 import traceback
 
 
+terminate = False
+
+
 def get_config_params(properties):
     '''Extract the set of configuration parameters from the properties attached
     to the schedule
@@ -144,7 +147,7 @@ def safe_start_ingest(event):
     '''
     try:
         return start_ingest(event)
-    except:
+    except Exception:
         logging.error('Start ingest failed')
         logging.error(traceback.format_exc())
         register_ca(status='idle')
@@ -155,7 +158,7 @@ def control_loop():
     '''Main loop of the capture agent, retrieving and checking the schedule as
     well as starting the capture process if necessry.
     '''
-    while True:
+    while not terminate:
         # Get next recording
         register_ca()
         events = get_session().query(RecordedEvent)\
@@ -171,8 +174,4 @@ def run():
     '''
     configure_service('ingest')
     configure_service('capture.admin')
-
-    try:
-        control_loop()
-    except KeyboardInterrupt:
-        pass
+    control_loop()

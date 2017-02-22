@@ -12,6 +12,7 @@ import tempfile
 import unittest
 
 from pyca import capture, config, db, utils
+from tests.tools import should_fail
 
 if sys.version_info.major > 2:
     try:
@@ -22,10 +23,6 @@ if sys.version_info.major > 2:
 
 class TestPycaCapture(unittest.TestCase):
 
-    dbfile = None
-    cadir = None
-    event = None
-
     def setUp(self):
         reload(config)
         reload(capture)
@@ -34,19 +31,20 @@ class TestPycaCapture(unittest.TestCase):
         utils.http_request = lambda x, y=False: b'xxx'
         _, self.dbfile = tempfile.mkstemp()
         self.cadir = tempfile.mkdtemp()
+        preview = os.path.join(self.cadir, 'preview.png')
+        open(preview, 'a').close()
         config.config()['agent']['database'] = 'sqlite:///' + self.dbfile
         config.config()['capture']['command'] = 'touch {{dir}}/{{name}}.mp4'
         config.config()['capture']['directory'] = self.cadir
-        config.config()['capture']['preview'] = os.path.join(self.cadir, 'no')
+        config.config()['capture']['preview'] = [preview]
         config.config()['service-capture.admin'] = ['']
 
         # Mock event
-
         db.init()
         self.event = db.BaseEvent()
         self.event.uid = '123123'
         self.event.start = utils.timestamp()
-        self.event.end = self.event.start + 1
+        self.event.end = self.event.start + 3
         data = [{'data': u'äüÄÜß',
                  'fmttype': 'application/xml',
                  'x-apple-filename': 'episode.xml'},
@@ -73,13 +71,13 @@ class TestPycaCapture(unittest.TestCase):
         assert not capture.start_capture(self.event)
 
     def test_safe_start_capture(self):
-        capture.start_capture = 'fail'
+        capture.start_capture = should_fail
         assert not capture.safe_start_capture(1)
         capture.start_capture = lambda x: True
         assert capture.safe_start_capture(1)
 
-    def test_control_loop(self):
-        capture.control_loop = lambda: True
+    def test_run(self):
+        capture.terminate = True
         capture.run()
 
 

@@ -7,6 +7,8 @@ Tests for basic capturing
 import unittest
 
 from pyca import utils, config
+from tests.tools import should_fail
+
 import sys
 if sys.version_info.major > 2:
     try:
@@ -62,7 +64,7 @@ class TestPycaUtils(unittest.TestCase):
     def test_register_ca(self):
         utils.http_request = lambda x, y=False: b'xxx'
         assert utils.register_ca()
-        utils.http_request = 'fail'
+        utils.http_request = should_fail
         assert not utils.register_ca()
         config.config()['agent']['backup_mode'] = True
         assert utils.register_ca()
@@ -71,7 +73,7 @@ class TestPycaUtils(unittest.TestCase):
         utils.http_request = lambda x, y=False: b'xxx'
         config.config()['service-capture.admin'] = ['']
         utils.recording_state('123', 'recording')
-        utils.http_request = 'fail'
+        utils.http_request = should_fail
         utils.recording_state('123', 'recording')
         config.config()['agent']['backup_mode'] = True
         utils.recording_state('123', 'recording')
