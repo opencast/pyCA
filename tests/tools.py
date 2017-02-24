@@ -5,7 +5,7 @@ Some helper tools for pyCA testing.
 
 
 class ShouldFailException(Exception):
-    pass
+    args = [None, 0]
 
 
 def should_fail(*args, **kwargs):
