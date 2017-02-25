@@ -105,7 +105,12 @@ def control_loop():
                          datetime.fromtimestamp(q[0].start))
         else:
             logging.info('No scheduled recording')
-        time.sleep(config()['agent']['update_frequency'])
+
+        next_update = timestamp() + config()['agent']['update_frequency']
+        while not terminate and timestamp() < next_update:
+            time.sleep(0.1)
+
+    logging.info('Shutting down schedule service')
 
 
 def run():

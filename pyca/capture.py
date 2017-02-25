@@ -17,6 +17,7 @@ import os.path
 import shlex
 import signal
 import subprocess
+import sys
 import time
 import traceback
 
@@ -28,8 +29,11 @@ captureproc = None
 def sigterm_handler(signum, frame):
     '''Intercept sigterm and terminate all processes.
     '''
+    global terminate
     if captureproc and captureproc.poll() is None:
         captureproc.terminate()
+    terminate = True
+    sys.exit(0)
 
 
 def start_capture(event):
@@ -136,6 +140,7 @@ def control_loop():
         if events.count():
             safe_start_capture(events[0])
         time.sleep(1.0)
+    logging.info('Shutting down capture service')
 
 
 def run():
