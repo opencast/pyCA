@@ -109,6 +109,7 @@ def main():
     elif cmd == 'ingest':
         ingest.run()
     elif cmd == 'ui':
+        signal.signal(signal.SIGINT, signal.default_int_handler)
         import pyca.ui
         pyca.ui.app.run(host='0.0.0.0')
     else:

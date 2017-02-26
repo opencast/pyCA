@@ -166,6 +166,7 @@ def control_loop():
         if events.count():
             safe_start_ingest(events[0])
         time.sleep(1.0)
+    logging.info('Shutting down ingest service')
 
 
 def run():
