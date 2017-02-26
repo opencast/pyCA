@@ -12,7 +12,7 @@ import multiprocessing
 import os
 import signal
 import sys
-from pyca import capture, config, schedule, ingest
+from pyca import capture, config, schedule, ingest, ui
 
 USAGE = '''
 Usage %s [OPTIONS] COMMAND
@@ -110,8 +110,7 @@ def main():
         ingest.run()
     elif cmd == 'ui':
         signal.signal(signal.SIGINT, signal.default_int_handler)
-        import pyca.ui
-        pyca.ui.app.run(host='0.0.0.0')
+        ui.app.run()
     else:
         # Invalid command
         usage(3)

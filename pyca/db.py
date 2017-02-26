@@ -87,6 +87,11 @@ class BaseEvent():
         '''
         return os.path.join(config()['capture']['directory'], self.name())
 
+    def status_str(self):
+        '''Return status as string.
+        '''
+        return Status.str(self.status)
+
     def __repr__(self):
         '''Return a string representation of an artist object.
 

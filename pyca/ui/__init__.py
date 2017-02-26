@@ -3,28 +3,19 @@
 Simple UI telling about the current state of the capture agent.
 '''
 from pyca.config import config
+from pyca.db import get_session, Status,  UpcomingEvent, RecordedEvent
 
 import os.path
-from jinja2 import Template
+import datetime
 from flask import Flask, request, send_from_directory, Response
+from flask import render_template
 app = Flask(__name__)
 
-__SITE = '''
-<!doctype html>
-<html>
-<head>
-    <meta http-equiv="refresh" content="{{ refresh }}; URL=/">
-    <title>pyCA</title>
-</head>
-<body style="text-align: center;">
-    {% for p in preview %}
-        <img style="max-width: 90%;" src="/img/{{ p }}" />
-    {% else %}
-        The capture agent is currently not recording.
-    {% endfor %}
-</body>
-</html>
-'''
+
+def dtfmt(ts):
+    '''Covert Unix timestamp into human readable form
+    '''
+    return datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
 
 
 @app.route('/')
@@ -36,7 +27,7 @@ def home():
             or request.authorization.username != config()['ui']['username'] \
             or request.authorization.password != config()['ui']['password']:
         return Response('pyCA', 401,
-                        {'WWW-Authenticate': 'Basic realm="Login Required"'})
+                        {'WWW-Authenticate': 'Basic realm="Login required"'})
 
     # Get IDs of existing preview images
     preview = config()['capture']['preview']
@@ -45,9 +36,27 @@ def home():
     preview = zip(preview, range(len(preview)))
     preview = [p[1] for p in preview if os.path.isfile(p[0])]
 
-    template = Template(__SITE)
-    return template.render(preview=preview,
-                           refresh=config()['ui']['refresh_rate'])
+    db = get_session()
+    upcoming_events = db.query(UpcomingEvent)\
+                        .order_by(UpcomingEvent.start)\
+                        .limit(5)
+    recorded_events = db.query(RecordedEvent)\
+                        .order_by(RecordedEvent.start.desc())\
+                        .limit(15)
+    recording = db.query(RecordedEvent)\
+                  .filter(RecordedEvent.status == Status.RECORDING)\
+                  .count()
+    uploading = db.query(RecordedEvent)\
+                  .filter(RecordedEvent.status == Status.UPLOADING)\
+                  .count()
+    processed = db.query(RecordedEvent).count()
+    upcoming = db.query(UpcomingEvent).count()
+    return render_template('home.html', preview=preview, config=config(),
+                           recorded_events=recorded_events,
+                           upcoming_events=upcoming_events,
+                           recording=recording, uploading=uploading,
+                           processed=processed, upcoming=upcoming,
+                           dtfmt=dtfmt)
 
 
 @app.route("/img/<img>")
