@@ -55,6 +55,37 @@ class Status():
                 return k.lower().replace('_', ' ')
 
 
+class ServiceStatus():
+    '''Service status type definitions
+    '''
+    STOPPED = 1
+    IDLE = 2
+    BUSY = 3
+
+    @classmethod
+    def str(cls, status):
+        '''Convert status (id) to its string name.'''
+        for k, v in cls.__dict__.items():
+            if k[0] in 'SIB' and v == status:
+                return k.lower().replace('_', ' ')
+
+
+class Service():
+    '''Service type definitions
+    '''
+    AGENTSTATE = 1
+    CAPTURE = 2
+    INGEST = 3
+    SCHEDULE = 4
+
+    @classmethod
+    def str(cls, service):
+        '''Convert service (id) to its string name.'''
+        for k, v in cls.__dict__.items():
+            if k[0] in 'ACIS' and v == service:
+                return k.lower().replace('_', ' ')
+
+
 # Database Schema Definition
 class BaseEvent():
     '''Database definition of an event.'''
@@ -146,3 +177,18 @@ class RecordedEvent(Base, BaseEvent):
         '''Store track data as JSON.
         '''
         self.tracks = json.dumps(tracks).encode('utf-8')
+
+
+class ServiceStates(Base):
+    '''List of internal service states.'''
+
+    __tablename__ = 'service_states'
+
+    type = Column('type', Integer(), nullable=False, primary_key=True)
+    status = Column('status', Integer(), nullable=False,
+                    default=ServiceStatus.STOPPED)
+
+    def __init__(self, service=None):
+        if service:
+            self.service = service.type
+            self.status = service.status

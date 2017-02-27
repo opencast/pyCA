@@ -8,9 +8,9 @@
 '''
 
 from pyca.utils import http_request, configure_service, unix_ts, timestamp
-from pyca.utils import terminate
+from pyca.utils import set_service_status, terminate
 from pyca.config import config
-from pyca.db import get_session, UpcomingEvent
+from pyca.db import get_session, UpcomingEvent, Service, ServiceStatus
 from base64 import b64decode
 from datetime import datetime
 import dateutil.parser
@@ -93,8 +93,9 @@ def get_schedule():
 def control_loop():
     '''Main loop, retrieving the schedule.
     '''
+    set_service_status(Service.SCHEDULE, ServiceStatus.BUSY)
     while not terminate():
-        # Try getting an updated schedult
+        # Try getting an updated schedule
         get_schedule()
         q = get_session().query(UpcomingEvent)\
                          .filter(UpcomingEvent.end > timestamp())
@@ -109,6 +110,7 @@ def control_loop():
             time.sleep(0.1)
 
     logging.info('Shutting down schedule service')
+    set_service_status(Service.SCHEDULE, ServiceStatus.STOPPED)
 
 
 def run():

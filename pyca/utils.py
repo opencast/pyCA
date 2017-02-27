@@ -200,6 +200,53 @@ def update_event_status(event, status):
     dbs.commit()
 
 
+def set_service_status(type, status):
+    '''Update the status of a particular service in the database.
+    '''
+    dbs = db.get_session()
+    s = dbs.query(db.ServiceStates).filter(db.ServiceStates.type == type)
+    if s.count():
+        dbs.query(db.ServiceStates).filter(db.ServiceStates.type == type)\
+                                   .update({'status': status})
+    else:
+        srv = db.ServiceStates()
+        srv.type = type
+        srv.status = status
+        dbs.add(srv)
+    dbs.commit()
+    update_agent_state()
+
+
+def get_service_status(type):
+    '''Update the status of a particular service in the database.
+    '''
+    dbs = db.get_session()
+    srvs = dbs.query(db.ServiceStates).filter(db.ServiceStates.type == type)
+
+    if srvs.count():
+        srv = srvs[0]
+        return srv.status
+    else:
+        return db.ServiceStatus.STOPPED
+
+
+def update_agent_state():
+    '''Update the current agent state in opencast.
+    '''
+    configure_service('capture.admin')
+    status = 'idle'
+
+    '''Determine reported agent state with priority list'''
+    if get_service_status(db.Service.INGEST) == db.ServiceStatus.BUSY:
+        status = 'uploading'
+    if get_service_status(db.Service.CAPTURE) == db.ServiceStatus.BUSY:
+        status = 'capturing'
+    if get_service_status(db.Service.SCHEDULE) == db.ServiceStatus.STOPPED:
+        status = 'offline'
+
+    register_ca(status=status)
+
+
 def terminate(shutdown=None):
     '''Mark process as to be terminated.
     '''

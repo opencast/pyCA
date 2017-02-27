@@ -12,17 +12,18 @@ import multiprocessing
 import os
 import signal
 import sys
-from pyca import capture, config, schedule, ingest, ui, utils
+from pyca import capture, config, schedule, ingest, ui, agentstate, utils
 
 USAGE = '''
 Usage %s [OPTIONS] COMMAND
 
 COMMANDS:
-  run      --  Start all pyCA components except ui (default)
-  capture  --  Start pyCA capture service
-  ingest   --  Start pyCA ingest service
-  schedule --  Start pyCA schedule service
-  ui       --  Start web based user interface
+  run        --  Start all pyCA components except ui (default)
+  capture    --  Start pyCA capture service
+  ingest     --  Start pyCA ingest service
+  schedule   --  Start pyCA schedule service
+  agentstate --  Start pyCA agentstate service
+  ui         --  Start web based user interface
 
 OPTIONS:
   --help, -h             -- Show this help',
@@ -100,13 +101,15 @@ def main():
 
     config.update_configuration(cfg)
     if cmd == 'run':
-        run_all(schedule, capture, ingest)
+        run_all(schedule, capture, ingest, agentstate)
     elif cmd == 'schedule':
         schedule.run()
     elif cmd == 'capture':
         capture.run()
     elif cmd == 'ingest':
         ingest.run()
+    elif cmd == 'agentstate':
+        agentstate.run()
     elif cmd == 'ui':
         signal.signal(signal.SIGINT, signal.default_int_handler)
         ui.app.run()
