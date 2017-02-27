@@ -1,0 +1,104 @@
+body {
+    font-family: "Open Sans", Helvetica, sans-serif;
+    font-size: 14px;
+    padding: 0px;
+    margin: 0px;
+}
+
+.center {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+/* Topmost: pyCA */
+header {
+    font-size: 20px;
+    font-weight: bold;
+    padding: 24px;
+}
+
+header a {
+    color: black;
+    display: block;
+    text-decoration: none;
+}
+
+/* Second from top: agent name */
+h1 {
+    background-color: #2075b1;
+    color: white;
+    font-size: 16px;
+    padding: 16px;
+    margin: 0;
+}
+
+/* Third from top: Stats */
+summary {
+    padding: 10px 20px;
+    background-color: #24425c;
+    color: white;
+    margin-bottom: 50px;
+}
+
+#status > div {
+    display: inline-block;
+    width: 100px;
+    height: 75px;
+    margin: 5px;
+    padding: 20px;
+    vertical-align: middle;
+    text-align: center;
+}
+
+#status > div:last-child {
+    width: 300px;
+    text-align: left;
+}
+
+#status > div > div {
+    padding: 10px;
+}
+
+#stats span {
+    display: inline-block;
+    min-width: 30px;
+}
+
+#status .active, #status .inactive {
+    font-size: x-large;
+    border-top: 1px solid gray;
+}
+
+#status .inactive {
+    color: gray;
+}
+
+
+table {
+    width: 100%;
+    border-spacing: 0;
+    border-collapse: collapse;
+}
+
+th {
+    font-weight: bold;
+    background-color: #eee;
+}
+
+td, th {
+    text-align: left;
+    padding: 10px;
+    border: 1px solid silver;
+    border-radius: 4px;
+    margin: 0;
+}
+
+tr.extendlist a {
+    display: block;
+    text-decoration: none;
+}
+
+tr.extendlist td {
+    padding: 5px 10px;
+    text-align: center;
+}

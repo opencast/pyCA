@@ -1,0 +1,16 @@
+<!doctype html>
+<html>
+<head>
+    <script src="{{ url_for('static', filename='jquery.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='func.js') }}"></script>
+    <title>pyCA</title>
+    <link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header class=center>
+        <a href={{ url_for('home') }}>pyCA</a>
+    </header>
+    <h1><div class=center>Capture Agent “{{ config['agent']['name'] }}”</div></h1>
+    {% block body %}{% endblock %}
+</body>
+</html>
