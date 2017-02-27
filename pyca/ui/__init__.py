@@ -36,13 +36,21 @@ def home():
     preview = zip(preview, range(len(preview)))
     preview = [p[1] for p in preview if os.path.isfile(p[0])]
 
+    # Get limits for recording table
+    try:
+        limit_upcoming = int(request.args.get('limit_upcoming', 5))
+        limit_processed = int(request.args.get('limit_processed', 15))
+    except ValueError:
+        limit_upcoming = 5
+        limit_processed = 15
+
     db = get_session()
     upcoming_events = db.query(UpcomingEvent)\
                         .order_by(UpcomingEvent.start)\
-                        .limit(5)
+                        .limit(limit_upcoming)
     recorded_events = db.query(RecordedEvent)\
                         .order_by(RecordedEvent.start.desc())\
-                        .limit(15)
+                        .limit(limit_processed)
     recording = db.query(RecordedEvent)\
                   .filter(RecordedEvent.status == Status.RECORDING)\
                   .count()
@@ -51,11 +59,14 @@ def home():
                   .count()
     processed = db.query(RecordedEvent).count()
     upcoming = db.query(UpcomingEvent).count()
+
     return render_template('home.html', preview=preview, config=config(),
                            recorded_events=recorded_events,
                            upcoming_events=upcoming_events,
                            recording=recording, uploading=uploading,
                            processed=processed, upcoming=upcoming,
+                           limit_upcoming=limit_upcoming,
+                           limit_processed=limit_processed,
                            dtfmt=dtfmt)
 
 

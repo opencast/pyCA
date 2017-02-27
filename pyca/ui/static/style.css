@@ -17,6 +17,12 @@ header {
     padding: 24px;
 }
 
+header a {
+    color: black;
+    display: block;
+    text-decoration: none;
+}
+
 /* Second from top: agent name */
 h1 {
     background-color: #2075b1;
@@ -34,7 +40,7 @@ summary {
     margin-bottom: 50px;
 }
 
-summary > div > div {
+#status > div {
     display: inline-block;
     width: 100px;
     height: 75px;
@@ -44,28 +50,29 @@ summary > div > div {
     text-align: center;
 }
 
-summary > div > div:last-child {
+#status > div:last-child {
     width: 300px;
     text-align: left;
 }
 
-summary > div > div > div {
+#status > div > div {
     padding: 10px;
 }
 
-summary span {
+#stats span {
     display: inline-block;
     min-width: 30px;
 }
 
-summary .active, summary .inactive {
+#status .active, #status .inactive {
     font-size: x-large;
     border-top: 1px solid gray;
 }
 
-summary .inactive {
+#status .inactive {
     color: gray;
 }
+
 
 table {
     width: 100%;
@@ -84,4 +91,14 @@ td, th {
     border: 1px solid silver;
     border-radius: 4px;
     margin: 0;
+}
+
+tr.extendlist a {
+    display: block;
+    text-decoration: none;
+}
+
+tr.extendlist td {
+    padding: 5px 10px;
+    text-align: center;
 }

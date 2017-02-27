@@ -1,7 +1,7 @@
 {% extends "layout.html" %}
 {% block body %}
 <summary>
-    <div class=center>
+    <div id=status class=center>
         <div>
             <div>Capture</div>
             {% if recording %}
@@ -20,12 +20,13 @@
             {% endif %}
         </div>
 
-        <div>
-            <div><span>{{ upcoming }}</span> Upcoming (in Buffer)</div>
+        <div id=stats>
+            <div title="Recordings in buffer"><span>{{ upcoming }}</span> Upcoming</div>
             <div><span>{{ processed }}</span> Processed</div>
         </div>
     </div>
 </summary>
+
 <main class=center>
 <section>
     <h2>Preview Images</h2>
@@ -44,13 +45,18 @@
             <th>End</th>
             <th>Status</th>
         </tr>
-        {% if upcoming > 5 %}
-        <tr><td>…</td></tr>
+        {% if upcoming > limit_upcoming %}
+        <tr class=extendlist>
+            <td colspan=3>
+                <a href={{ url_for('home', limit_processed=limit_processed,
+                                   limit_upcoming=limit_upcoming+5) }}>…</a>
+            </td>
+        </tr>
         {% endif %}
         {% for e in upcoming_events %}
         <tr class=upcoming>
-            <td>{{ e.start }}</td>
-            <td>{{ e.end }}</td>
+            <td>{{ dtfmt(e.start) }}</td>
+            <td>{{ dtfmt(e.end) }}</td>
             <td>upcoming</td>
         </tr>
         {% endfor %}
@@ -61,8 +67,13 @@
             <td>{{ e.status_str() }}</td>
         </tr>
         {% endfor %}
-        {% if processed > 15 %}
-        <tr><td>…</td></tr>
+        {% if processed > limit_processed %}
+        <tr class=extendlist>
+            <td colspan=3>
+                <a href={{ url_for('home', limit_processed=limit_processed+10,
+                                   limit_upcoming=limit_upcoming) }}>…</a>
+            </td>
+        </tr>
         {% endif %}
     </table>
 
