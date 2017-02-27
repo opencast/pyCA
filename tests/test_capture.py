@@ -72,9 +72,9 @@ class TestPycaCapture(unittest.TestCase):
 
     def test_safe_start_capture(self):
         capture.start_capture = should_fail
-        assert not capture.safe_start_capture(1)
+        assert not capture.safe_start_capture(self.event)
         capture.start_capture = lambda x: True
-        assert capture.safe_start_capture(1)
+        assert capture.safe_start_capture(self.event)
 
     def test_run(self):
         capture.terminate = True

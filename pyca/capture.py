@@ -90,6 +90,8 @@ def safe_start_capture(event):
     except Exception:
         logging.error('Start capture failed')
         logging.error(traceback.format_exc())
+        recording_state(event.uid, 'capture_error')
+        update_event_status(event, Status.FAILED_RECORDING)
         register_ca(status='idle')
         return False
 
