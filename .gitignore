@@ -4,3 +4,6 @@ venv
 *.swp
 
 /recordings/*
+
+.coverage
+pyca.db
