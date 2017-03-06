@@ -20,9 +20,14 @@
             {% endif %}
         </div>
 
-        <div id=stats>
-            <div title="Recordings in buffer"><span>{{ upcoming }}</span> Upcoming</div>
-            <div><span>{{ processed }}</span> Processed</div>
+        <div>
+            <div>Upcoming</div>
+            <div class=inactive>{{ upcoming }}</div>
+        </div>
+
+        <div>
+            <div>Processed</div>
+            <div class=inactive>{{ processed }}</div>
         </div>
     </div>
 </summary>
