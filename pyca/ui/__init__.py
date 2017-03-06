@@ -3,7 +3,9 @@
 Simple UI telling about the current state of the capture agent.
 '''
 from pyca.config import config
-from pyca.db import get_session, Status,  UpcomingEvent, RecordedEvent
+from pyca.db import get_session, Status, UpcomingEvent, RecordedEvent
+from pyca.db import Service, ServiceStatus
+from pyca.utils import get_service_status
 
 import os.path
 import datetime
@@ -59,12 +61,10 @@ def home():
     recorded_events = db.query(RecordedEvent)\
                         .order_by(RecordedEvent.start.desc())\
                         .limit(limit_processed)
-    recording = db.query(RecordedEvent)\
-                  .filter(RecordedEvent.status == Status.RECORDING)\
-                  .count()
-    uploading = db.query(RecordedEvent)\
-                  .filter(RecordedEvent.status == Status.UPLOADING)\
-                  .count()
+    recording = get_service_status(Service.CAPTURE) \
+                == ServiceStatus.BUSY
+    uploading =  get_service_status(Service.INGEST) \
+                == ServiceStatus.BUSY
     processed = db.query(RecordedEvent).count()
     upcoming = db.query(UpcomingEvent).count()
 

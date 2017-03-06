@@ -8,8 +8,8 @@
 '''
 
 from pyca.utils import timestamp, try_mkdir, configure_service, ensurelist
-from pyca.utils import set_service_status, recording_state, update_event_status
-from pyca.utils import terminate
+from pyca.utils import set_service_status, set_service_status_immediate
+from pyca.utils import recording_state, update_event_status, terminate
 from pyca.config import config
 from pyca.db import get_session, RecordedEvent, UpcomingEvent, Status,\
                     Service, ServiceStatus
@@ -59,7 +59,7 @@ def start_capture(event):
     os.mkdir(event.directory())
 
     # Set state
-    set_service_status(Service.CAPTURE, ServiceStatus.BUSY)
+    set_service_status_immediate(Service.CAPTURE, ServiceStatus.BUSY)
     recording_state(event.uid, 'capturing')
     update_event_status(event, Status.RECORDING)
 
@@ -73,10 +73,10 @@ def start_capture(event):
         # Update state
         recording_state(event.uid, 'capture_error')
         update_event_status(event, Status.FAILED_RECORDING)
-        set_service_status(Service.CAPTURE, ServiceStatus.IDLE)
+        set_service_status_immediate(Service.CAPTURE, ServiceStatus.IDLE)
         return False
 
-    set_service_status(Service.CAPTURE, ServiceStatus.IDLE)
+    set_service_status_immediate(Service.CAPTURE, ServiceStatus.IDLE)
     update_event_status(event, Status.FINISHED_RECORDING)
     return True
 
@@ -92,7 +92,7 @@ def safe_start_capture(event):
         logging.error(traceback.format_exc())
         recording_state(event.uid, 'capture_error')
         update_event_status(event, Status.FAILED_RECORDING)
-        set_service_status(Service.CAPTURE, ServiceStatus.IDLE)
+        set_service_status_immediate(Service.CAPTURE, ServiceStatus.IDLE)
         return False
 
 

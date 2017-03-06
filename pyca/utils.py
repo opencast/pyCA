@@ -214,6 +214,10 @@ def set_service_status(type, status):
         srv.status = status
         dbs.add(srv)
     dbs.commit()
+
+
+def set_service_status_immediate(type, status):
+    set_service_status(type, status)
     update_agent_state()
 
 
