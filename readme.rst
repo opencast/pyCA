@@ -74,7 +74,31 @@ On Arch Linux::
 …or use the available [AUR]_ package. Note that Arch Linux uses Python 3.5
 by default, so this method will use Python 3.5 for pyCA as well.
 
+
+User Interface
+**************
+
+PyCA comes with a web interface to check the status of capture agent and
+recordings. It is built as WSGI application and can be run using many
+different WSGI servers (Apache httpd + mod_wsgi, Gunicorn, …).
+
+For testing, it also comes with a minimal built-in server. Note that it is
+meant for testing only and should not be used in production. It will also
+listen to localhost only. To start the server, run (additional to pyCA)::
+
+  ./start.sh ui
+
+To production deployment, use a WSGI server instead. A very simple example,
+using Gunicorn, would be to run::
+
+  gunicorn pyca.ui:app
+
+For more information, have a look at the help option of gunicorn or go to the
+Gunicorn online documentation [GUNI]_
+
+
 .. [OC] http://opencast.org/
 .. [LGPL] https://raw.githubusercontent.com/lkiesow/pyCA/master/license.lgpl
 .. [RPi] http://www.raspberrypi.org/
 .. [AUR] https://aur.archlinux.org/packages/pyca
+.. [GUNI] http://gunicorn.org/
