@@ -200,38 +200,39 @@ def update_event_status(event, status):
     dbs.commit()
 
 
-def set_service_status(type, status):
+def set_service_status(service, status):
     '''Update the status of a particular service in the database.
     '''
     dbs = db.get_session()
-    s = dbs.query(db.ServiceStates).filter(db.ServiceStates.type == type)
+    s = dbs.query(db.ServiceStates).filter(db.ServiceStates.type == service)
     if s.count():
-        dbs.query(db.ServiceStates).filter(db.ServiceStates.type == type)\
-                                   .update({'status': status})
+        s.update({'status': status})
     else:
         srv = db.ServiceStates()
-        srv.type = type
+        srv.type = service
         srv.status = status
         dbs.add(srv)
     dbs.commit()
 
 
-def set_service_status_immediate(type, status):
-    set_service_status(type, status)
+def set_service_status_immediate(service, status):
+    '''Update the status of a particular service in the database and send an
+    immediate signal to Opencast.
+    '''
+    set_service_status(service, status)
     update_agent_state()
 
 
-def get_service_status(type):
+def get_service_status(service):
     '''Update the status of a particular service in the database.
     '''
     dbs = db.get_session()
-    srvs = dbs.query(db.ServiceStates).filter(db.ServiceStates.type == type)
+    srvs = dbs.query(db.ServiceStates).filter(db.ServiceStates.type == service)
 
     if srvs.count():
-        srv = srvs[0]
-        return srv.status
-    else:
-        return db.ServiceStatus.STOPPED
+        return srvs[0].status
+
+    return db.ServiceStatus.STOPPED
 
 
 def update_agent_state():
@@ -240,13 +241,13 @@ def update_agent_state():
     configure_service('capture.admin')
     status = 'idle'
 
-    '''Determine reported agent state with priority list'''
-    if get_service_status(db.Service.INGEST) == db.ServiceStatus.BUSY:
-        status = 'uploading'
-    if get_service_status(db.Service.CAPTURE) == db.ServiceStatus.BUSY:
-        status = 'capturing'
+    # Determine reported agent state with priority list
     if get_service_status(db.Service.SCHEDULE) == db.ServiceStatus.STOPPED:
         status = 'offline'
+    elif get_service_status(db.Service.CAPTURE) == db.ServiceStatus.BUSY:
+        status = 'capturing'
+    elif get_service_status(db.Service.INGEST) == db.ServiceStatus.BUSY:
+        status = 'uploading'
 
     register_ca(status=status)
 

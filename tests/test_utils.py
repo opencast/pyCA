@@ -4,9 +4,11 @@
 Tests for basic capturing
 '''
 
+import os
+import tempfile
 import unittest
 
-from pyca import utils, config
+from pyca import utils, config, db
 from tests.tools import should_fail
 
 import sys
@@ -23,6 +25,14 @@ class TestPycaUtils(unittest.TestCase):
         reload(utils)
         reload(config)
         config.config()['service-capture.admin'] = ['']
+
+        # db
+        _, self.dbfile = tempfile.mkstemp()
+        config.config()['agent']['database'] = 'sqlite:///' + self.dbfile
+        db.init()
+
+    def tearDown(self):
+        os.remove(self.dbfile)
 
     def test_get_service(self):
         res = '''{"services":{
@@ -77,6 +87,15 @@ class TestPycaUtils(unittest.TestCase):
         utils.recording_state('123', 'recording')
         config.config()['agent']['backup_mode'] = True
         utils.recording_state('123', 'recording')
+
+    def test_set_service_status_immediate(self):
+        utils.http_request = lambda x, y=False: b''
+        utils.set_service_status_immediate(db.Service.SCHEDULE,
+                                           db.ServiceStatus.IDLE)
+        utils.set_service_status_immediate(db.Service.INGEST,
+                                           db.ServiceStatus.BUSY)
+        utils.set_service_status_immediate(db.Service.CAPTURE,
+                                           db.ServiceStatus.BUSY)
 
 
 if __name__ == '__main__':

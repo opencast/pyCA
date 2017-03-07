@@ -8,6 +8,7 @@
 
 import json
 import os.path
+import string
 from pyca.config import config
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, LargeBinary, create_engine
@@ -36,7 +37,17 @@ def get_session():
     return Session()
 
 
-class Status():
+class Constants():
+
+    @classmethod
+    def str(cls, value):
+        '''Convert status (id) to its string name.'''
+        for k, v in cls.__dict__.items():
+            if k[0] in string.ascii_uppercase and v == value:
+                return k.lower().replace('_', ' ')
+
+
+class Status(Constants):
     '''Event status definitions
     '''
     UPCOMING = 1
@@ -47,43 +58,22 @@ class Status():
     FAILED_UPLOADING = 6
     FINISHED_UPLOADING = 7
 
-    @classmethod
-    def str(cls, status):
-        '''Convert status (id) to its string name.'''
-        for k, v in cls.__dict__.items():
-            if k[0] in 'FRSU' and v == status:
-                return k.lower().replace('_', ' ')
 
-
-class ServiceStatus():
+class ServiceStatus(Constants):
     '''Service status type definitions
     '''
     STOPPED = 1
     IDLE = 2
     BUSY = 3
 
-    @classmethod
-    def str(cls, status):
-        '''Convert status (id) to its string name.'''
-        for k, v in cls.__dict__.items():
-            if k[0] in 'SIB' and v == status:
-                return k.lower().replace('_', ' ')
 
-
-class Service():
+class Service(Constants):
     '''Service type definitions
     '''
     AGENTSTATE = 1
     CAPTURE = 2
     INGEST = 3
     SCHEDULE = 4
-
-    @classmethod
-    def str(cls, service):
-        '''Convert service (id) to its string name.'''
-        for k, v in cls.__dict__.items():
-            if k[0] in 'ACIS' and v == service:
-                return k.lower().replace('_', ' ')
 
 
 # Database Schema Definition
