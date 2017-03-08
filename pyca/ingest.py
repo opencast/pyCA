@@ -7,7 +7,7 @@
     :license: LGPL – see license.lgpl for more details.
 '''
 
-from pyca.utils import http_request, configure_service, register_ca
+from pyca.utils import http_request, configure_service, register_ca, terminate
 from pyca.utils import recording_state, update_event_status
 from pyca.config import config
 from pyca.db import get_session, RecordedEvent, Status
@@ -18,9 +18,6 @@ import pycurl
 from random import randrange
 import time
 import traceback
-
-
-terminate = False
 
 
 def get_config_params(properties):
@@ -157,7 +154,7 @@ def control_loop():
     '''Main loop of the capture agent, retrieving and checking the schedule as
     well as starting the capture process if necessry.
     '''
-    while not terminate:
+    while not terminate():
         # Get next recording
         register_ca()
         events = get_session().query(RecordedEvent)\

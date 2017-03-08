@@ -12,7 +12,7 @@ import tempfile
 import unittest
 
 from pyca import capture, config, db, utils
-from tests.tools import should_fail
+from tests.tools import should_fail, terminate_fn
 
 if sys.version_info.major > 2:
     try:
@@ -77,7 +77,7 @@ class TestPycaCapture(unittest.TestCase):
         assert capture.safe_start_capture(self.event)
 
     def test_run(self):
-        capture.terminate = True
+        capture.terminate = terminate_fn(1)
         capture.run()
 
 

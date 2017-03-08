@@ -198,3 +198,12 @@ def update_event_status(event, status):
                                .update({'status': status})
     event.status = status
     dbs.commit()
+
+
+def terminate(shutdown=None):
+    '''Mark process as to be terminated.
+    '''
+    global _terminate
+    if shutdown is not None:
+        _terminate = shutdown
+    return '_terminate' in globals() and _terminate

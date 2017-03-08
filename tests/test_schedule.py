@@ -10,7 +10,7 @@ import tempfile
 import unittest
 
 from pyca import schedule, config, db, utils
-from tests.tools import should_fail, ShouldFailException
+from tests.tools import should_fail, ShouldFailException, terminate_fn
 
 
 class TestPycaCapture(unittest.TestCase):
@@ -56,7 +56,7 @@ class TestPycaCapture(unittest.TestCase):
         assert db.get_session().query(db.UpcomingEvent).count()
 
     def test_run(self):
-        schedule.terminate = True
+        schedule.terminate = terminate_fn(2)
         schedule.run()
 
 

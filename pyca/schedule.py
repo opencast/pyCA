@@ -8,6 +8,7 @@
 '''
 
 from pyca.utils import http_request, configure_service, unix_ts, timestamp
+from pyca.utils import terminate
 from pyca.config import config
 from pyca.db import get_session, UpcomingEvent
 from base64 import b64decode
@@ -16,9 +17,6 @@ import dateutil.parser
 import logging
 import time
 import traceback
-
-
-terminate = False
 
 
 def parse_ical(vcal):
@@ -95,7 +93,7 @@ def get_schedule():
 def control_loop():
     '''Main loop, retrieving the schedule.
     '''
-    while not terminate:
+    while not terminate():
         # Try getting an updated schedult
         get_schedule()
         q = get_session().query(UpcomingEvent)\
@@ -107,7 +105,7 @@ def control_loop():
             logging.info('No scheduled recording')
 
         next_update = timestamp() + config()['agent']['update_frequency']
-        while not terminate and timestamp() < next_update:
+        while not terminate() and timestamp() < next_update:
             time.sleep(0.1)
 
     logging.info('Shutting down schedule service')

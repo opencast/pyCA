@@ -9,6 +9,7 @@
 
 from pyca.utils import timestamp, try_mkdir, configure_service, ensurelist
 from pyca.utils import register_ca, recording_state, update_event_status
+from pyca.utils import terminate
 from pyca.config import config
 from pyca.db import get_session, RecordedEvent, UpcomingEvent, Status
 import logging
@@ -22,17 +23,15 @@ import time
 import traceback
 
 
-terminate = False
 captureproc = None
 
 
 def sigterm_handler(signum, frame):
     '''Intercept sigterm and terminate all processes.
     '''
-    global terminate
     if captureproc and captureproc.poll() is None:
         captureproc.terminate()
-    terminate = True
+    terminate(True)
     sys.exit(0)
 
 
@@ -133,7 +132,7 @@ def control_loop():
     '''Main loop of the capture agent, retrieving and checking the schedule as
     well as starting the capture process if necessry.
     '''
-    while not terminate:
+    while not terminate():
         # Get next recording
         register_ca()
         events = get_session().query(UpcomingEvent)\

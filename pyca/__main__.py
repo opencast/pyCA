@@ -12,7 +12,7 @@ import multiprocessing
 import os
 import signal
 import sys
-from pyca import capture, config, schedule, ingest, ui
+from pyca import capture, config, schedule, ingest, ui, utils
 
 USAGE = '''
 Usage %s [OPTIONS] COMMAND
@@ -46,8 +46,7 @@ def usage(retval=0):
 def sigint_handler(signum, frame):
     '''Intercept sigint and terminate services gracefully.
     '''
-    for mod in (capture, ingest, schedule):
-        mod.terminate = True
+    utils.terminate(True)
 
 
 def sigterm_handler(signum, frame):
