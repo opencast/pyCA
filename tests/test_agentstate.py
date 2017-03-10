@@ -9,6 +9,7 @@ import tempfile
 import unittest
 
 from pyca import agentstate, config, db, utils
+from tests.tools import terminate_fn
 
 
 class TestPycaAgentState(unittest.TestCase):
@@ -17,7 +18,7 @@ class TestPycaAgentState(unittest.TestCase):
         utils.http_request = lambda x, y=False: b'xxx'
         _, self.dbfile = tempfile.mkstemp()
         config.config()['agent']['database'] = 'sqlite:///' + self.dbfile
-        config.config()['service-scheduler'] = ['']
+        config.config()['service-capture.admin'] = ['']
 
         # Mock event
         db.init()
@@ -26,8 +27,11 @@ class TestPycaAgentState(unittest.TestCase):
         os.remove(self.dbfile)
 
     def test_run(self):
-        agentstate.terminate = True
-        agentstate.run()
+        agentstate.terminate = terminate_fn(1)
+        try:
+            agentstate.run()
+        except Exception:
+            assert False
 
 
 if __name__ == '__main__':

@@ -123,7 +123,7 @@ def configure_service(service):
     '''Get the location of a given service from Opencast and add it to the
     current configuration.
     '''
-    while (not config().get('service-' + service)):
+    while not config().get('service-' + service):
         try:
             config()['service-' + service] = \
                 get_service('org.opencastproject.' + service)
