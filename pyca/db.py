@@ -180,5 +180,5 @@ class ServiceStates(Base):
 
     def __init__(self, service=None):
         if service:
-            self.service = service.type
+            self.type = service.type
             self.status = service.status

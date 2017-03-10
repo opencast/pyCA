@@ -43,6 +43,30 @@ class TestPycaDb(unittest.TestCase):
     def test_status(self):
         assert db.Status.str(db.Status.UPCOMING) == 'upcoming'
 
+    def test_event(self):
+        e = db.BaseEvent()
+        e.uid = 'asd'
+        e.start = 123
+        e.end = 234
+        e.status = db.Status.UPCOMING
+
+        assert str(e) == '<Event(start=123, uid="asd")>'
+
+        e = db.RecordedEvent(e)
+        assert e.name() == 'recording-123-asd'
+        assert e.status_str() == 'upcoming'
+        assert e.serialize()['uid'] == 'asd'
+        assert e.get_tracks() == []
+
+    def test_servicestate(self):
+        s = db.ServiceStates()
+        s.type = 0
+        s.status = 0
+        s = db.ServiceStates(s)
+
+        assert s.type == 0
+        assert s.status == 0
+
 
 if __name__ == '__main__':
     unittest.main()
