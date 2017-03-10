@@ -13,7 +13,7 @@ before_install:
    - pip install flake8 python-coveralls coverage flask
 
 script:
-   - coverage run --omit='*/lib/*,tests/*' -m unittest discover -s tests
+   - coverage run --source=pyca --omit='*.html' -m unittest discover -s tests
    - flake8 tests/*.py pyca/*.py
 
 after_success:
