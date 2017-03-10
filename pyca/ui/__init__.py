@@ -7,6 +7,7 @@ from pyca.db import get_session, Status,  UpcomingEvent, RecordedEvent
 
 import os.path
 import datetime
+from functools import wraps
 from flask import Flask, request, send_from_directory, Response
 from flask import render_template
 app = Flask(__name__)
@@ -18,17 +19,24 @@ def dtfmt(ts):
     return datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
 
 
+def requires_auth(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        auth = request.authorization
+        if config()['ui']['password'] and not request.authorization \
+                or request.authorization.username != config()['ui']['username'] \
+                or request.authorization.password != config()['ui']['password']:
+            return Response('pyCA', 401,
+                            {'WWW-Authenticate': 'Basic realm="pyCA Login"'})
+        return f(*args, **kwargs)
+    return decorated
+
+
 @app.route('/')
+@requires_auth
 def home():
     '''Serve the status page of the capture agent.
     '''
-    # Check credentials:
-    if config()['ui']['password'] and not request.authorization \
-            or request.authorization.username != config()['ui']['username'] \
-            or request.authorization.password != config()['ui']['password']:
-        return Response('pyCA', 401,
-                        {'WWW-Authenticate': 'Basic realm="Login required"'})
-
     # Get IDs of existing preview images
     preview = config()['capture']['preview']
     previewdir = config()['capture']['preview_dir']
@@ -70,14 +78,15 @@ def home():
                            dtfmt=dtfmt)
 
 
-@app.route("/img/<img>")
-def serve_image(img):
+@app.route("/img/<int:img>")
+@requires_auth
+def serve_image(image_id):
     '''Serve the preview image with the given id
     '''
     filepath = ''
     try:
         preview_dir = config()['capture']['preview_dir']
-        filepath = config()['capture']['preview'][int(img)]
+        filepath = config()['capture']['preview'][image_id]
         filepath = filepath.replace('{{previewdir}}', preview_dir)
         if os.path.isfile(filepath):
             [directory, filename] = filepath.rsplit('/', 1)

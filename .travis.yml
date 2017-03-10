@@ -10,7 +10,7 @@ python:
    - "3.6"
 
 before_install:
-   - pip install flake8 python-coveralls coverage
+   - pip install flake8 python-coveralls coverage flask
 
 script:
    - coverage run --omit='*/lib/*,tests/*' -m unittest discover -s tests
