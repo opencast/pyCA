@@ -37,22 +37,20 @@ summary {
     padding: 10px 20px;
     background-color: #24425c;
     color: white;
-    margin-bottom: 50px;
+    margin-bottom: 10px;
+}
+
+#status {
+    text-align: center;
 }
 
 #status > div {
     display: inline-block;
-    width: 100px;
+    width: 90px;
     height: 75px;
     margin: 5px;
     padding: 20px;
     vertical-align: middle;
-    text-align: center;
-}
-
-#status > div:last-child {
-    width: 300px;
-    text-align: left;
 }
 
 #status > div > div {
@@ -73,6 +71,9 @@ summary {
     color: gray;
 }
 
+main {
+    padding: 20px;
+}
 
 table {
     width: 100%;
