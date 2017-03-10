@@ -12,7 +12,7 @@ import tempfile
 import unittest
 
 from pyca import ingest, config, db, utils
-from tests.tools import should_fail
+from tests.tools import should_fail, terminate_fn
 
 if sys.version_info.major > 2:
     try:
@@ -82,7 +82,9 @@ class TestPycaIngest(unittest.TestCase):
         assert ingest.safe_start_ingest(1)
 
     def test_run(self):
-        ingest.control_loop = lambda: True
+        ingest.terminate(True)
+        ingest.run()
+        ingest.terminate = terminate_fn(1)
         ingest.run()
 
 
