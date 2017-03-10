@@ -80,6 +80,9 @@ class TestPycaCapture(unittest.TestCase):
         capture.terminate = terminate_fn(1)
         capture.run()
 
-
-if __name__ == '__main__':
-    unittest.main()
+    def test_sigterm(self):
+        try:
+            capture.sigterm_handler(0, 0)
+        except BaseException as e:
+            assert e.code == 0
+            assert utils.terminate()
