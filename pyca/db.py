@@ -108,6 +108,11 @@ class BaseEvent():
         '''
         return os.path.join(config()['capture']['directory'], self.name())
 
+    def remaining_duration(self, time):
+        '''Returns the remaining duration for a recording.
+        '''
+        return max(0, self.end - max(self.start, time))
+
     def status_str(self):
         '''Return status as string.
         '''

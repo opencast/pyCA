@@ -53,7 +53,6 @@ def start_capture(upcoming_event):
         db.add(event)
         db.commit()
 
-    duration = event.end - timestamp()
     try_mkdir(config()['capture']['directory'])
     os.mkdir(event.directory())
 
@@ -63,7 +62,7 @@ def start_capture(upcoming_event):
     update_event_status(event, Status.RECORDING)
 
     # Recording
-    tracks = recording_command(event.directory(), event.name(), duration)
+    tracks = recording_command(event)
     event.set_tracks(tracks)
     db.commit()
 
@@ -89,24 +88,41 @@ def safe_start_capture(event):
         return False
 
 
-def recording_command(directory, name, duration):
+def recording_command(event):
     '''Run the actual command to record the a/v material.
     '''
+    # Prepare command line
     preview_dir = config()['capture']['preview_dir']
     cmd = config()['capture']['command']
-    cmd = cmd.replace('{{time}}', str(duration))
-    cmd = cmd.replace('{{dir}}', directory)
-    cmd = cmd.replace('{{name}}', name)
+    cmd = cmd.replace('{{time}}', str(event.remaining_duration(timestamp())))
+    cmd = cmd.replace('{{dir}}', event.directory())
+    cmd = cmd.replace('{{name}}', event.name())
     cmd = cmd.replace('{{previewdir}}', preview_dir)
+
+    # Signal configuration
+    sigterm_time = config()['capture']['sigterm_time']
+    sigkill_time = config()['capture']['sigkill_time']
+    sigterm_time = 0 if sigterm_time < 0 else event.end + sigterm_time
+    sigkill_time = 0 if sigkill_time < 0 else event.end + sigkill_time
+
+    # Launch capture command
     logger.info(cmd)
     args = shlex.split(cmd)
     DEVNULL = getattr(subprocess, 'DEVNULL', os.open(os.devnull, os.O_RDWR))
     captureproc = subprocess.Popen(args, stdin=DEVNULL)
     hasattr(subprocess, 'DEVNULL') or os.close(DEVNULL)
+
+    # Check process
     while captureproc.poll() is None:
+        if sigterm_time and timestamp() > sigterm_time:
+            logger.info("Terminating capture process")
+            captureproc.terminate()
+            sigterm_time = 0  # send only once
+        elif sigkill_time and timestamp() > sigkill_time:
+            logger.warning("Terminating capture process")
+            captureproc.kill()
+            sigkill_time = 0  # send only once
         time.sleep(0.1)
-    if captureproc.returncode > 0:
-        raise RuntimeError('Recording failed (%i)' % captureproc.returncode)
 
     # Remove preview files:
     for preview in config()['capture']['preview']:
@@ -116,11 +132,16 @@ def recording_command(directory, name, duration):
             logger.warning('Could not remove preview files')
             logger.warning(traceback.format_exc())
 
+    # Check process for errors
+    exitcode = config()['capture']['exit_code']
+    if captureproc.poll() > 0 and captureproc.returncode != exitcode:
+        raise RuntimeError('Recording failed (%i)' % captureproc.returncode)
+
     # Return [(flavor,path),…]
     flavors = ensurelist(config()['capture']['flavors'])
     files = ensurelist(config()['capture']['files'])
-    files = [f.replace('{{dir}}', directory) for f in files]
-    files = [f.replace('{{name}}', name) for f in files]
+    files = [f.replace('{{dir}}', event.directory()) for f in files]
+    files = [f.replace('{{name}}', event.name()) for f in files]
     return list(zip(flavors, files))
 
 

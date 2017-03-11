@@ -25,6 +25,9 @@ flavors          = force_list(default=list('presenter/source'))
 files            = force_list(default=list('{{dir}}/{{name}}.mp4'))
 preview_dir      = string(default='./recordings')
 preview          = force_list(default=list())
+sigterm_time     = integer(min=-1, default=-1)
+sigkill_time     = integer(min=-1, default=120)
+exit_code        = integer(min=0, max=255, default=0)
 
 [server]
 url              = string(default='https://octestallinone.virtuos.uos.de')

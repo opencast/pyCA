@@ -33,7 +33,7 @@ class TestPycaCapture(unittest.TestCase):
         self.event = db.BaseEvent()
         self.event.uid = '123123'
         self.event.start = utils.timestamp()
-        self.event.end = self.event.start + 3
+        self.event.end = self.event.start
         data = [{'data': u'äüÄÜß',
                  'fmttype': 'application/xml',
                  'x-apple-filename': 'episode.xml'},
@@ -53,6 +53,7 @@ class TestPycaCapture(unittest.TestCase):
         os.remove(self.dbfile)
         shutil.rmtree(self.cadir)
         reload(capture)
+        reload(config)
         reload(utils)
 
     def test_start_capture(self):
@@ -65,6 +66,16 @@ class TestPycaCapture(unittest.TestCase):
             assert False
         except RuntimeError:
             assert True
+
+    def test_start_capture_sigterm(self):
+        config.config()['capture']['command'] = 'sleep 10'
+        config.config()['capture']['sigterm_time'] = 0
+        capture.start_capture(self.event)
+
+    def test_start_capture_sigkill(self):
+        config.config()['capture']['command'] = 'sleep 10'
+        config.config()['capture']['sigkill_time'] = 0
+        capture.start_capture(self.event)
 
     def test_safe_start_capture(self):
         capture.start_capture = should_fail
