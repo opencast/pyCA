@@ -8,6 +8,8 @@
 '''
 
 import getopt
+import logging
+import logging.handlers
 import multiprocessing
 import os
 import signal
@@ -70,9 +72,6 @@ def run_all(*modules):
 
 
 def main():
-    # Set signal handler
-    signal.signal(signal.SIGINT, sigint_handler)
-    signal.signal(signal.SIGTERM, sigterm_handler)
 
     # Probe for configuration file location
     cfg = '/etc/pyca.conf'
@@ -96,10 +95,29 @@ def main():
     if len(args) > 1:
         usage(2)
 
+    config.update_configuration(cfg)
+
+    # Initialize logger
+    handlers = []
+    conf = config.config()
+    if conf['logging']['syslog']:
+        handlers.append(logging.handlers.SysLogHandler(address='/dev/log'))
+    if conf['logging']['stderr']:
+        handlers.append(logging.StreamHandler(sys.stderr))
+    root_logger = logging.getLogger('')
+    root_logger.setLevel(logging.INFO)
+    for h in handlers:
+        h.setFormatter(logging.Formatter(
+            'pyca: [%(filename)s:%(lineno)s:%(funcName)s()] %(message)s'))
+        root_logger.addHandler(h)
+
+    # Set signal handler
+    signal.signal(signal.SIGINT, sigint_handler)
+    signal.signal(signal.SIGTERM, sigterm_handler)
+
     # Get the command with `run` as default
     cmd = (args + ['run'])[0]
 
-    config.update_configuration(cfg)
     if cmd == 'run':
         run_all(schedule, capture, ingest, agentstate)
     elif cmd == 'schedule':

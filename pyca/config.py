@@ -7,6 +7,7 @@ import logging
 from configobj import ConfigObj
 from validate import Validator
 
+logger = logging.getLogger('__name__')
 
 __CFG = '''
 [agent]
@@ -37,6 +38,10 @@ username         = string(default='admin')
 password         = string(default='opencast')
 refresh_rate     = integer(min=1, default=2)
 url              = string(default='http://localhost:5000')
+
+[logging]
+syslog           = boolean(default=False)
+stderr           = boolean(default=True)
 '''  # noqa
 
 cfgspec = __CFG.split('\n')
@@ -61,14 +66,14 @@ def check():
     '''Check configuration for sanity.
     '''
     if config()['server']['insecure']:
-        logging.warning('INSECURE: HTTPS CHECKS ARE TURNED OFF. A SECURE '
+        logger.warning('INSECURE: HTTPS CHECKS ARE TURNED OFF. A SECURE '
                         'CONNECTION IS NOT GUARANTEED')
     if config()['server']['certificate']:
         try:
             with open(config()['server']['certificate'], 'rb'):
                 pass
         except IOError as err:
-            logging.warning('Could not read certificate file: %s', err)
+            logger.warning('Could not read certificate file: %s', err)
 
 
 def config(key=None):

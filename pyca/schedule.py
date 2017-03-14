@@ -18,6 +18,8 @@ import logging
 import time
 import traceback
 
+logger = logging.getLogger('__main__')
+
 
 def parse_ical(vcal):
     '''Parse Opencast schedule iCalendar file and return events as dict
@@ -65,15 +67,15 @@ def get_schedule():
     except Exception as e:
         # Silently ignore the error if the capture agent is not yet registered
         if e.args[1] != 404:
-            logging.error('Could not get schedule')
-            logging.error(traceback.format_exc())
+            logger.error('Could not get schedule')
+            logger.error(traceback.format_exc())
         return
 
     try:
         cal = parse_ical(vcal.decode('utf-8'))
     except Exception:
-        logging.error('Could not parse ical')
-        logging.error(traceback.format_exc())
+        logger.error('Could not parse ical')
+        logger.error(traceback.format_exc())
         return
     db = get_session()
     db.query(UpcomingEvent).delete()
@@ -100,16 +102,16 @@ def control_loop():
         q = get_session().query(UpcomingEvent)\
                          .filter(UpcomingEvent.end > timestamp())
         if q.count():
-            logging.info('Next scheduled recording: %s',
+            logger.info('Next scheduled recording: %s',
                          datetime.fromtimestamp(q[0].start))
         else:
-            logging.info('No scheduled recording')
+            logger.info('No scheduled recording')
 
         next_update = timestamp() + config()['agent']['update_frequency']
         while not terminate() and timestamp() < next_update:
             time.sleep(0.1)
 
-    logging.info('Shutting down schedule service')
+    logger.info('Shutting down schedule service')
     set_service_status(Service.SCHEDULE, ServiceStatus.STOPPED)
 
 

@@ -20,6 +20,8 @@ from random import randrange
 import time
 import traceback
 
+logger = logging.getLogger('__main__')
+
 
 def get_config_params(properties):
     '''Extract the set of configuration parameters from the properties attached
@@ -64,8 +66,8 @@ def start_ingest(event):
         ingest(event.get_tracks(), event.directory(), event.uid, workflow_def,
                workflow_config)
     except:
-        logging.error('Something went wrong during the upload')
-        logging.error(traceback.format_exc())
+        logger.error('Something went wrong during the upload')
+        logger.error(traceback.format_exc())
         # Update state if something went wrong
         recording_state(event.uid, 'upload_error')
         update_event_status(event, Status.FAILED_UPLOADING)
@@ -90,15 +92,15 @@ def ingest(tracks, recording_dir, recording_id, workflow_def,
     # service at the same time
     service = config()['service-ingest']
     service = service[randrange(0, len(service))]
-    logging.info('Selecting ingest service to use: ' + service)
+    logger.info('Selecting ingest service to use: ' + service)
 
     # create mediapackage
-    logging.info('Creating new mediapackage')
+    logger.info('Creating new mediapackage')
     mediapackage = http_request(service + '/createMediaPackage')
 
     # add episode DublinCore catalog
     if os.path.isfile('%s/episode.xml' % recording_dir):
-        logging.info('Adding episode DC catalog')
+        logger.info('Adding episode DC catalog')
         dublincore = ''
         with open('%s/episode.xml' % recording_dir, 'rb') as episodefile:
             dublincore = episodefile.read().decode('utf8')
@@ -109,7 +111,7 @@ def ingest(tracks, recording_dir, recording_id, workflow_def,
 
     # add series DublinCore catalog
     if os.path.isfile('%s/series.xml' % recording_dir):
-        logging.info('Adding series DC catalog')
+        logger.info('Adding series DC catalog')
         dublincore = ''
         with open('%s/series.xml' % recording_dir, 'rb') as seriesfile:
             dublincore = seriesfile.read().decode('utf8')
@@ -120,14 +122,14 @@ def ingest(tracks, recording_dir, recording_id, workflow_def,
 
     # add track
     for (flavor, track) in tracks:
-        logging.info('Adding track ({0} -> {1})'.format(flavor, track))
+        logger.info('Adding track ({0} -> {1})'.format(flavor, track))
         track = track.encode('ascii', 'ignore')
         fields = [('mediaPackage', mediapackage), ('flavor', flavor),
                   ('BODY1', (pycurl.FORM_FILE, track))]
         mediapackage = http_request(service + '/addTrack', fields)
 
     # ingest
-    logging.info('Ingest recording')
+    logger.info('Ingest recording')
     fields = [('mediaPackage', mediapackage)]
     if workflow_def:
         fields.append(('workflowDefinitionId', workflow_def))
@@ -145,8 +147,8 @@ def safe_start_ingest(event):
     try:
         return start_ingest(event)
     except Exception:
-        logging.error('Start ingest failed')
-        logging.error(traceback.format_exc())
+        logger.error('Start ingest failed')
+        logger.error(traceback.format_exc())
         set_service_status(Service.INGEST, ServiceStatus.IDLE)
         return False
 
@@ -164,7 +166,7 @@ def control_loop():
         if events.count():
             safe_start_ingest(events[0])
         time.sleep(1.0)
-    logging.info('Shutting down ingest service')
+    logger.info('Shutting down ingest service')
     set_service_status(Service.INGEST, ServiceStatus.STOPPED)
 
 

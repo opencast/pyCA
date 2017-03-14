@@ -14,6 +14,8 @@ from pyca.db import Service, ServiceStatus
 import logging
 import time
 
+logger = logging.getLogger('__main__')
+
 
 def control_loop():
     '''Main loop, updating the capture agent state.
@@ -26,7 +28,7 @@ def control_loop():
         while not terminate and timestamp() < next_update:
             time.sleep(0.1)
 
-    logging.info('Shutting down agentstate service')
+    logger.info('Shutting down agentstate service')
     set_service_status(Service.AGENTSTATE, ServiceStatus.STOPPED)
 
 

@@ -23,7 +23,7 @@ import sys
 import time
 import traceback
 
-
+logger = logging.getLogger('__main__')
 captureproc = None
 
 
@@ -40,7 +40,7 @@ def start_capture(event):
     '''Start the capture process, creating all necessary files and directories
     as well as ingesting the captured files if no backup mode is configured.
     '''
-    logging.info('Start recording')
+    logger.info('Start recording')
 
     # First move event to recording_event table
     db = get_session()
@@ -68,8 +68,8 @@ def start_capture(event):
         event.set_tracks(tracks)
         db.commit()
     except:
-        logging.error('Recording command failed')
-        logging.error(traceback.format_exc())
+        logger.error('Recording command failed')
+        logger.error(traceback.format_exc())
         # Update state
         recording_state(event.uid, 'capture_error')
         update_event_status(event, Status.FAILED_RECORDING)
@@ -88,8 +88,8 @@ def safe_start_capture(event):
     try:
         return start_capture(event)
     except Exception:
-        logging.error('Start capture failed')
-        logging.error(traceback.format_exc())
+        logger.error('Start capture failed')
+        logger.error(traceback.format_exc())
         recording_state(event.uid, 'capture_error')
         update_event_status(event, Status.FAILED_RECORDING)
         set_service_status_immediate(Service.CAPTURE, ServiceStatus.IDLE)
@@ -105,7 +105,7 @@ def recording_command(directory, name, duration):
     cmd = cmd.replace('{{dir}}', directory)
     cmd = cmd.replace('{{name}}', name)
     cmd = cmd.replace('{{previewdir}}', preview_dir)
-    logging.info(cmd)
+    logger.info(cmd)
     args = shlex.split(cmd)
     captureproc = subprocess.Popen(args)
     while captureproc.poll() is None:
@@ -118,8 +118,8 @@ def recording_command(directory, name, duration):
         try:
             os.remove(preview.replace('{{previewdir}}', preview_dir))
         except OSError:
-            logging.warning('Could not remove preview files')
-            logging.warning(traceback.format_exc())
+            logger.warning('Could not remove preview files')
+            logger.warning(traceback.format_exc())
 
     # Return [(flavor,path),…]
     flavors = ensurelist(config()['capture']['flavors'])
@@ -142,7 +142,7 @@ def control_loop():
         if events.count():
             safe_start_capture(events[0])
         time.sleep(1.0)
-    logging.info('Shutting down capture service')
+    logger.info('Shutting down capture service')
     set_service_status(Service.CAPTURE, ServiceStatus.STOPPED)
 
 

@@ -26,11 +26,7 @@ else:
     from io import BytesIO as bio
 
 
-# Set up logging
-logging.basicConfig(level=logging.INFO,
-                    format='%(asctime)s %(levelname)-8s ' +
-                    '[%(filename)s:%(lineno)s:%(funcName)s()] %(message)s',
-                    datefmt='%Y-%m-%d %H:%M:%S')
+logger = logging.getLogger('__main__')
 
 
 def http_request(url, post_data=None):
@@ -87,7 +83,7 @@ def get_service(service_type):
     endpoints = [s['host'] + s['path'] for s in services
                  if s['online'] and s['active']]
     for endpoint in endpoints:
-        logging.info(u'Endpoint for %s: %s', service_type, endpoint)
+        logger.info(u'Endpoint for %s: %s', service_type, endpoint)
     return endpoints
 
 
@@ -128,9 +124,9 @@ def configure_service(service):
             config()['service-' + service] = \
                 get_service('org.opencastproject.' + service)
         except:
-            logging.error('Could not get %s endpoint. Retrying in 5 seconds' %
+            logger.error('Could not get %s endpoint. Retrying in 5 seconds' %
                           service)
-            logging.error(traceback.format_exc())
+            logger.error(traceback.format_exc())
             time.sleep(5.0)
 
 
@@ -156,12 +152,12 @@ def register_ca(status='idle'):
     try:
         response = http_request(url, params).decode('utf-8')
         if response:
-            logging.info(response)
+            logger.info(response)
     except:
         # Ignore errors (e.g. network issues) as it's more important to get
         # the recording as to set the correct current state in the admin ui.
-        logging.warning('Could not set capture agent state')
-        logging.warning(traceback.format_exc())
+        logger.warning('Could not set capture agent state')
+        logger.warning(traceback.format_exc())
         return False
     return True
 
@@ -182,12 +178,12 @@ def recording_state(recording_id, status):
     url += '/recordings/%s' % recording_id
     try:
         result = http_request(url, params)
-        logging.info(result)
+        logger.info(result)
     except:
         # Ignore errors (e.g. network issues) as it's more important to get
         # the recording as to set the correct current state in the admin ui.
-        logging.warning('Could not set recording state')
-        logging.warning(traceback.format_exc())
+        logger.warning('Could not set recording state')
+        logger.warning(traceback.format_exc())
 
 
 def update_event_status(event, status):
