@@ -20,5 +20,6 @@ setup(
         'console_scripts': [
             'pyca = pyca.__main__:main'
         ]
-    }
+    },
+    test_suite="tests",
 )
