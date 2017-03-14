@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(
     name="pyca",
@@ -8,7 +8,7 @@ setup(
     author_email='lkiesow@uos.de',
     license="LGPLv3",
     url="https://github.com/opencast/pyCA",
-    packages=["pyca"],
+    packages=find_packages(),
     install_requires=[
         "pycurl>=7.19.5",
         "python-dateutil>=2.4.0",
