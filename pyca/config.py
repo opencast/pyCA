@@ -42,6 +42,7 @@ url              = string(default='http://localhost:5000')
 [logging]
 syslog           = boolean(default=False)
 stderr           = boolean(default=True)
+level            = option('debug', 'info', 'warning', 'error', default='info')
 '''  # noqa
 
 cfgspec = __CFG.split('\n')
