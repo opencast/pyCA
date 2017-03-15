@@ -20,7 +20,7 @@ from random import randrange
 import time
 import traceback
 
-logger = logging.getLogger('__main__')
+logger = logging.getLogger(__name__)
 
 
 def get_config_params(properties):

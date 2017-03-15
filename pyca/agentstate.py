@@ -14,7 +14,7 @@ from pyca.db import Service, ServiceStatus
 import logging
 import time
 
-logger = logging.getLogger('__main__')
+logger = logging.getLogger(__name__)
 
 
 def control_loop():

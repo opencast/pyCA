@@ -26,7 +26,7 @@ else:
     from io import BytesIO as bio
 
 
-logger = logging.getLogger('__main__')
+logger = logging.getLogger(__name__)
 
 
 def http_request(url, post_data=None):

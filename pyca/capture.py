@@ -23,7 +23,7 @@ import sys
 import time
 import traceback
 
-logger = logging.getLogger('__main__')
+logger = logging.getLogger(__name__)
 captureproc = None
 
 

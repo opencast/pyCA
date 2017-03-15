@@ -108,7 +108,7 @@ def main():
     root_logger.setLevel(logging.INFO)
     for h in handlers:
         h.setFormatter(logging.Formatter(
-            'pyca: [%(filename)s:%(lineno)s:%(funcName)s()] %(message)s'))
+            'pyca: [%(name)s:%(lineno)s:%(funcName)s()] %(message)s'))
         root_logger.addHandler(h)
 
     # Set signal handler

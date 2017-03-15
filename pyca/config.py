@@ -7,7 +7,7 @@ import logging
 from configobj import ConfigObj
 from validate import Validator
 
-logger = logging.getLogger('__name__')
+logger = logging.getLogger(__name__)
 
 __CFG = '''
 [agent]
