@@ -103,7 +103,7 @@ def control_loop():
                          .filter(UpcomingEvent.end > timestamp())
         if q.count():
             logger.info('Next scheduled recording: %s',
-                         datetime.fromtimestamp(q[0].start))
+                        datetime.fromtimestamp(q[0].start))
         else:
             logger.info('No scheduled recording')
 

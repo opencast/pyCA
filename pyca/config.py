@@ -68,7 +68,7 @@ def check():
     '''
     if config()['server']['insecure']:
         logger.warning('INSECURE: HTTPS CHECKS ARE TURNED OFF. A SECURE '
-                        'CONNECTION IS NOT GUARANTEED')
+                       'CONNECTION IS NOT GUARANTEED')
     if config()['server']['certificate']:
         try:
             with open(config()['server']['certificate'], 'rb'):

@@ -125,7 +125,7 @@ def configure_service(service):
                 get_service('org.opencastproject.' + service)
         except:
             logger.error('Could not get %s endpoint. Retrying in 5 seconds' %
-                          service)
+                         service)
             logger.error(traceback.format_exc())
             time.sleep(5.0)
 
