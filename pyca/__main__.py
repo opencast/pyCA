@@ -110,21 +110,7 @@ def main():
             '[%(name)s:%(lineno)s:%(funcName)s()] %(message)s'))
         logger.addHandler(h)
 
-    # evaluate loglevel myself. eval frightened me
-    level = conf['logging']['level']
-    if level == 'debug':
-        level = logging.DEBUG
-    elif level == 'info':
-        level = logging.INFO
-    elif level == 'warning':
-        level = logging.WARNING
-    elif level == 'error':
-        level = logging.ERROR
-    else:
-        # This is a safeguarding. With proper validation config can only have
-        # the above mentioned cases
-        level = logging.INFO
-    logger.setLevel(level)
+    logger.setLevel(logging.getLevelName(conf['logging']['level'].upper()))
 
     # Set signal handler
     signal.signal(signal.SIGINT, sigint_handler)
