@@ -104,11 +104,11 @@ def main():
         handlers.append(logging.handlers.SysLogHandler(address='/dev/log'))
     if conf['logging']['stderr']:
         handlers.append(logging.StreamHandler(sys.stderr))
-    root_logger = logging.getLogger('')
+    logger = logging.getLogger('')
     for h in handlers:
         h.setFormatter(logging.Formatter(
             'pyca: [%(name)s:%(lineno)s:%(funcName)s()] %(message)s'))
-        root_logger.addHandler(h)
+        logger.addHandler(h)
 
     # evaluate loglevel myself. eval frightened me
     level = conf['logging']['level']
@@ -124,7 +124,7 @@ def main():
         # This is a safeguarding. With proper validation config can only have
         # the above mentioned cases
         level = logging.INFO
-    root_logger.setLevel(level)
+    logger.setLevel(level)
 
     # Set signal handler
     signal.signal(signal.SIGINT, sigint_handler)
