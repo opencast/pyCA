@@ -24,6 +24,11 @@ class TestPycaMain(unittest.TestCase):
             __main__.main()
         except BaseException as e:
             assert e.code == 0
+        sys.argv = ['pyca', '-x']
+        try:
+            __main__.main()
+        except BaseException as e:
+            assert e.code == 1
         sys.argv = ['pyca', 'too', 'many', 'arguments']
         try:
             __main__.main()

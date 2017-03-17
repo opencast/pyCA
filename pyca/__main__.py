@@ -81,15 +81,15 @@ def main():
     # Check command line options
     try:
         opts, args = getopt.getopt(sys.argv[1:], 'hc:', ['help', 'config='])
-
-        for opt, arg in opts:
-            if opt in ("-h", "--help"):
-                usage()
-            if opt in ('-c', '--config'):
-                cfg = arg
-                break
-    except (getopt.GetoptError, ValueError):
+    except getopt.GetoptError:
         usage(1)
+
+    for opt, arg in opts:
+        if opt in ("-h", "--help"):
+            usage()
+        if opt in ('-c', '--config'):
+            cfg = arg
+            break
 
     # Make sure we got only one command
     if len(args) > 1:
