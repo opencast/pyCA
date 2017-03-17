@@ -107,7 +107,7 @@ def main():
     logger = logging.getLogger('')
     for h in handlers:
         h.setFormatter(logging.Formatter(
-            'pyca: [%(name)s:%(lineno)s:%(funcName)s()] %(message)s'))
+            '[%(name)s:%(lineno)s:%(funcName)s()] %(message)s'))
         logger.addHandler(h)
 
     # evaluate loglevel myself. eval frightened me
