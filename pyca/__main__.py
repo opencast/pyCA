@@ -95,7 +95,11 @@ def main():
     if len(args) > 1:
         usage(2)
 
-    config.update_configuration(cfg)
+    try:
+        config.update_configuration(cfg)
+    except ValueError as e:
+        print(e.message)
+        sys.exit(3)
 
     # Initialize logger
     handlers = []

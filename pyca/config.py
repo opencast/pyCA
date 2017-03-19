@@ -57,7 +57,9 @@ def update_configuration(cfgfile='/etc/pyca.conf'):
     '''
     cfg = ConfigObj(cfgfile, configspec=cfgspec)
     validator = Validator()
-    cfg.validate(validator)
+    val = cfg.validate(validator)
+    if val is not True:
+        raise ValueError('Invalid configuration: %s' % val)
     globals()['__config'] = cfg
     check()
     return cfg
