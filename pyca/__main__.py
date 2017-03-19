@@ -110,7 +110,7 @@ def main():
             '[%(name)s:%(lineno)s:%(funcName)s()] %(message)s'))
         logger.addHandler(h)
 
-    logger.setLevel(logging.getLevelName(conf['logging']['level'].upper()))
+    logger.setLevel(conf['logging']['level'].upper())
 
     # Set signal handler
     signal.signal(signal.SIGINT, sigint_handler)
