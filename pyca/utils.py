@@ -72,16 +72,10 @@ def get_service(service_type):
     endpoint = '/services/available.json?serviceType=' + str(service_type)
     url = '%s%s' % (config()['server']['url'], endpoint)
     response = http_request(url).decode('utf-8')
-    services = (json.loads(response).get('services') or {}).get('service', [])
-    # This will give us either a list or one element. Let us make sure, it is
-    # a list
-    try:
-        services.get('type')
-        services = [services]
-    except AttributeError:
-        pass
-    endpoints = [s['host'] + s['path'] for s in services
-                 if s['online'] and s['active']]
+    services = json.loads(response).get('services', {}).get('service', [])
+    services = ensurelist(services)
+    endpoints = [service['host'] + service['path'] for service in services
+                 if service['online'] and service['active']]
     for endpoint in endpoints:
         logger.info(u'Endpoint for %s: %s', service_type, endpoint)
     return endpoints
