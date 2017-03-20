@@ -9,7 +9,7 @@ import tempfile
 import unittest
 
 from pyca import utils, config, db
-from tests.tools import should_fail
+from tests.tools import should_fail, CurlMock
 
 import sys
 if sys.version_info.major > 2:
@@ -68,8 +68,20 @@ class TestPycaUtils(unittest.TestCase):
         config.config()['server']['certificate'] = 'nowhere'
         try:
             utils.http_request('http://127.0.0.1:8', [('x', 'y')])
+            assert False
         except Exception as e:
             assert e.args[0] == 7  # connection error
+
+    def test_http_request_mocked_curl(self):
+        config.config()['server']['insecure'] = True
+        config.config()['server']['certificate'] = 'nowhere'
+        utils.pycurl.Curl = CurlMock
+        try:
+            utils.http_request('http://127.0.0.1:8', [('x', 'y')])
+            assert True
+        except Exception:
+            assert False
+        reload(utils.pycurl)
 
     def test_register_ca(self):
         utils.http_request = lambda x, y=False: b'xxx'
@@ -96,7 +108,3 @@ class TestPycaUtils(unittest.TestCase):
                                            db.ServiceStatus.BUSY)
         utils.set_service_status_immediate(db.Service.CAPTURE,
                                            db.ServiceStatus.BUSY)
-
-
-if __name__ == '__main__':
-    unittest.main()
