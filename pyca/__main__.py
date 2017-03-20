@@ -98,8 +98,8 @@ def main():
     try:
         config.update_configuration(cfg)
     except ValueError as e:
-        print(e.message)
-        sys.exit(3)
+        print(str(e))
+        sys.exit(4)
 
     # Initialize logger
     handlers = []

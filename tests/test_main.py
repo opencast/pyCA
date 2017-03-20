@@ -3,7 +3,9 @@
 pyCA tests for schedule handling
 '''
 
+import os
 import sys
+import tempfile
 import unittest
 
 from pyca import __main__, agentstate, capture, ingest, schedule, ui, utils
@@ -19,6 +21,9 @@ if sys.version_info.major > 2:
 class TestPycaMain(unittest.TestCase):
 
     def test_help(self):
+        # shorten usage output
+        __main__.USAGE = '%s'
+        # test scenarios which end in the usage being printed
         sys.argv = ['pyca', '-h']
         try:
             __main__.main()
@@ -39,6 +44,18 @@ class TestPycaMain(unittest.TestCase):
             __main__.main()
         except BaseException as e:
             assert e.code == 3
+
+    def test_broken_configuration(self):
+        fd, fn = tempfile.mkstemp()
+        with open(fn, 'w') as f:
+            f.write('[agent]\nupdate_frequency = "qwe"')
+        sys.argv = ['pyca', '-c', fn, 'fail']
+        try:
+            __main__.main()
+        except BaseException as e:
+            assert e.code == 4
+        os.close(fd)
+        os.remove(fn)
 
     def test_run(self):
         for mod in (agentstate, capture, ingest, schedule):
