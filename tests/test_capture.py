@@ -29,7 +29,7 @@ class TestPycaCapture(unittest.TestCase):
         reload(utils)
         reload(db)
         utils.http_request = lambda x, y=False: b'xxx'
-        _, self.dbfile = tempfile.mkstemp()
+        self.fd, self.dbfile = tempfile.mkstemp()
         self.cadir = tempfile.mkdtemp()
         preview = os.path.join(self.cadir, 'preview.png')
         open(preview, 'a').close()
@@ -60,6 +60,7 @@ class TestPycaCapture(unittest.TestCase):
         self.event.set_data({'attach': data})
 
     def tearDown(self):
+        os.close(self.fd)
         os.remove(self.dbfile)
         shutil.rmtree(self.cadir)
 
