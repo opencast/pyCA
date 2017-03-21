@@ -15,7 +15,3 @@ class TestPycaConfig(unittest.TestCase):
         config.config()['server']['insecure'] = True
         config.config()['server']['certificate'] = 'xxx'
         config.check()
-
-
-if __name__ == '__main__':
-    unittest.main()

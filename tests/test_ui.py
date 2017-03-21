@@ -57,7 +57,3 @@ class TestPycaUI(unittest.TestCase):
             r = ui.serve_image(0)
             assert r.status_code == 200
             r.close()
-
-
-if __name__ == '__main__':
-    unittest.main()

@@ -7,27 +7,16 @@ Tests for basic capturing
 import os
 import os.path
 import shutil
-import sys
 import tempfile
 import unittest
 
 from pyca import capture, config, db, utils
-from tests.tools import should_fail, terminate_fn
-
-if sys.version_info.major > 2:
-    try:
-        from importlib import reload
-    except ImportError:
-        from imp import reload
+from tests.tools import should_fail, terminate_fn, reload
 
 
 class TestPycaCapture(unittest.TestCase):
 
     def setUp(self):
-        reload(config)
-        reload(capture)
-        reload(utils)
-        reload(db)
         utils.http_request = lambda x, y=False: b'xxx'
         self.fd, self.dbfile = tempfile.mkstemp()
         self.cadir = tempfile.mkdtemp()
@@ -63,6 +52,8 @@ class TestPycaCapture(unittest.TestCase):
         os.close(self.fd)
         os.remove(self.dbfile)
         shutil.rmtree(self.cadir)
+        reload(capture)
+        reload(utils)
 
     def test_start_capture(self):
         assert capture.start_capture(self.event)

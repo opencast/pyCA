@@ -9,21 +9,12 @@ import tempfile
 import unittest
 
 from pyca import utils, config, db
-from tests.tools import should_fail, CurlMock
-
-import sys
-if sys.version_info.major > 2:
-    try:
-        from importlib import reload
-    except ImportError:
-        from imp import reload
+from tests.tools import should_fail, CurlMock, reload
 
 
 class TestPycaUtils(unittest.TestCase):
 
     def setUp(self):
-        reload(utils)
-        reload(config)
         config.config()['service-capture.admin'] = ['']
 
         # db
@@ -34,6 +25,8 @@ class TestPycaUtils(unittest.TestCase):
     def tearDown(self):
         os.close(self.fd)
         os.remove(self.dbfile)
+        reload(utils)
+        reload(config)
 
     def test_get_service(self):
         res = '''{"services":{

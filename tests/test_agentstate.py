@@ -9,7 +9,7 @@ import tempfile
 import unittest
 
 from pyca import agentstate, config, db, utils
-from tests.tools import terminate_fn
+from tests.tools import terminate_fn, reload
 
 
 class TestPycaAgentState(unittest.TestCase):
@@ -26,6 +26,7 @@ class TestPycaAgentState(unittest.TestCase):
     def tearDown(self):
         os.close(self.fd)
         os.remove(self.dbfile)
+        reload(utils)
 
     def test_run(self):
         agentstate.terminate = terminate_fn(1)
@@ -33,7 +34,3 @@ class TestPycaAgentState(unittest.TestCase):
             agentstate.run()
         except Exception:
             assert False
-
-
-if __name__ == '__main__':
-    unittest.main()

@@ -67,7 +67,3 @@ class TestPycaDb(unittest.TestCase):
 
         assert s.type == 0
         assert s.status == 0
-
-
-if __name__ == '__main__':
-    unittest.main()

@@ -7,27 +7,16 @@ Tests for basic capturing
 import os
 import os.path
 import shutil
-import sys
 import tempfile
 import unittest
 
 from pyca import ingest, config, db, utils
-from tests.tools import should_fail, terminate_fn
-
-if sys.version_info.major > 2:
-    try:
-        from importlib import reload
-    except ImportError:
-        from imp import reload
+from tests.tools import should_fail, terminate_fn, reload
 
 
 class TestPycaIngest(unittest.TestCase):
 
     def setUp(self):
-        reload(config)
-        reload(ingest)
-        reload(utils)
-        reload(db)
         utils.http_request = lambda x, y=False: b'xxx'
         ingest.http_request = lambda x, y=False: b'xxx'
         self.fd, self.dbfile = tempfile.mkstemp()
@@ -68,6 +57,8 @@ class TestPycaIngest(unittest.TestCase):
         os.close(self.fd)
         os.remove(self.dbfile)
         shutil.rmtree(self.cadir)
+        reload(ingest)
+        reload(utils)
 
     def test_start_ingest(self):
         assert ingest.start_ingest(self.event)
@@ -87,7 +78,3 @@ class TestPycaIngest(unittest.TestCase):
         ingest.run()
         ingest.terminate = terminate_fn(1)
         ingest.run()
-
-
-if __name__ == '__main__':
-    unittest.main()

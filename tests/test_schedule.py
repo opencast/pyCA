@@ -10,7 +10,7 @@ import tempfile
 import unittest
 
 from pyca import schedule, config, db, utils
-from tests.tools import should_fail, ShouldFailException, terminate_fn
+from tests.tools import should_fail, ShouldFailException, terminate_fn, reload
 
 
 class TestPycaCapture(unittest.TestCase):
@@ -39,6 +39,8 @@ class TestPycaCapture(unittest.TestCase):
     def tearDown(self):
         os.close(self.fd)
         os.remove(self.dbfile)
+        reload(utils)
+        reload(schedule)
 
     def test_get_schedule(self):
         # Failed request
@@ -59,7 +61,3 @@ class TestPycaCapture(unittest.TestCase):
     def test_run(self):
         schedule.terminate = terminate_fn(2)
         schedule.run()
-
-
-if __name__ == '__main__':
-    unittest.main()
