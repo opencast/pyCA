@@ -25,7 +25,7 @@ def control_loop():
         update_agent_state()
 
         next_update = timestamp() + config()['agent']['update_frequency']
-        while not terminate and timestamp() < next_update:
+        while not terminate() and timestamp() < next_update:
             time.sleep(0.1)
 
     logger.info('Shutting down agentstate service')
