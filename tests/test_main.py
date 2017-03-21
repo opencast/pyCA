@@ -9,20 +9,22 @@ import tempfile
 import unittest
 
 from pyca import __main__, agentstate, capture, ingest, schedule, ui, utils
-from tests.tools import should_fail, ShouldFailException
-
-if sys.version_info.major > 2:
-    try:
-        from importlib import reload
-    except ImportError:
-        from imp import reload
+from tests.tools import should_fail, ShouldFailException, reload
 
 
 class TestPycaMain(unittest.TestCase):
 
+    def setUp(self):
+        # Disable `print`
+        # Ugly but compatible with Python 2
+        sys.stdout = ShouldFailException()
+        sys.stdout.write = lambda x: ''
+        sys.stdout.flush = lambda: ''
+
+    def teardown(self):
+        reload(sys)
+
     def test_help(self):
-        # shorten usage output
-        __main__.USAGE = '%s'
         # test scenarios which end in the usage being printed
         sys.argv = ['pyca', '-h']
         try:

@@ -3,6 +3,19 @@
 Some helper tools for pyCA testing.
 '''
 
+import logging
+
+try:
+    from importlib import reload  # noqa
+except ImportError:
+    from imp import reload  # noqa
+
+
+# Raise log level above maximum to silence logging in tests.
+# Then ensure that the log leven cannot be reset
+logging.getLogger('').setLevel(logging.CRITICAL * 100)
+logging.getLogger('').setLevel = lambda x: True
+
 
 class ShouldFailException(Exception):
     args = [None, 0]
