@@ -36,7 +36,7 @@ def sigterm_handler(signum, frame):
     sys.exit(0)
 
 
-def start_capture(event):
+def start_capture(upcoming_event):
     '''Start the capture process, creating all necessary files and directories
     as well as ingesting the captured files if no backup mode is configured.
     '''
@@ -44,13 +44,12 @@ def start_capture(event):
 
     # First move event to recording_event table
     db = get_session()
-    events = db.query(RecordedEvent).filter(RecordedEvent.uid == event.uid)\
-                                    .filter(RecordedEvent.start ==
-                                            event.start)
-    if events.count():
-        event = events[0]
-    else:
-        event = RecordedEvent(event)
+    event = db.query(RecordedEvent)\
+              .filter(RecordedEvent.uid == upcoming_event.uid)\
+              .filter(RecordedEvent.start == upcoming_event.start)\
+              .first()
+    if not event:
+        event = RecordedEvent(upcoming_event)
         db.add(event)
         db.commit()
 
@@ -136,11 +135,12 @@ def control_loop():
     set_service_status(Service.CAPTURE, ServiceStatus.IDLE)
     while not terminate():
         # Get next recording
-        events = get_session().query(UpcomingEvent)\
-                              .filter(UpcomingEvent.start <= timestamp())\
-                              .filter(UpcomingEvent.end > timestamp())
-        if events.count():
-            safe_start_capture(events[0])
+        event = get_session().query(UpcomingEvent)\
+                             .filter(UpcomingEvent.start <= timestamp())\
+                             .filter(UpcomingEvent.end > timestamp())\
+                             .first()
+        if event:
+            safe_start_capture(event)
         time.sleep(1.0)
     logger.info('Shutting down capture service')
     set_service_status(Service.CAPTURE, ServiceStatus.STOPPED)
