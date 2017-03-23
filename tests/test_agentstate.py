@@ -16,7 +16,7 @@ class TestPycaAgentState(unittest.TestCase):
 
     def setUp(self):
         utils.http_request = lambda x, y=False: b'xxx'
-        _, self.dbfile = tempfile.mkstemp()
+        self.fd, self.dbfile = tempfile.mkstemp()
         config.config()['agent']['database'] = 'sqlite:///' + self.dbfile
         config.config()['service-capture.admin'] = ['']
 
@@ -24,6 +24,7 @@ class TestPycaAgentState(unittest.TestCase):
         db.init()
 
     def tearDown(self):
+        os.close(self.fd)
         os.remove(self.dbfile)
 
     def test_run(self):

@@ -19,10 +19,11 @@ class TestPycaDb(unittest.TestCase):
         cfg = './etc/pyca.conf'
         config.update_configuration(cfg)
 
-        _, self.dbfile = tempfile.mkstemp()
+        self.fd, self.dbfile = tempfile.mkstemp()
         config.config()['agent']['database'] = 'sqlite:///' + self.dbfile
 
     def tearDown(self):
+        os.close(self.fd)
         os.remove(self.dbfile)
 
     def test_get_session(self):

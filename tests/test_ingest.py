@@ -30,7 +30,7 @@ class TestPycaIngest(unittest.TestCase):
         reload(db)
         utils.http_request = lambda x, y=False: b'xxx'
         ingest.http_request = lambda x, y=False: b'xxx'
-        _, self.dbfile = tempfile.mkstemp()
+        self.fd, self.dbfile = tempfile.mkstemp()
         self.cadir = tempfile.mkdtemp()
         config.config()['agent']['database'] = 'sqlite:///' + self.dbfile
         config.config()['capture']['directory'] = self.cadir
@@ -65,6 +65,7 @@ class TestPycaIngest(unittest.TestCase):
         self.event.set_tracks([('presenter/source', trackfile)])
 
     def tearDown(self):
+        os.close(self.fd)
         os.remove(self.dbfile)
         shutil.rmtree(self.cadir)
 

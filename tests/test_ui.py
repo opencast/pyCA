@@ -16,13 +16,15 @@ class TestPycaUI(unittest.TestCase):
     auth = {'Authorization': 'Basic YWRtaW46b3BlbmNhc3Q='}
 
     def setUp(self):
-        _, self.dbfile = tempfile.mkstemp()
-        _, self.previewfile = tempfile.mkstemp()
+        self.fd1, self.dbfile = tempfile.mkstemp()
+        self.fd2, self.previewfile = tempfile.mkstemp()
         config.config()['capture']['preview'] = [self.previewfile]
         config.config()['agent']['database'] = 'sqlite:///' + self.dbfile
         db.init()
 
     def tearDown(self):
+        os.close(self.fd1)
+        os.close(self.fd2)
         os.remove(self.dbfile)
         os.remove(self.previewfile)
 
