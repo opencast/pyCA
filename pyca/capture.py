@@ -106,7 +106,9 @@ def recording_command(directory, name, duration):
     cmd = cmd.replace('{{previewdir}}', preview_dir)
     logger.info(cmd)
     args = shlex.split(cmd)
-    captureproc = subprocess.Popen(args)
+    DEVNULL = getattr(subprocess, 'DEVNULL', os.open(os.devnull, os.O_RDWR))
+    captureproc = subprocess.Popen(args, stdin=DEVNULL)
+    hasattr(subprocess, 'DEVNULL') or os.close(DEVNULL)
     while captureproc.poll() is None:
         time.sleep(0.1)
     if captureproc.returncode > 0:
