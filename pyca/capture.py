@@ -63,22 +63,14 @@ def start_capture(event):
     recording_state(event.uid, 'capturing')
     update_event_status(event, Status.RECORDING)
 
-    try:
-        tracks = recording_command(event.directory(), event.name(), duration)
-        event.set_tracks(tracks)
-        db.commit()
-    except:
-        logger.error('Recording command failed')
-        logger.error(traceback.format_exc())
-        # Update state
-        recording_state(event.uid, 'capture_error')
-        update_event_status(event, Status.FAILED_RECORDING)
-        set_service_status_immediate(Service.CAPTURE, ServiceStatus.IDLE)
-        return False
+    # Recording
+    tracks = recording_command(event.directory(), event.name(), duration)
+    event.set_tracks(tracks)
+    db.commit()
 
+    # Set status
     set_service_status_immediate(Service.CAPTURE, ServiceStatus.IDLE)
     update_event_status(event, Status.FINISHED_RECORDING)
-    return True
 
 
 def safe_start_capture(event):
@@ -86,10 +78,12 @@ def safe_start_capture(event):
     process, log them but otherwise ignore them.
     '''
     try:
-        return start_capture(event)
+        start_capture(event)
+        return True
     except Exception:
-        logger.error('Start capture failed')
+        logger.error('Recording failed')
         logger.error(traceback.format_exc())
+        # Update state
         recording_state(event.uid, 'capture_error')
         update_event_status(event, Status.FAILED_RECORDING)
         set_service_status_immediate(Service.CAPTURE, ServiceStatus.IDLE)
@@ -111,7 +105,7 @@ def recording_command(directory, name, duration):
     while captureproc.poll() is None:
         time.sleep(0.1)
     if captureproc.returncode > 0:
-        raise Exception('Recording failed (%i)' % captureproc.returncode)
+        raise RuntimeError('Recording failed (%i)' % captureproc.returncode)
 
     # Remove preview files:
     for preview in config()['capture']['preview']:

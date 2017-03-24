@@ -64,11 +64,15 @@ class TestPycaCapture(unittest.TestCase):
         shutil.rmtree(self.cadir)
 
     def test_start_capture(self):
-        assert capture.start_capture(self.event)
+        capture.start_capture(self.event)
 
     def test_start_capture_recording_command_failure(self):
         config.config()['capture']['command'] = 'false'
-        assert not capture.start_capture(self.event)
+        try:
+            capture.start_capture(self.event)
+            assert False
+        except RuntimeError:
+            assert True
 
     def test_safe_start_capture(self):
         capture.start_capture = should_fail
