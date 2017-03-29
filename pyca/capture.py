@@ -78,7 +78,6 @@ def safe_start_capture(event):
     '''
     try:
         start_capture(event)
-        return True
     except Exception:
         logger.error('Recording failed')
         logger.error(traceback.format_exc())
@@ -86,7 +85,6 @@ def safe_start_capture(event):
         recording_state(event.uid, 'capture_error')
         update_event_status(event, Status.FAILED_RECORDING)
         set_service_status_immediate(Service.CAPTURE, ServiceStatus.IDLE)
-        return False
 
 
 def recording_command(directory, name, duration):
