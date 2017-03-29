@@ -12,7 +12,6 @@ logger = logging.getLogger(__name__)
 __CFG = '''
 [agent]
 name             = string(default='pyca')
-ignore_timezone  = boolean(default=False)
 update_frequency = integer(min=5, default=60)
 cal_lookahead    = integer(min=0, default=14)
 backup_mode      = boolean(default=false)
