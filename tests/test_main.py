@@ -47,17 +47,20 @@ class TestPycaMain(unittest.TestCase):
         except BaseException as e:
             assert e.code == 3
 
-    def test_broken_configuration(self):
-        fd, fn = tempfile.mkstemp()
-        with open(fn, 'w') as f:
-            f.write('[agent]\nupdate_frequency = "qwe"')
-        sys.argv = ['pyca', '-c', fn, 'fail']
-        try:
-            __main__.main()
-        except BaseException as e:
-            assert e.code == 4
-        os.close(fd)
-        os.remove(fn)
+    def test_broken_configuration_type(self):
+        configs = ('[capture]\nflavors = "x/source"\nfiles = a, b',
+                   '[agent]\nupdate_frequency = "nan"')
+        for config in configs:
+            fd, fn = tempfile.mkstemp()
+            with open(fn, 'w') as f:
+                f.write(config)
+            sys.argv = ['pyca', '-c', fn, 'fail']
+            try:
+                __main__.main()
+            except BaseException as e:
+                assert e.code == 4
+            os.close(fd)
+            os.remove(fn)
 
     def test_run(self):
         for mod in (agentstate, capture, ingest, schedule):
