@@ -20,9 +20,9 @@ database         = string(default='sqlite:///pyca.db')
 
 [capture]
 directory        = string(default='./recordings')
-command          = string(default='ffmpeg -nostats -re -f lavfi -r 25 -i testsrc -t {{time}} {{dir}}/{{name}}.mp4')
+command          = string(default='ffmpeg -nostats -re -f lavfi -r 25 -i testsrc -t {{time}} {{dir}}/{{name}}.webm')
 flavors          = force_list(default=list('presenter/source'))
-files            = force_list(default=list('{{dir}}/{{name}}.mp4'))
+files            = force_list(default=list('{{dir}}/{{name}}.webm'))
 preview_dir      = string(default='./recordings')
 preview          = force_list(default=list())
 
