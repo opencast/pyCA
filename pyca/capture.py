@@ -7,9 +7,9 @@
     :license: LGPL – see license.lgpl for more details.
 '''
 
-from pyca.utils import timestamp, try_mkdir, configure_service, ensurelist
+from pyca.utils import timestamp, try_mkdir, configure_service, terminate
 from pyca.utils import set_service_status, set_service_status_immediate
-from pyca.utils import recording_state, update_event_status, terminate
+from pyca.utils import recording_state, update_event_status
 from pyca.config import config
 from pyca.db import get_session, RecordedEvent, UpcomingEvent, Status,\
                     Service, ServiceStatus
@@ -89,17 +89,17 @@ def safe_start_capture(event):
 def recording_command(event):
     '''Run the actual command to record the a/v material.
     '''
+    conf = config('capture')
     # Prepare command line
-    preview_dir = config()['capture']['preview_dir']
-    cmd = config()['capture']['command']
+    cmd = conf['command']
     cmd = cmd.replace('{{time}}', str(event.remaining_duration(timestamp())))
     cmd = cmd.replace('{{dir}}', event.directory())
     cmd = cmd.replace('{{name}}', event.name())
-    cmd = cmd.replace('{{previewdir}}', preview_dir)
+    cmd = cmd.replace('{{previewdir}}', conf['preview_dir'])
 
     # Signal configuration
-    sigterm_time = config()['capture']['sigterm_time']
-    sigkill_time = config()['capture']['sigkill_time']
+    sigterm_time = conf['sigterm_time']
+    sigkill_time = conf['sigkill_time']
     sigterm_time = 0 if sigterm_time < 0 else event.end + sigterm_time
     sigkill_time = 0 if sigkill_time < 0 else event.end + sigkill_time
 
@@ -123,9 +123,9 @@ def recording_command(event):
         time.sleep(0.1)
 
     # Remove preview files:
-    for preview in config()['capture']['preview']:
+    for preview in conf['preview']:
         try:
-            os.remove(preview.replace('{{previewdir}}', preview_dir))
+            os.remove(preview.replace('{{previewdir}}', conf['preview_dir']))
         except OSError:
             logger.warning('Could not remove preview files')
             logger.warning(traceback.format_exc())
@@ -136,11 +136,9 @@ def recording_command(event):
         raise RuntimeError('Recording failed (%i)' % captureproc.returncode)
 
     # Return [(flavor,path),…]
-    flavors = ensurelist(config()['capture']['flavors'])
-    files = ensurelist(config()['capture']['files'])
-    files = [f.replace('{{dir}}', event.directory()) for f in files]
-    files = [f.replace('{{name}}', event.name()) for f in files]
-    return list(zip(flavors, files))
+    files = (f.replace('{{dir}}', event.directory()) for f in conf['files'])
+    files = (f.replace('{{name}}', event.name()) for f in files)
+    return list(zip(conf['flavors'], files))
 
 
 def control_loop():
