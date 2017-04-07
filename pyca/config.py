@@ -62,6 +62,8 @@ def update_configuration(cfgfile='/etc/pyca.conf'):
     val = cfg.validate(validator)
     if val is not True:
         raise ValueError('Invalid configuration: %s' % val)
+    if len(cfg['capture']['files']) != len(cfg['capture']['flavors']):
+        raise ValueError('List of files and flavors do not match')
     globals()['__config'] = cfg
     check()
     return cfg
@@ -74,11 +76,7 @@ def check():
         logger.warning('INSECURE: HTTPS CHECKS ARE TURNED OFF. A SECURE '
                        'CONNECTION IS NOT GUARANTEED')
     if config()['server']['certificate']:
-        try:
-            with open(config()['server']['certificate'], 'rb'):
-                pass
-        except IOError as err:
-            logger.warning('Could not read certificate file: %s', err)
+        open(config()['server']['certificate'], 'rb').close()
 
 
 def config(key=None):
