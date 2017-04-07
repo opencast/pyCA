@@ -83,6 +83,7 @@ def get_service(service_type):
 
 def unix_ts(dtval):
     '''Convert datetime into a unix timestamp.
+    This is the equivalent to Python 3's int(datetime.timestamp()).
 
     :param dt: datetime to convert
     '''
@@ -94,8 +95,6 @@ def unix_ts(dtval):
 def timestamp():
     '''Get current unix timestamp
     '''
-    if config()['agent']['ignore_timezone']:
-        return unix_ts(datetime.now())
     return unix_ts(datetime.now(tzutc()))
 
 
