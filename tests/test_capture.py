@@ -78,10 +78,11 @@ class TestPycaCapture(unittest.TestCase):
         capture.start_capture(self.event)
 
     def test_safe_start_capture(self):
+        '''Ensure that safe_start_capture always returns without error to not
+        disrupt the main loop.
+        '''
         capture.start_capture = should_fail
-        assert not capture.safe_start_capture(self.event)
-        capture.start_capture = lambda x: True
-        assert capture.safe_start_capture(self.event)
+        capture.safe_start_capture(self.event)
 
     def test_run(self):
         capture.terminate = terminate_fn(1)
