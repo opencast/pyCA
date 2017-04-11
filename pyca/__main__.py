@@ -72,11 +72,10 @@ def run_all(*modules):
 
 
 def main():
-
     # Probe for configuration file location
-    cfg = '/etc/pyca.conf'
+    cfg = './etc/pyca.conf'
     if not os.path.isfile(cfg):
-        cfg = './etc/pyca.conf'
+        cfg = '/etc/pyca.conf'
 
     # Check command line options
     try:
@@ -103,10 +102,10 @@ def main():
 
     # Initialize logger
     handlers = []
-    conf = config.config()
-    if conf['logging']['syslog']:
+    logconf = config.config()['logging']
+    if logconf['syslog']:
         handlers.append(logging.handlers.SysLogHandler(address='/dev/log'))
-    if conf['logging']['stderr']:
+    if logconf['stderr']:
         handlers.append(logging.StreamHandler(sys.stderr))
     logger = logging.getLogger('')
     for h in handlers:
@@ -114,7 +113,10 @@ def main():
             '[%(name)s:%(lineno)s:%(funcName)s()] %(message)s'))
         logger.addHandler(h)
 
-    logger.setLevel(conf['logging']['level'].upper())
+    logger.setLevel(logconf['level'].upper())
+
+    logger.info('Configuration loaded from %s' % cfg)
+    logger.info('Log level set to %s' % logconf['level'])
 
     # Set signal handler
     signal.signal(signal.SIGINT, sigint_handler)
