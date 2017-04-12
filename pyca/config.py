@@ -46,6 +46,7 @@ url              = string(default='http://localhost:5000')
 [logging]
 syslog           = boolean(default=False)
 stderr           = boolean(default=True)
+file             = string(default='')
 level            = option('debug', 'info', 'warning', 'error', default='info')
 format           = string(default='[%(name)s:%(lineno)s:%(funcName)s()] [%(levelname)s] %(message)s')
 '''  # noqa
@@ -103,6 +104,8 @@ def logger_init():
         handlers.append(logging.handlers.SysLogHandler(address='/dev/log'))
     if logconf['stderr']:
         handlers.append(logging.StreamHandler(sys.stderr))
+    if logconf['file']:
+        handlers.append(logging.handlers.WatchedFileHandler(logconf['file']))
     for handler in handlers:
         handler.setFormatter(logging.Formatter(logconf['format']))
         logging.root.addHandler(handler)
