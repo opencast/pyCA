@@ -8,8 +8,6 @@
 '''
 
 import getopt
-import logging
-import logging.handlers
 import multiprocessing
 import os
 import signal
@@ -99,24 +97,6 @@ def main():
     except ValueError as e:
         print(str(e))
         sys.exit(4)
-
-    # Initialize logger
-    handlers = []
-    logconf = config.config()['logging']
-    if logconf['syslog']:
-        handlers.append(logging.handlers.SysLogHandler(address='/dev/log'))
-    if logconf['stderr']:
-        handlers.append(logging.StreamHandler(sys.stderr))
-    logger = logging.getLogger('')
-    for h in handlers:
-        h.setFormatter(logging.Formatter(
-            '[%(name)s:%(lineno)s:%(funcName)s()] %(message)s'))
-        logger.addHandler(h)
-
-    logger.setLevel(logconf['level'].upper())
-
-    logger.info('Configuration loaded from %s' % cfg)
-    logger.info('Log level set to %s' % logconf['level'])
 
     # Set signal handler
     signal.signal(signal.SIGINT, sigint_handler)

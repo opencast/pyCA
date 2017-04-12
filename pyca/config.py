@@ -3,8 +3,10 @@
 Default configuration for pyCA.
 '''
 
+import configobj
 import logging
-from configobj import ConfigObj
+import logging.handlers
+import sys
 from validate import Validator
 
 logger = logging.getLogger(__name__)
@@ -45,6 +47,7 @@ url              = string(default='http://localhost:5000')
 syslog           = boolean(default=False)
 stderr           = boolean(default=True)
 level            = option('debug', 'info', 'warning', 'error', default='info')
+format           = string(default='[%(name)s:%(lineno)s:%(funcName)s()] [%(levelname)s] %(message)s')
 '''  # noqa
 
 cfgspec = __CFG.split('\n')
@@ -57,7 +60,8 @@ def update_configuration(cfgfile='/etc/pyca.conf'):
 
     :param cfgfile: Configuration file to load.
     '''
-    cfg = ConfigObj(cfgfile, configspec=cfgspec)
+    configobj.DEFAULT_INTERPOLATION = 'template'
+    cfg = configobj.ConfigObj(cfgfile, configspec=cfgspec)
     validator = Validator()
     val = cfg.validate(validator)
     if val is not True:
@@ -65,6 +69,8 @@ def update_configuration(cfgfile='/etc/pyca.conf'):
     if len(cfg['capture']['files']) != len(cfg['capture']['flavors']):
         raise ValueError('List of files and flavors do not match')
     globals()['__config'] = cfg
+    logger_init()
+    logger.info('Configuration loaded from %s' % cfgfile)
     check()
     return cfg
 
@@ -72,12 +78,34 @@ def update_configuration(cfgfile='/etc/pyca.conf'):
 def check():
     '''Check configuration for sanity.
     '''
-    if config()['server']['insecure']:
-        logger.warning('INSECURE: HTTPS CHECKS ARE TURNED OFF. A SECURE '
-                       'CONNECTION IS NOT GUARANTEED')
-    if config()['server']['certificate']:
-        open(config()['server']['certificate'], 'rb').close()
+    if config('server')['insecure']:
+        logger.warning('HTTPS CHECKS ARE TURNED OFF. A SECURE CONNECTION IS '
+                       'NOT GUARANTEED')
+    if config('server')['certificate']:
+        # Ensure certificate exists and is readable
+        open(config('server')['certificate'], 'rb').close()
+    if config('agent')['backup_mode']:
+        logger.info('Agent runs in bakup mode. No data will be sent to '
+                    'Opencast')
 
 
 def config(key=None):
-    return __config or update_configuration()
+    cfg = __config or update_configuration()
+    return cfg[key] if key else cfg
+
+
+def logger_init():
+    '''Initialize logger based on configuration
+    '''
+    handlers = []
+    logconf = config('logging')
+    if logconf['syslog']:
+        handlers.append(logging.handlers.SysLogHandler(address='/dev/log'))
+    if logconf['stderr']:
+        handlers.append(logging.StreamHandler(sys.stderr))
+    for handler in handlers:
+        handler.setFormatter(logging.Formatter(logconf['format']))
+        logging.root.addHandler(handler)
+
+    logging.root.setLevel(logconf['level'].upper())
+    logger.info('Log level set to %s' % logconf['level'])
