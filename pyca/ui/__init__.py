@@ -2,37 +2,15 @@
 '''
 Simple UI telling about the current state of the capture agent.
 '''
+from flask import Flask, request, send_from_directory,  render_template
 from pyca.config import config
-from pyca.db import get_session, UpcomingEvent, RecordedEvent
-from pyca.db import Service, ServiceStatus
+from pyca.db import Service, ServiceStatus, UpcomingEvent, RecordedEvent
+from pyca.db import get_session
+from pyca.ui.utils import dtfmt, requires_auth
 from pyca.utils import get_service_status
-
 import os.path
-import datetime
-from functools import wraps
-from flask import Flask, request, send_from_directory, Response
-from flask import render_template
 app = Flask(__name__)
-import pyca.ui.jsonapi
-
-
-def dtfmt(ts):
-    '''Covert Unix timestamp into human readable form
-    '''
-    return datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
-
-
-def requires_auth(f):
-    @wraps(f)
-    def decorated(*args, **kwargs):
-        auth = request.authorization
-        if config()['ui']['password'] and not auth \
-                or auth.username != config()['ui']['username'] \
-                or auth.password != config()['ui']['password']:
-            return Response('pyCA', 401,
-                            {'WWW-Authenticate': 'Basic realm="pyCA Login"'})
-        return f(*args, **kwargs)
-    return decorated
+import pyca.ui.jsonapi  # noqa
 
 
 @app.route('/')

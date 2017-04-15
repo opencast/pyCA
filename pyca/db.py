@@ -151,7 +151,7 @@ class BaseEvent():
                 'uid': self.uid,
                 'title': self.title,
                 'data': self.data,
-                'status': self.status}
+                'status': Status.str(self.status)}
 
 
 class UpcomingEvent(Base, BaseEvent):
