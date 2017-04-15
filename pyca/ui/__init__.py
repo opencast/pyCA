@@ -3,7 +3,7 @@
 Simple UI telling about the current state of the capture agent.
 '''
 from pyca.config import config
-from pyca.db import get_session, Status, UpcomingEvent, RecordedEvent
+from pyca.db import get_session, UpcomingEvent, RecordedEvent
 from pyca.db import Service, ServiceStatus
 from pyca.utils import get_service_status
 
@@ -25,9 +25,9 @@ def requires_auth(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         auth = request.authorization
-        if config()['ui']['password'] and not request.authorization \
-                or request.authorization.username != config()['ui']['username'] \
-                or request.authorization.password != config()['ui']['password']:
+        if config()['ui']['password'] and not auth \
+                or auth.username != config()['ui']['username'] \
+                or auth.password != config()['ui']['password']:
             return Response('pyCA', 401,
                             {'WWW-Authenticate': 'Basic realm="pyCA Login"'})
         return f(*args, **kwargs)
@@ -61,10 +61,8 @@ def home():
     recorded_events = db.query(RecordedEvent)\
                         .order_by(RecordedEvent.start.desc())\
                         .limit(limit_processed)
-    recording = get_service_status(Service.CAPTURE) \
-                == ServiceStatus.BUSY
-    uploading =  get_service_status(Service.INGEST) \
-                == ServiceStatus.BUSY
+    recording = get_service_status(Service.CAPTURE) == ServiceStatus.BUSY
+    uploading = get_service_status(Service.INGEST) == ServiceStatus.BUSY
     processed = db.query(RecordedEvent).count()
     upcoming = db.query(UpcomingEvent).count()
 

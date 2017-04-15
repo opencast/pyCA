@@ -14,7 +14,7 @@ before_install:
 
 script:
    - coverage run --source=pyca --omit='*.html' -m unittest discover -s tests
-   - flake8 tests/*.py pyca/*.py
+   - flake8 $(find . -name '*.py')
 
 after_success:
    - coveralls
