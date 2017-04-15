@@ -8,20 +8,7 @@ from flask import request, jsonify
 from pyca.ui import app
 
 
-
-def json_error(code=500, title='Internal Error'):
-    error = {
-        'errors': [
-            {
-                'status': code,
-                'title': title
-            }
-        ]
-    }
-    
-    return jsonify(error)
-
-@app.route("/api/internal_state.json")
+@app.route('/api/services')
 def internal_state():
     '''Serve a json representation of internal agent state
     '''
@@ -34,63 +21,53 @@ def internal_state():
     return jsonify(state)
 
 
-@app.route("/api/event.json", methods=['GET'])
-def event():
-    '''Serve a json representation of events
+@app.route('/api/events')
+def events():
+    '''Serve a JSON representation of events
     '''
-    
-    try:
-        db = get_session()
-        upcoming_events = db.query(UpcomingEvent)\
-                            .order_by(UpcomingEvent.start)
-        recorded_events = db.query(RecordedEvent)\
-                            .order_by(RecordedEvent.start.desc())
-    except:
-        return json_error(), 500
-    
-    answer = { 'data': [] }
-    for events in [upcoming_events, recorded_events]:
-        for e in events:
-            i = {
-                'type': 'event',
-                'id': e.uid,
-                'attributes': {
-                    'start': datetime.fromtimestamp(e.start).isoformat(),
-                    'end': datetime.fromtimestamp(e.end).isoformat(),
-                    'status': Status.str(Status.UPCOMING)
-                }
-            }
+    db = get_session()
+    upcoming_events = db.query(UpcomingEvent)\
+                        .order_by(UpcomingEvent.start)
+    recorded_events = db.query(RecordedEvent)\
+                        .order_by(RecordedEvent.start.desc())
 
-            if hasattr(e, 'status'):
-                i['attributes']['status'] = Status.str(e.status)
-
-            answer['data'].append(i)
-
-    return jsonify(answer)
+    result = [event.serialize() for event in upcoming_events]
+    result += [event.serialize() for event in recorded_events]
+    return jsonify(result)
 
 
-@app.route("/api/event.json", methods=['DELETE'])
-def delete_event():
-    '''Delete a specific event identified by ?id parameter
+@app.route('/api/events/<uid>')
+def event(uid):
+    '''Return a specific event es JSON
     '''
-    uid = request.args.get('id', 0)
-    if uid == 0:
-        return json_error(400, 'missing id parameter'), 400
-    
-    try:
-        db = get_session()
-        event = db.query(RecordedEvent).filter(RecordedEvent.uid == uid)
-        if event.count():
-            logging.info('deleting event %s via api', uid)
-            # TODO
-        else:
-            return json_error(404, 'no event with id'), 404
-    except:
-        return json_error(), 500
-    return uid
+    db = get_session()
+    event = db.query(RecordedEvent).filter(RecordedEvent.uid == uid).first() \
+            or db.query(UpcomingEvent).filter(UpcomingEvent.uid == uid).first()
 
-@app.route("/api/event.json", methods=['POST'])
-def reingest_event():
+    if event:
+        return jsonify(event.serialize())
+    return '', 404
+
+
+@app.route('/api/events/<uid>', methods=['DELETE'])
+def delete_event(uid):
+    '''Delete a specific event identified by its uid
+
+    Returns 204 if the action was successful.
+    '''
+    db = get_session()
+    db.query(RecordedEvent).filter(RecordedEvent.uid == uid).delete()
+    logging.info('deleting event %s via api', uid)
+    db.commit()
+    return '', 204
+
+
+@app.route('/api/events/<uid>', methods=['PATCH'])
+def reingest_event(uid):
     '''Reingest a specific event identified by ?id parameter
     '''
-    pass
+    db = get_session()
+    db.query(RecordedEvent).filter(RecordedEvent.uid == uid).delete()
+    logging.info('deleting event %s via api', uid)
+    db.commit()
+    return '', 204

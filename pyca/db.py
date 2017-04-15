@@ -87,6 +87,9 @@ class BaseEvent():
     end = Column('end', Integer(), nullable=False)
     title = Column('title', Text())
     data = Column('data', LargeBinary(), nullable=False)
+    status = Column('status', Integer(), nullable=False,
+                    default=Status.UPCOMING)
+    tracks = Column('tracks', LargeBinary(), nullable=True)
 
     def get_data(self):
         '''Load JSON data from event.
@@ -119,6 +122,18 @@ class BaseEvent():
         '''
         return Status.str(self.status)
 
+    def get_tracks(self):
+        '''Load JSON track data from event.
+        '''
+        if not self.tracks:
+            return []
+        return json.loads(self.tracks.decode('utf-8'))
+
+    def set_tracks(self, tracks):
+        '''Store track data as JSON.
+        '''
+        self.tracks = json.dumps(tracks).encode('utf-8')
+
     def __repr__(self):
         '''Return a string representation of an artist object.
 
@@ -126,17 +141,17 @@ class BaseEvent():
         '''
         return '<Event(start=%i, uid="%s")>' % (self.start, self.uid)
 
-    def serialize(self, expand=0):
+    def serialize(self):
         '''Serialize this object as dictionary usable for conversion to JSON.
 
-        :param expand: Defines if sub objects shall be serialized as well.
         :return: Dictionary representing this object.
         '''
         return {'start': self.start,
                 'end': self.end,
                 'uid': self.uid,
                 'title': self.title,
-                'data': self.data}
+                'data': self.data,
+                'status': self.status}
 
 
 class UpcomingEvent(Base, BaseEvent):
@@ -150,10 +165,6 @@ class RecordedEvent(Base, BaseEvent):
 
     __tablename__ = 'recorded_event'
 
-    status = Column('status', Integer(), nullable=False,
-                    default=Status.UPCOMING)
-    tracks = Column('tracks', LargeBinary(), nullable=True)
-
     def __init__(self, event=None):
         if event:
             self.uid = event.uid
@@ -161,20 +172,7 @@ class RecordedEvent(Base, BaseEvent):
             self.end = event.end
             self.title = event.title
             self.data = event.data
-            if hasattr(event, 'status'):
-                self.status = event.status
-
-    def get_tracks(self):
-        '''Load JSON track data from event.
-        '''
-        if not self.tracks:
-            return []
-        return json.loads(self.tracks.decode('utf-8'))
-
-    def set_tracks(self, tracks):
-        '''Store track data as JSON.
-        '''
-        self.tracks = json.dumps(tracks).encode('utf-8')
+            self.status = event.status
 
 
 class ServiceStates(Base):

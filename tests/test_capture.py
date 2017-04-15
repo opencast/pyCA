@@ -35,6 +35,7 @@ class TestPycaCapture(unittest.TestCase):
         self.event.title = u'äüÄÜß'
         self.event.start = utils.timestamp()
         self.event.end = self.event.start
+        self.event.status = db.Status.UPCOMING
         data = [{'data': u'äüÄÜß',
                  'fmttype': 'application/xml',
                  'x-apple-filename': 'episode.xml'},
