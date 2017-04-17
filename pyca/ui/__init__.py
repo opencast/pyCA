@@ -2,7 +2,7 @@
 '''
 Simple UI telling about the current state of the capture agent.
 '''
-from flask import Flask, request, send_from_directory,  render_template
+from flask import Flask, request, send_from_directory, render_template
 from pyca.config import config
 from pyca.db import Service, ServiceStatus, UpcomingEvent, RecordedEvent
 from pyca.db import get_session
