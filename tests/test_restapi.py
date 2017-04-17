@@ -35,7 +35,7 @@ class TestPycaRestInterface(unittest.TestCase):
         session = db.get_session()
         session.add(event)
         session.commit()
-        return event
+        return db.RecordedEvent(event)
 
     def test_servicestatus(self):
         # Without authentication
