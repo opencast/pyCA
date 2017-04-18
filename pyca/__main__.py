@@ -9,7 +9,6 @@
 
 import getopt
 import multiprocessing
-import os
 import signal
 import sys
 from pyca import capture, config, schedule, ingest, ui, agentstate, utils
@@ -70,17 +69,13 @@ def run_all(*modules):
 
 
 def main():
-    # Probe for configuration file location
-    cfg = './etc/pyca.conf'
-    if not os.path.isfile(cfg):
-        cfg = '/etc/pyca.conf'
-
     # Check command line options
     try:
         opts, args = getopt.getopt(sys.argv[1:], 'hc:', ['help', 'config='])
     except getopt.GetoptError:
         usage(1)
 
+    cfg = None
     for opt, arg in opts:
         if opt in ("-h", "--help"):
             usage()

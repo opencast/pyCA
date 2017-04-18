@@ -6,6 +6,7 @@ Default configuration for pyCA.
 import configobj
 import logging
 import logging.handlers
+import os
 import sys
 from validate import Validator
 
@@ -56,12 +57,26 @@ cfgspec = __CFG.split('\n')
 __config = None
 
 
-def update_configuration(cfgfile='/etc/pyca.conf'):
+def configuration_file(cfgfile):
+    '''Find the best match for the configuration file.
+    '''
+    if cfgfile is not None:
+        return cfgfile
+    # If no file is explicitely specified, probe for the configuration file
+    # location.
+    cfg = './etc/pyca.conf'
+    if not os.path.isfile(cfg):
+        return '/etc/pyca.conf'
+    return cfg
+
+
+def update_configuration(cfgfile=None):
     '''Update configuration from file.
 
     :param cfgfile: Configuration file to load.
     '''
     configobj.DEFAULT_INTERPOLATION = 'template'
+    cfgfile = configuration_file(cfgfile)
     cfg = configobj.ConfigObj(cfgfile, configspec=cfgspec)
     validator = Validator()
     val = cfg.validate(validator)
