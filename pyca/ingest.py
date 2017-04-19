@@ -86,18 +86,21 @@ def ingest(tracks, recording_dir, recording_id, attachments):
     mediapackage = http_request(service + '/createMediaPackage')
 
     # extract workflow_def, workflow_config and add DC catalogs
+    prop = 'org.opencastproject.capture.agent.properties'
+    dcns = 'http://www.opencastproject.org/xsd/1.0/dublincore/'
     for attachment in attachments:
-        value = attachment.get('data')
-        if attachment.get('fmttype') == 'application/text':
-            workflow_def, workflow_config = get_config_params(value)
-            continue
-        for catalog in ['episode', 'series']:
-            if attachment.get('x-apple-filename') == '%s.xml' % catalog:
-                logger.info('Adding %s DC catalog' % catalog)
-                fields = [('mediaPackage', mediapackage),
-                          ('flavor', 'dublincore/%s' % catalog),
-                          ('dublinCore', value)]
-                mediapackage = http_request(service + '/addDCCatalog', fields)
+        data = attachment.get('data')
+        if attachment.get('x-apple-filename') == prop:
+            workflow_def, workflow_config = get_config_params(data)
+
+        # Check for dublincore catalogs
+        elif attachment.get('fmttype') == 'application/xml' and dcns in data:
+            name = attachment.get('x-apple-filename', '').rsplit('.', 1)[0]
+            logger.info('Adding %s DC catalog' % name)
+            fields = [('mediaPackage', mediapackage),
+                      ('flavor', 'dublincore/%s' % name),
+                      ('dublinCore', data)]
+            mediapackage = http_request(service + '/addDCCatalog', fields)
 
     # add track
     for (flavor, track) in tracks:
