@@ -10,7 +10,7 @@ python:
    - "3.6"
 
 before_install:
-   - pip install flake8 python-coveralls coverage
+   - pip install flake8 python-coveralls mock coverage
 
 script:
    - coverage run --source=pyca --omit='*.html' -m unittest discover -s tests
