@@ -13,8 +13,6 @@ from pyca.utils import update_event_status, terminate
 from pyca.config import config
 from pyca.db import get_session, RecordedEvent, Status, Service, ServiceStatus
 import logging
-import os
-import os.path
 import pycurl
 from random import randrange
 import time
@@ -40,17 +38,8 @@ def get_config_params(properties):
 
 
 def start_ingest(event):
-
-    # Put metadata files on disk
+    # get attacments for ingest
     attachments = event.get_data().get('attach')
-    workflow_config = ''
-    for attachment in attachments:
-        value = attachment.get('data')
-        if attachment.get('fmttype') == 'application/text':
-            workflow_def, workflow_config = get_config_params(value)
-        filename = attachment.get('x-apple-filename')
-        with open(os.path.join(event.directory(), filename), 'wb') as f:
-            f.write(value.encode('utf-8'))
 
     # If we are a backup CA, we don't want to actually upload anything. So
     # let's just quit here.
@@ -63,8 +52,7 @@ def start_ingest(event):
     update_event_status(event, Status.UPLOADING)
 
     try:
-        ingest(event.get_tracks(), event.directory(), event.uid, workflow_def,
-               workflow_config)
+        ingest(event.get_tracks(), event.directory(), event.uid, attachments)
     except:
         logger.error('Something went wrong during the upload')
         logger.error(traceback.format_exc())
@@ -81,9 +69,8 @@ def start_ingest(event):
     return True
 
 
-def ingest(tracks, recording_dir, recording_id, workflow_def,
-           workflow_config):
-    '''Ingest a finished recording to the Matterhorn server.
+def ingest(tracks, recording_dir, recording_id, attachments):
+    '''Ingest a finished recording to the Opencast server.
     '''
 
     # select ingest service
@@ -98,27 +85,22 @@ def ingest(tracks, recording_dir, recording_id, workflow_def,
     logger.info('Creating new mediapackage')
     mediapackage = http_request(service + '/createMediaPackage')
 
-    # add episode DublinCore catalog
-    if os.path.isfile('%s/episode.xml' % recording_dir):
-        logger.info('Adding episode DC catalog')
-        dublincore = ''
-        with open('%s/episode.xml' % recording_dir, 'rb') as episodefile:
-            dublincore = episodefile.read().decode('utf8')
-        fields = [('mediaPackage', mediapackage),
-                  ('flavor', 'dublincore/episode'),
-                  ('dublinCore', dublincore)]
-        mediapackage = http_request(service + '/addDCCatalog', fields)
+    # extract workflow_def, workflow_config and add DC catalogs
+    prop = 'org.opencastproject.capture.agent.properties'
+    dcns = 'http://www.opencastproject.org/xsd/1.0/dublincore/'
+    for attachment in attachments:
+        data = attachment.get('data')
+        if attachment.get('x-apple-filename') == prop:
+            workflow_def, workflow_config = get_config_params(data)
 
-    # add series DublinCore catalog
-    if os.path.isfile('%s/series.xml' % recording_dir):
-        logger.info('Adding series DC catalog')
-        dublincore = ''
-        with open('%s/series.xml' % recording_dir, 'rb') as seriesfile:
-            dublincore = seriesfile.read().decode('utf8')
-        fields = [('mediaPackage', mediapackage),
-                  ('flavor', 'dublincore/series'),
-                  ('dublinCore', dublincore)]
-        mediapackage = http_request(service + '/addDCCatalog', fields)
+        # Check for dublincore catalogs
+        elif attachment.get('fmttype') == 'application/xml' and dcns in data:
+            name = attachment.get('x-apple-filename', '').rsplit('.', 1)[0]
+            logger.info('Adding %s DC catalog' % name)
+            fields = [('mediaPackage', mediapackage),
+                      ('flavor', 'dublincore/%s' % name),
+                      ('dublinCore', data)]
+            mediapackage = http_request(service + '/addDCCatalog', fields)
 
     # add track
     for (flavor, track) in tracks:
