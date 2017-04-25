@@ -41,7 +41,7 @@ certificate      = string(default='')
 [ui]
 username         = string(default='admin')
 password         = string(default='opencast')
-refresh_rate     = integer(min=1, default=2)
+refresh_rate     = integer(min=1, default=10)
 url              = string(default='http://localhost:5000')
 
 [logging]
