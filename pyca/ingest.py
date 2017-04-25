@@ -7,14 +7,14 @@
     :license: LGPL – see license.lgpl for more details.
 '''
 
+from pyca.config import config
+from pyca.db import get_session, RecordedEvent, Status, Service, ServiceStatus
 from pyca.utils import http_request, configure_service, set_service_status
 from pyca.utils import set_service_status_immediate, recording_state
 from pyca.utils import update_event_status, terminate
-from pyca.config import config
-from pyca.db import get_session, RecordedEvent, Status, Service, ServiceStatus
+from random import randrange
 import logging
 import pycurl
-from random import randrange
 import time
 import traceback
 
@@ -37,47 +37,19 @@ def get_config_params(properties):
     return wdef, param
 
 
-def start_ingest(event):
-    # get attacments for ingest
-    attachments = event.get_data().get('attach')
-
-    # If we are a backup CA, we don't want to actually upload anything. So
-    # let's just quit here.
-    if config()['agent']['backup_mode']:
-        return True
-
-    # Upload everything
+def ingest(event):
+    '''Ingest a finished recording to the Opencast server.
+    '''
+    # Update status
     set_service_status(Service.INGEST, ServiceStatus.BUSY)
     recording_state(event.uid, 'uploading')
     update_event_status(event, Status.UPLOADING)
 
-    try:
-        ingest(event.get_tracks(), event.directory(), event.uid, attachments)
-    except:
-        logger.error('Something went wrong during the upload')
-        logger.error(traceback.format_exc())
-        # Update state if something went wrong
-        recording_state(event.uid, 'upload_error')
-        update_event_status(event, Status.FAILED_UPLOADING)
-        set_service_status_immediate(Service.INGEST, ServiceStatus.IDLE)
-        return False
-
-    # Update state
-    recording_state(event.uid, 'upload_finished')
-    update_event_status(event, Status.FINISHED_UPLOADING)
-    set_service_status_immediate(Service.INGEST, ServiceStatus.IDLE)
-    return True
-
-
-def ingest(tracks, recording_dir, recording_id, attachments):
-    '''Ingest a finished recording to the Opencast server.
-    '''
-
-    # select ingest service
+    # Select ingest service
     # The ingest service to use is selected at random from the available
     # ingest services to ensure that not every capture agent uses the same
     # service at the same time
-    service = config()['service-ingest']
+    service = config('service-ingest')
     service = service[randrange(0, len(service))]
     logger.info('Selecting ingest service to use: ' + service)
 
@@ -88,7 +60,7 @@ def ingest(tracks, recording_dir, recording_id, attachments):
     # extract workflow_def, workflow_config and add DC catalogs
     prop = 'org.opencastproject.capture.agent.properties'
     dcns = 'http://www.opencastproject.org/xsd/1.0/dublincore/'
-    for attachment in attachments:
+    for attachment in event.get_data().get('attach'):
         data = attachment.get('data')
         if attachment.get('x-apple-filename') == prop:
             workflow_def, workflow_config = get_config_params(data)
@@ -103,7 +75,7 @@ def ingest(tracks, recording_dir, recording_id, attachments):
             mediapackage = http_request(service + '/addDCCatalog', fields)
 
     # add track
-    for (flavor, track) in tracks:
+    for (flavor, track) in event.get_tracks():
         logger.info('Adding track ({0} -> {1})'.format(flavor, track))
         track = track.encode('ascii', 'ignore')
         fields = [('mediaPackage', mediapackage), ('flavor', flavor),
@@ -115,11 +87,16 @@ def ingest(tracks, recording_dir, recording_id, attachments):
     fields = [('mediaPackage', mediapackage)]
     if workflow_def:
         fields.append(('workflowDefinitionId', workflow_def))
-    if recording_id:
+    if event.uid:
         fields.append(('workflowInstanceId',
-                       recording_id.encode('ascii', 'ignore')))
+                       event.uid.encode('ascii', 'ignore')))
     fields += workflow_config
     mediapackage = http_request(service + '/ingest', fields)
+
+    # Update status
+    recording_state(event.uid, 'upload_finished')
+    update_event_status(event, Status.FINISHED_UPLOADING)
+    set_service_status_immediate(Service.INGEST, ServiceStatus.IDLE)
 
 
 def safe_start_ingest(event):
@@ -127,12 +104,14 @@ def safe_start_ingest(event):
     process, log them but otherwise ignore them.
     '''
     try:
-        return start_ingest(event)
+        ingest(event)
     except Exception:
-        logger.error('Start ingest failed')
+        logger.error('Something went wrong during the upload')
         logger.error(traceback.format_exc())
-        set_service_status(Service.INGEST, ServiceStatus.IDLE)
-        return False
+        # Update state if something went wrong
+        recording_state(event.uid, 'upload_error')
+        update_event_status(event, Status.FAILED_UPLOADING)
+        set_service_status_immediate(Service.INGEST, ServiceStatus.IDLE)
 
 
 def control_loop():
@@ -142,11 +121,11 @@ def control_loop():
     set_service_status(Service.INGEST, ServiceStatus.IDLE)
     while not terminate():
         # Get next recording
-        events = get_session().query(RecordedEvent)\
-                              .filter(RecordedEvent.status ==
-                                      Status.FINISHED_RECORDING)
-        if events.count():
-            safe_start_ingest(events[0])
+        event = get_session().query(RecordedEvent)\
+                             .filter(RecordedEvent.status ==
+                                     Status.FINISHED_RECORDING).first()
+        if event:
+            safe_start_ingest(event)
         time.sleep(1.0)
     logger.info('Shutting down ingest service')
     set_service_status(Service.INGEST, ServiceStatus.STOPPED)
@@ -155,6 +134,11 @@ def control_loop():
 def run():
     '''Start the capture agent.
     '''
+    # If we are a backup CA, we don't want to actually upload anything. So
+    # let's just quit here and do not run the ingest service at all.
+    if config('agent')['backup_mode']:
+        return
+
     configure_service('ingest')
     configure_service('capture.admin')
     control_loop()
