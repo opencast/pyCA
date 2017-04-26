@@ -4,6 +4,7 @@ Some helper tools for pyCA testing.
 '''
 
 import logging
+import pycurl
 
 try:
     from importlib import reload  # noqa
@@ -17,12 +18,12 @@ logging.getLogger('').setLevel(logging.CRITICAL * 100)
 logging.getLogger('').setLevel = lambda x: True
 
 
-class ShouldFailException(Exception):
-    args = [None, 0]
+class ShouldFailException(pycurl.error):
+    pass
 
 
 def should_fail(*args, **kwargs):
-    raise ShouldFailException()
+    raise ShouldFailException(None, 0)
 
 
 def __terminate():
@@ -49,6 +50,8 @@ class CurlMock():
     URL = 8
     USERPWD = 9
     WRITEFUNCTION = 10
+    FAILONERROR = 11
+    FOLLOWLOCATION = 12
 
     def setopt(self, *args):
         pass

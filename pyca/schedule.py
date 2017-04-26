@@ -15,6 +15,7 @@ from base64 import b64decode
 from datetime import datetime
 import dateutil.parser
 import logging
+import pycurl
 import time
 import traceback
 
@@ -57,18 +58,15 @@ def get_schedule():
     '''Try to load schedule from the Matterhorn core. Returns a valid schedule
     or None on failure.
     '''
+    uri = '%s/calendars?agentid=%s' % (config()['service-scheduler'][0],
+                                       config()['agent']['name'])
+    lookahead = config()['agent']['cal_lookahead'] * 24 * 60 * 60
+    if lookahead:
+        uri += '&cutoff=%i' % ((timestamp() + lookahead) * 1000)
     try:
-        uri = '%s/calendars?agentid=%s' % (config()['service-scheduler'][0],
-                                           config()['agent']['name'])
-        lookahead = config()['agent']['cal_lookahead'] * 24 * 60 * 60
-        if lookahead:
-            uri += '&cutoff=%i' % ((timestamp() + lookahead) * 1000)
         vcal = http_request(uri)
-    except Exception as e:
-        # Silently ignore the error if the capture agent is not yet registered
-        if e.args[1] != 404:
-            logger.error('Could not get schedule')
-            logger.error(traceback.format_exc())
+    except pycurl.error as e:
+        logger.error('Could not get schedule: %s' % e)
         return
 
     try:
