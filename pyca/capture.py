@@ -57,9 +57,9 @@ def start_capture(upcoming_event):
     os.mkdir(event.directory())
 
     # Set state
-    set_service_status_immediate(Service.CAPTURE, ServiceStatus.BUSY)
-    recording_state(event.uid, 'capturing')
     update_event_status(event, Status.RECORDING)
+    recording_state(event.uid, 'capturing')
+    set_service_status_immediate(Service.CAPTURE, ServiceStatus.BUSY)
 
     # Recording
     tracks = recording_command(event)
@@ -67,8 +67,9 @@ def start_capture(upcoming_event):
     db.commit()
 
     # Set status
-    set_service_status_immediate(Service.CAPTURE, ServiceStatus.IDLE)
     update_event_status(event, Status.FINISHED_RECORDING)
+    recording_state(event.uid, 'capture_finished')
+    set_service_status_immediate(Service.CAPTURE, ServiceStatus.IDLE)
 
 
 def safe_start_capture(event):

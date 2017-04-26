@@ -19,7 +19,6 @@ import os.path
 import pycurl
 import sys
 import time
-import traceback
 if sys.version_info[0] == 2:
     from cStringIO import StringIO as bio
 else:
@@ -55,11 +54,10 @@ def http_request(url, post_data=None):
     curl.setopt(pycurl.USERPWD, "%s:%s" % (config()['server']['username'],
                                            config()['server']['password']))
     curl.setopt(curl.HTTPHEADER, ['X-Requested-Auth: Digest'])
+    curl.setopt(curl.FAILONERROR, True)
+    curl.setopt(curl.FOLLOWLOCATION, True)
     curl.perform()
-    status = curl.getinfo(pycurl.HTTP_CODE)
     curl.close()
-    if int(status / 100) != 2:
-        raise Exception('Request to %s failed' % url, status)
     result = buf.getvalue()
     buf.close()
     return result
@@ -112,14 +110,13 @@ def configure_service(service):
     '''Get the location of a given service from Opencast and add it to the
     current configuration.
     '''
-    while not config().get('service-' + service):
+    while not config().get('service-' + service) and not terminate():
         try:
             config()['service-' + service] = \
                 get_service('org.opencastproject.' + service)
-        except:
-            logger.error('Could not get %s endpoint. Retrying in 5 seconds' %
-                         service)
-            logger.error(traceback.format_exc())
+        except pycurl.error as e:
+            logger.error('Could not get %s endpoint: %s. Retrying in 5s' %
+                         (service, e))
             time.sleep(5.0)
 
 
@@ -138,7 +135,7 @@ def register_ca(status='idle'):
     # If this is a backup CA we don't tell the Matterhorn core that we are
     # here.  We will just run silently in the background:
     if config()['agent']['backup_mode']:
-        return True
+        return
     params = [('address', config()['ui']['url']), ('state', status)]
     url = '%s/agents/%s' % (config()['service-capture.admin'][0],
                             config()['agent']['name'])
@@ -146,13 +143,8 @@ def register_ca(status='idle'):
         response = http_request(url, params).decode('utf-8')
         if response:
             logger.info(response)
-    except:
-        # Ignore errors (e.g. network issues) as it's more important to get
-        # the recording as to set the correct current state in the admin ui.
-        logger.warning('Could not set capture agent state')
-        logger.warning(traceback.format_exc())
-        return False
-    return True
+    except pycurl.error as e:
+        logger.warning('Could not set agent statei to %s: %s' % (status, e))
 
 
 def recording_state(recording_id, status):
@@ -172,11 +164,8 @@ def recording_state(recording_id, status):
     try:
         result = http_request(url, params)
         logger.info(result)
-    except:
-        # Ignore errors (e.g. network issues) as it's more important to get
-        # the recording as to set the correct current state in the admin ui.
-        logger.warning('Could not set recording state')
-        logger.warning(traceback.format_exc())
+    except pycurl.error as e:
+        logger.warning('Could not set recording state to %s: %s' % (status, e))
 
 
 def update_event_status(event, status):
