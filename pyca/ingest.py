@@ -71,7 +71,7 @@ def ingest(event):
             logger.info('Adding %s DC catalog' % name)
             fields = [('mediaPackage', mediapackage),
                       ('flavor', 'dublincore/%s' % name),
-                      ('dublinCore', data)]
+                      ('dublinCore', data.encode('utf-8'))]
             mediapackage = http_request(service + '/addDCCatalog', fields)
 
     # add track
