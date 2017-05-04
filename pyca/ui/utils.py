@@ -26,3 +26,14 @@ def requires_auth(f):
                             {'WWW-Authenticate': 'Basic realm="pyCA Login"'})
         return f(*args, **kwargs)
     return decorated
+
+
+def jsonapi_mediatype(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if request.headers['Content-Type'] != 'application/vnd.api+json':
+            return Response('Unsupported Media Type', 415)
+        response = f(*args, **kwargs)
+        response.headers['Content-Type'] = 'application/vnd.api+json'
+        return response
+    return decorated

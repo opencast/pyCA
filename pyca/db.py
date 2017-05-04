@@ -146,12 +146,18 @@ class BaseEvent():
 
         :return: Dictionary representing this object.
         '''
-        return {'start': self.start,
+        return {
+            'type': 'event',
+            'id': self.uid,
+            'attributes': {
+                'start': self.start,
                 'end': self.end,
                 'uid': self.uid,
                 'title': self.title,
                 'data': self.data,
-                'status': Status.str(self.status)}
+                'status': Status.str(self.status)
+                }
+            }
 
 
 class UpcomingEvent(Base, BaseEvent):

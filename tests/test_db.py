@@ -56,7 +56,7 @@ class TestPycaDb(unittest.TestCase):
         e = db.RecordedEvent(e)
         assert e.name() == 'recording-123-asd'
         assert e.status_str() == 'upcoming'
-        assert e.serialize()['uid'] == 'asd'
+        assert e.serialize()['id'] == 'asd'
         assert e.get_tracks() == []
 
     def test_servicestate(self):
