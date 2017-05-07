@@ -11,7 +11,7 @@ import os.path
 import string
 from pyca.config import config
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String, LargeBinary, create_engine
+from sqlalchemy import Column, Integer, Text, LargeBinary, create_engine
 from sqlalchemy.orm import sessionmaker
 Base = declarative_base()
 
@@ -82,9 +82,10 @@ class BaseEvent():
 
     __tablename__ = 'event'
 
-    uid = Column('uid', String(255), nullable=False, primary_key=True)
+    uid = Column('uid', Text(), nullable=False, primary_key=True)
     start = Column('start', Integer(), primary_key=True)
     end = Column('end', Integer(), nullable=False)
+    title = Column('title', Text())
     data = Column('data', LargeBinary(), nullable=False)
 
     def get_data(self):
@@ -134,6 +135,7 @@ class BaseEvent():
         return {'start': self.start,
                 'end': self.end,
                 'uid': self.uid,
+                'title': self.title,
                 'data': self.data}
 
 
@@ -157,6 +159,7 @@ class RecordedEvent(Base, BaseEvent):
             self.uid = event.uid
             self.start = event.start
             self.end = event.end
+            self.title = event.title
             self.data = event.data
             if hasattr(event, 'status'):
                 self.status = event.status

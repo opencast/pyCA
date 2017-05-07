@@ -85,6 +85,7 @@ def get_schedule():
         e.start = event['dtstart']
         e.end = event['dtend']
         e.uid = event.get('uid')
+        e.title = event.get('summary')
         e.set_data(event)
         db.add(e)
     db.commit()

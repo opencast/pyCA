@@ -20,6 +20,7 @@ class TestPycaCapture(unittest.TestCase):
     VCAL = ('''BEGIN:VCALENDAR
         BEGIN:VEVENT
         UID:20170223T171244Z
+        SUMMARY:TEST
         DTSTART:20170223T230000Z
         DTEND:%sZ
         ATTACH;FMTTYPE=application/xml;VALUE=BINARY;ENCODING=BASE64;
