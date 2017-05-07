@@ -181,16 +181,14 @@ def update_event_status(event, status):
 def set_service_status(service, status):
     '''Update the status of a particular service in the database.
     '''
+    srv = db.ServiceStates()
+    srv.type = service
+    srv.status = status
+
     dbs = db.get_session()
-    s = dbs.query(db.ServiceStates).filter(db.ServiceStates.type == service)
-    if s.count():
-        s.update({'status': status})
-    else:
-        srv = db.ServiceStates()
-        srv.type = service
-        srv.status = status
-        dbs.add(srv)
+    dbs.merge(srv)
     dbs.commit()
+    dbs.close()
 
 
 def set_service_status_immediate(service, status):
