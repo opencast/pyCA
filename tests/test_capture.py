@@ -32,6 +32,7 @@ class TestPycaCapture(unittest.TestCase):
         db.init()
         self.event = db.BaseEvent()
         self.event.uid = '123123'
+        self.event.title = u'äüÄÜß'
         self.event.start = utils.timestamp()
         self.event.end = self.event.start
         data = [{'data': u'äüÄÜß',
