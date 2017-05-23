@@ -13,8 +13,8 @@ before_install:
    - pip install flake8 python-coveralls mock coverage
 
 script:
-   - coverage run --source=pyca --omit='*.html' -m unittest discover -s tests
-   - flake8 $(find . -name '*.py')
+   - make test
+   - make lint
 
 after_success:
    - coveralls
