@@ -6,6 +6,7 @@ from pyca.ui import app
 from pyca.ui.utils import requires_auth, jsonapi_mediatype
 from pyca.utils import get_service_status, ensurelist
 import logging
+import shutil
 
 logger = logging.getLogger(__name__)
 
@@ -85,16 +86,22 @@ def delete_event(uid):
     events can be deleted. Events in the buffer for upcoming events are
     regularly replaced anyway and a manual removal could have unpredictable
     effects.
+    
+    Use ?hard=true parameter to delete the recorded files on disk as well.
 
     Returns 204 if the action was successful.
     Returns 404 if event does not exist
     '''
+    logger.info('deleting event %s via api', uid)
     db = get_session()
     events = db.query(RecordedEvent).filter(RecordedEvent.uid == uid)
     if not events.count():
         return make_error_response('No event with specified uid', 404)
+    hard_delete = request.args.get('hard', 'false')
+    if hard_delete == 'true':
+        logger.info('deleting recorded files at %s', events[0].directory())
+        shutil.rmtree(events[0].directory())
     events.delete()
-    logger.info('deleting event %s via api', uid)
     db.commit()
     return make_response('', 204)
 
