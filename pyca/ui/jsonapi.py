@@ -86,7 +86,7 @@ def delete_event(uid):
     events can be deleted. Events in the buffer for upcoming events are
     regularly replaced anyway and a manual removal could have unpredictable
     effects.
-    
+
     Use ?hard=true parameter to delete the recorded files on disk as well.
 
     Returns 204 if the action was successful.

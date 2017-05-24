@@ -133,6 +133,20 @@ class TestPycaRestInterface(unittest.TestCase):
             assert response.headers['Content-Type'] == self.content_type
             assert not response.data
 
+        # With hard deletion
+        event = self.add_test_event()
+        directory = event.directory()
+        # create a stub recording directory
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+        with ui.app.test_request_context(headers=self.headers,
+                                         query_string='hard=true'):
+            response = ui.jsonapi.delete_event(event.uid)
+            assert response.status_code == 204
+            assert response.headers['Content-Type'] == self.content_type
+            assert not response.data
+            assert not os.path.exists(directory)
+
     def test_modify_event(self):
         # Without authentication
         with ui.app.test_request_context():
