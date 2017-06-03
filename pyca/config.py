@@ -86,6 +86,11 @@ def update_configuration(cfgfile=None):
         raise ValueError('List of files and flavors do not match')
     globals()['__config'] = cfg
     logger_init()
+    if cfg['server'].get('url','').endswith('/'):
+        logger.warning('Stripping / from the end of the base url. This seems '
+                'like a configuration error. If you want to keep it, use // '
+                'at the end of the configuration value.')
+        cfg['server']['url'] = cfg['server']['url'][:-1]
     logger.info('Configuration loaded from %s' % cfgfile)
     check()
     return cfg
