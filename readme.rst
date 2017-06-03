@@ -109,6 +109,25 @@ regular capture agent fails to record (for whatever reasons). Just match the
 name of the pyCA to that of the regular capture agent.
 
 
+Preview
+*******
+
+The web interface can show preview images for running capture processes. To
+enable this, the capture process must generate these still images and write
+them to a pre-defined location. An simple example configuration using FFmpeg
+could look like this::
+
+    command          = '''ffmpeg -nostats -re
+                          -f lavfi -r 25 -i testsrc
+                          -f lavfi -i sine -t {{time}}
+                          -map 0:v -map 1:a {{dir}}/{{name}}.webm
+                          -map 0:v -r 1 -updatefirst 1 {{previewdir}}/preview.jpg'''
+
+    preview = '{{previewdir}}/preview.jpg'
+
+This command will record audio and video from a test source and write a WebM
+file while simultaneously updating a still image every second.
+
 .. _Opencast: http://opencast.org
 .. _GNU Lesser General Public License: https://raw.githubusercontent.com/opencast/pyCA/master/license.lgpl
 .. _Raspberry Pi: http://www.raspberrypi.org
