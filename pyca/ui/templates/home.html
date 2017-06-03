@@ -33,10 +33,10 @@
 </summary>
 
 <main class=center>
-<section>
+<section id=preview>
     <h2>Preview Images</h2>
     {% for p in preview %}
-        <img style="max-width: 90%;" src="/img/{{ p }}" />
+        <img src="/img/{{ p }}" />
     {% else %}
         No preview image
     {% endfor %}

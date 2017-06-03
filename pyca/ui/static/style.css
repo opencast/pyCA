@@ -103,3 +103,8 @@ tr.extendlist td {
     padding: 5px 10px;
     text-align: center;
 }
+
+#preview img {
+    max-width: 90%;
+    max-height: 300px;
+}
