@@ -86,6 +86,10 @@ def update_configuration(cfgfile=None):
         raise ValueError('List of files and flavors do not match')
     globals()['__config'] = cfg
     logger_init()
+    if cfg['server'].get('url', '').endswith('/'):
+        logger.warning('Base URL ends with /. This is most likely a '
+                       'configuration error. The URL should contain nothing '
+                       'of the service paths.')
     logger.info('Configuration loaded from %s' % cfgfile)
     check()
     return cfg
