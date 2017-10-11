@@ -105,7 +105,7 @@ def check():
         # Ensure certificate exists and is readable
         open(config('server')['certificate'], 'rb').close()
     if config('agent')['backup_mode']:
-        logger.info('Agent runs in bakup mode. No data will be sent to '
+        logger.info('Agent runs in backup mode. No data will be sent to '
                     'Opencast')
 
 
