@@ -71,6 +71,8 @@ def start_capture(upcoming_event):
     recording_state(event.uid, 'capture_finished')
     set_service_status_immediate(Service.CAPTURE, ServiceStatus.IDLE)
 
+    logger.info('Finished recording')
+
 
 def safe_start_capture(event):
     '''Start a capture process but make sure to catch any errors during this
