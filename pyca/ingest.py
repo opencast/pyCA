@@ -98,6 +98,8 @@ def ingest(event):
     update_event_status(event, Status.FINISHED_UPLOADING)
     set_service_status_immediate(Service.INGEST, ServiceStatus.IDLE)
 
+    logger.info('Finished ingest')
+
 
 def safe_start_ingest(event):
     '''Start a capture process but make sure to catch any errors during this
