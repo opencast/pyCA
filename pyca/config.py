@@ -32,7 +32,7 @@ sigkill_time     = integer(min=-1, default=120)
 exit_code        = integer(min=0, max=255, default=0)
 
 [server]
-url              = string(default='https://octestallinone.virtuos.uos.de')
+url              = string(default='https://develop.opencast.org')
 username         = string(default='opencast_system_account')
 password         = string(default='CHANGE_ME')
 insecure         = boolean(default=False)
