@@ -87,7 +87,7 @@ class TestPycaMain(unittest.TestCase):
         sys.argv = ['pyca', 'run']
         try:
             __main__.main()
-        except:
+        except Exception:
             assert False
 
         for mod in (agentstate, capture, ingest, schedule):
