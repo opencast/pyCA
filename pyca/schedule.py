@@ -98,13 +98,17 @@ def control_loop():
     while not terminate():
         # Try getting an updated schedule
         get_schedule()
-        q = get_session().query(UpcomingEvent)\
-                         .filter(UpcomingEvent.end > timestamp())
-        if q.count():
+        session = get_session()
+        next_event = session.query(UpcomingEvent)\
+                            .filter(UpcomingEvent.end > timestamp())\
+                            .order_by(UpcomingEvent.start)\
+                            .first()
+        if next_event:
             logger.info('Next scheduled recording: %s',
-                        datetime.fromtimestamp(q[0].start))
+                        datetime.fromtimestamp(next_event.start))
         else:
             logger.info('No scheduled recording')
+        session.close()
 
         next_update = timestamp() + config()['agent']['update_frequency']
         while not terminate() and timestamp() < next_update:
