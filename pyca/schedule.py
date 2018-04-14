@@ -16,8 +16,13 @@ from datetime import datetime
 import dateutil.parser
 import logging
 import pycurl
+import sys
 import time
 import traceback
+if sys.version_info[0] == 2:
+    from urllib import urlencode
+else:
+    from urllib.parse import urlencode
 
 logger = logging.getLogger(__name__)
 
@@ -58,11 +63,12 @@ def get_schedule():
     '''Try to load schedule from the Matterhorn core. Returns a valid schedule
     or None on failure.
     '''
-    uri = '%s/calendars?agentid=%s' % (config()['service-scheduler'][0],
-                                       config()['agent']['name'])
+    params = {'agentid': config()['agent']['name'].encode('utf8')}
     lookahead = config()['agent']['cal_lookahead'] * 24 * 60 * 60
     if lookahead:
-        uri += '&cutoff=%i' % ((timestamp() + lookahead) * 1000)
+        params['cutoff'] = str((timestamp() + lookahead) * 1000)
+    uri = '%s/calendars?%s' % (config()['service-scheduler'][0],
+                               urlencode(params))
     try:
         vcal = http_request(uri)
     except pycurl.error as e:

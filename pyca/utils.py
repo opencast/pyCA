@@ -21,8 +21,10 @@ import sys
 import time
 if sys.version_info[0] == 2:
     from cStringIO import StringIO as bio
+    from urllib import quote as urlquote
 else:
     from io import BytesIO as bio
+    from urllib.parse import quote as urlquote
 
 
 logger = logging.getLogger(__name__)
@@ -137,8 +139,8 @@ def register_ca(status='idle'):
     if config()['agent']['backup_mode']:
         return
     params = [('address', config()['ui']['url']), ('state', status)]
-    url = '%s/agents/%s' % (config()['service-capture.admin'][0],
-                            config()['agent']['name'])
+    name = urlquote(config()['agent']['name'].encode('utf-8'), safe='')
+    url = '%s/agents/%s' % (config()['service-capture.admin'][0], name)
     try:
         response = http_request(url, params).decode('utf-8')
         if response:

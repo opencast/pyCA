@@ -77,7 +77,7 @@ def update_configuration(cfgfile=None):
     '''
     configobj.DEFAULT_INTERPOLATION = 'template'
     cfgfile = configuration_file(cfgfile)
-    cfg = configobj.ConfigObj(cfgfile, configspec=cfgspec)
+    cfg = configobj.ConfigObj(cfgfile, configspec=cfgspec, encoding='utf-8')
     validator = Validator()
     val = cfg.validate(validator)
     if val is not True:
