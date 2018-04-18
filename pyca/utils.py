@@ -70,7 +70,7 @@ def get_service(service_type):
     endpoint = '/services/available.json?serviceType=' + str(service_type)
     url = '%s%s' % (config()['server']['url'], endpoint)
     response = http_request(url).decode('utf-8')
-    services = json.loads(response).get('services', {}).get('service', [])
+    services = (json.loads(response).get('services') or {}).get('service', [])
     services = ensurelist(services)
     endpoints = [service['host'] + service['path'] for service in services
                  if service['online'] and service['active']]
