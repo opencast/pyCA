@@ -144,7 +144,7 @@ def register_ca(status='idle'):
         if response:
             logger.info(response)
     except pycurl.error as e:
-        logger.warning('Could not set agent statei to %s: %s' % (status, e))
+        logger.warning('Could not set agent state to %s: %s' % (status, e))
 
 
 def recording_state(recording_id, status):
