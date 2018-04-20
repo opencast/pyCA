@@ -33,6 +33,7 @@ logger = logging.getLogger(__name__)
 def http_request(url, post_data=None):
     '''Make an HTTP request to a given URL with optional parameters.
     '''
+    logger.debug('Requesting URL: %s' % url)
     buf = bio()
     curl = pycurl.Curl()
     curl.setopt(curl.URL, url.encode('ascii', 'ignore'))
