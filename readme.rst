@@ -76,6 +76,27 @@ On Arch Linux::
 …or use the available AUR_ package.
 
 
+Starting pyCA
+*************
+
+You can start pyCA by running
+
+  ./start.sh
+
+This start script will take an optional command allowing you to separately launch
+pyCA services and run them as separate processes. By default (or using the
+`run` command) all services except the UI are launced as a single process.
+
+Available commands are:
+
+ - `run`: Start all pyCA components except ui (default)
+ - `capture`: Start pyCA capture service
+ - `ingest`: Start pyCA ingest service
+ - `schedule`: Start pyCA schedule service
+ - `agentstate`: Start pyCA agentstate service
+ - `ui`: Start web based user interface
+
+
 User Interface
 **************
 
