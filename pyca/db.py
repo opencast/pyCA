@@ -154,7 +154,7 @@ class BaseEvent():
                 'end': self.end,
                 'uid': self.uid,
                 'title': self.title,
-                'data': self.data,
+                'data': self.get_data(),
                 'status': Status.str(self.status)
                 }
             }

@@ -50,6 +50,7 @@ class TestPycaDb(unittest.TestCase):
         e.start = 123
         e.end = 234
         e.status = db.Status.UPCOMING
+        e.set_data({})
 
         assert str(e) == '<Event(start=123, uid="asd")>'
 
