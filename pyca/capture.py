@@ -16,6 +16,7 @@ from pyca.db import get_session, RecordedEvent, UpcomingEvent, Status,\
 import logging
 import os
 import os.path
+import sdnotify
 import shlex
 import signal
 import subprocess
@@ -24,6 +25,7 @@ import time
 import traceback
 
 logger = logging.getLogger(__name__)
+n = sdnotify.SystemdNotifier()
 captureproc = None
 
 
@@ -117,6 +119,7 @@ def recording_command(event):
 
     # Check process
     while captureproc.poll() is None:
+        n.notify('STATUS=Capturing')
         if sigcustom_time and timestamp() > sigcustom_time:
             logger.info("Sending custom signal to capture process")
             captureproc.send_signal(conf['sigcustom'])
@@ -155,7 +158,9 @@ def control_loop():
     well as starting the capture process if necessry.
     '''
     set_service_status(Service.CAPTURE, ServiceStatus.IDLE)
+    n.notify("READY=1")
     while not terminate():
+        n.notify('STATUS=Waiting')
         # Get next recording
         event = get_session().query(UpcomingEvent)\
                              .filter(UpcomingEvent.start <= timestamp())\

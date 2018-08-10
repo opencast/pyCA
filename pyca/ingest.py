@@ -15,10 +15,12 @@ from pyca.utils import update_event_status, terminate
 from random import randrange
 import logging
 import pycurl
+import sdnotify
 import time
 import traceback
 
 logger = logging.getLogger(__name__)
+n = sdnotify.SystemdNotifier()
 
 
 def get_config_params(properties):
@@ -121,8 +123,10 @@ def control_loop():
     well as starting the capture process if necessry.
     '''
     set_service_status(Service.INGEST, ServiceStatus.IDLE)
+    n.notify("READY=1")
     while not terminate():
         # Get next recording
+        n.notify('STATUS=Running')
         event = get_session().query(RecordedEvent)\
                              .filter(RecordedEvent.status ==
                                      Status.FINISHED_RECORDING).first()
