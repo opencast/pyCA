@@ -115,7 +115,8 @@ def control_loop():
         if next_event:
             logger.info('Next scheduled recording: %s',
                         datetime.fromtimestamp(next_event.start))
-            n.notify('STATUS=Next scheduled recording: %s' % datetime.fromtimestamp(next_event.start))
+            n.notify('STATUS=Next scheduled recording: %s' %
+                     datetime.fromtimestamp(next_event.start))
         else:
             logger.info('No scheduled recording')
             n.notify('STATUS=No scheduled recording')
