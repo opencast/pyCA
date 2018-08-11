@@ -103,8 +103,9 @@ def control_loop():
     '''Main loop, retrieving the schedule.
     '''
     set_service_status(Service.SCHEDULE, ServiceStatus.BUSY)
-    n.notify("READY=1")
+    n.notify('READY=1')
     while not terminate():
+        n.notify('WATCHDOG=1')
         # Try getting an updated schedule
         get_schedule()
         session = get_session()

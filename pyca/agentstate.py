@@ -23,9 +23,10 @@ def control_loop():
     '''Main loop, updating the capture agent state.
     '''
     set_service_status(Service.AGENTSTATE, ServiceStatus.BUSY)
-    n.notify("READY=1")
+    n.notify('READY=1')
+    n.notify('STATUS=Running')
     while not terminate():
-        n.notify('STATUS=Running')
+        n.notify('WATCHDOG=1')
         update_agent_state()
 
         next_update = timestamp() + config()['agent']['update_frequency']

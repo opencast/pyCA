@@ -117,9 +117,12 @@ def recording_command(event):
     captureproc = subprocess.Popen(args, stdin=DEVNULL)
     hasattr(subprocess, 'DEVNULL') or os.close(DEVNULL)
 
+    # Set systemd status
+    n.notify('STATUS=Capturing')
+
     # Check process
     while captureproc.poll() is None:
-        n.notify('STATUS=Capturing')
+        n.notify('WATCHDOG=1')
         if sigcustom_time and timestamp() > sigcustom_time:
             logger.info("Sending custom signal to capture process")
             captureproc.send_signal(conf['sigcustom'])
@@ -147,6 +150,9 @@ def recording_command(event):
     if captureproc.poll() > 0 and captureproc.returncode != exitcode:
         raise RuntimeError('Recording failed (%i)' % captureproc.returncode)
 
+    # Reset systemd status
+    n.notify('STATUS=Waiting')
+
     # Return [(flavor,path),…]
     files = (f.replace('{{dir}}', event.directory()) for f in conf['files'])
     files = (f.replace('{{name}}', event.name()) for f in files)
@@ -158,9 +164,10 @@ def control_loop():
     well as starting the capture process if necessry.
     '''
     set_service_status(Service.CAPTURE, ServiceStatus.IDLE)
-    n.notify("READY=1")
+    n.notify('READY=1')
+    n.notify('STATUS=Waiting')
     while not terminate():
-        n.notify('STATUS=Waiting')
+        n.notify('WATCHDOG=1')
         # Get next recording
         event = get_session().query(UpcomingEvent)\
                              .filter(UpcomingEvent.start <= timestamp())\
