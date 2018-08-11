@@ -103,6 +103,8 @@ def recording_command(event):
     # Signal configuration
     sigterm_time = conf['sigterm_time']
     sigkill_time = conf['sigkill_time']
+    sigcustom_time = conf['sigcustom_time']
+    sigcustom_time = 0 if sigcustom_time < 0 else event.end + sigcustom_time
     sigterm_time = 0 if sigterm_time < 0 else event.end + sigterm_time
     sigkill_time = 0 if sigkill_time < 0 else event.end + sigkill_time
 
@@ -115,12 +117,16 @@ def recording_command(event):
 
     # Check process
     while captureproc.poll() is None:
+        if sigcustom_time and timestamp() > sigcustom_time:
+            logger.info("Sending custom signal to capture process")
+            captureproc.send_signal(conf['sigcustom'])
+            sigcustom_time = 0  # send only once
         if sigterm_time and timestamp() > sigterm_time:
             logger.info("Terminating capture process")
             captureproc.terminate()
             sigterm_time = 0  # send only once
         elif sigkill_time and timestamp() > sigkill_time:
-            logger.warning("Terminating capture process")
+            logger.warning("Killing capture process")
             captureproc.kill()
             sigkill_time = 0  # send only once
         time.sleep(0.1)
