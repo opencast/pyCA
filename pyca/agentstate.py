@@ -16,17 +16,17 @@ import sdnotify
 import time
 
 logger = logging.getLogger(__name__)
-n = sdnotify.SystemdNotifier()
+notify = sdnotify.SystemdNotifier()
 
 
 def control_loop():
     '''Main loop, updating the capture agent state.
     '''
     set_service_status(Service.AGENTSTATE, ServiceStatus.BUSY)
-    n.notify('READY=1')
-    n.notify('STATUS=Running')
+    notify.notify('READY=1')
+    notify.notify('STATUS=Running')
     while not terminate():
-        n.notify('WATCHDOG=1')
+        notify.notify('WATCHDOG=1')
         update_agent_state()
 
         next_update = timestamp() + config()['agent']['update_frequency']

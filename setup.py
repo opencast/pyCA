@@ -14,6 +14,7 @@ setup(
         "python-dateutil>=2.4.0",
         "configobj>=5.0.0",
         "sqlalchemy>=0.9.8",
+        "sdnotify>=0.3.2",
         "flask"
     ],
     entry_points={
