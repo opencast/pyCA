@@ -30,7 +30,7 @@ version 2.7, while for Python 3 we test against all recent versions. For a
 detailed list of supported versions, have a look at the `Travis
 configuration`_.
 
-While we will continue to support Python 2 for some time, we recommend using
+While we will continue to support Python 2 until the end of 2019, we recommend using
 Python 3 if possible.
 
 
