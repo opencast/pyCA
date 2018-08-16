@@ -15,10 +15,12 @@ from pyca.utils import update_event_status, terminate
 from random import randrange
 import logging
 import pycurl
+import sdnotify
 import time
 import traceback
 
 logger = logging.getLogger(__name__)
+notify = sdnotify.SystemdNotifier()
 
 
 def get_config_params(properties):
@@ -42,6 +44,7 @@ def ingest(event):
     '''
     # Update status
     set_service_status(Service.INGEST, ServiceStatus.BUSY)
+    notify.notify('STATUS=Uploading')
     recording_state(event.uid, 'uploading')
     update_event_status(event, Status.UPLOADING)
 
@@ -96,6 +99,7 @@ def ingest(event):
     # Update status
     recording_state(event.uid, 'upload_finished')
     update_event_status(event, Status.FINISHED_UPLOADING)
+    notify.notify('STATUS=Running')
     set_service_status_immediate(Service.INGEST, ServiceStatus.IDLE)
 
     logger.info('Finished ingest')
@@ -121,7 +125,10 @@ def control_loop():
     well as starting the capture process if necessry.
     '''
     set_service_status(Service.INGEST, ServiceStatus.IDLE)
+    notify.notify('READY=1')
+    notify.notify('STATUS=Running')
     while not terminate():
+        notify.notify('WATCHDOG=1')
         # Get next recording
         event = get_session().query(RecordedEvent)\
                              .filter(RecordedEvent.status ==

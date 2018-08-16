@@ -12,16 +12,21 @@ from pyca.utils import terminate
 from pyca.config import config
 from pyca.db import Service, ServiceStatus
 import logging
+import sdnotify
 import time
 
 logger = logging.getLogger(__name__)
+notify = sdnotify.SystemdNotifier()
 
 
 def control_loop():
     '''Main loop, updating the capture agent state.
     '''
     set_service_status(Service.AGENTSTATE, ServiceStatus.BUSY)
+    notify.notify('READY=1')
+    notify.notify('STATUS=Running')
     while not terminate():
+        notify.notify('WATCHDOG=1')
         update_agent_state()
 
         next_update = timestamp() + config()['agent']['update_frequency']

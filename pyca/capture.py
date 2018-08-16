@@ -16,6 +16,7 @@ from pyca.db import get_session, RecordedEvent, UpcomingEvent, Status,\
 import logging
 import os
 import os.path
+import sdnotify
 import shlex
 import signal
 import subprocess
@@ -24,6 +25,7 @@ import time
 import traceback
 
 logger = logging.getLogger(__name__)
+notify = sdnotify.SystemdNotifier()
 captureproc = None
 
 
@@ -115,8 +117,12 @@ def recording_command(event):
     captureproc = subprocess.Popen(args, stdin=DEVNULL)
     hasattr(subprocess, 'DEVNULL') or os.close(DEVNULL)
 
+    # Set systemd status
+    notify.notify('STATUS=Capturing')
+
     # Check process
     while captureproc.poll() is None:
+        notify.notify('WATCHDOG=1')
         if sigcustom_time and timestamp() > sigcustom_time:
             logger.info("Sending custom signal to capture process")
             captureproc.send_signal(conf['sigcustom'])
@@ -144,6 +150,9 @@ def recording_command(event):
     if captureproc.poll() > 0 and captureproc.returncode != exitcode:
         raise RuntimeError('Recording failed (%i)' % captureproc.returncode)
 
+    # Reset systemd status
+    notify.notify('STATUS=Waiting')
+
     # Return [(flavor,path),…]
     files = (f.replace('{{dir}}', event.directory()) for f in conf['files'])
     files = (f.replace('{{name}}', event.name()) for f in files)
@@ -155,7 +164,10 @@ def control_loop():
     well as starting the capture process if necessry.
     '''
     set_service_status(Service.CAPTURE, ServiceStatus.IDLE)
+    notify.notify('READY=1')
+    notify.notify('STATUS=Waiting')
     while not terminate():
+        notify.notify('WATCHDOG=1')
         # Get next recording
         event = get_session().query(UpcomingEvent)\
                              .filter(UpcomingEvent.start <= timestamp())\

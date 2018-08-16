@@ -16,6 +16,7 @@ from datetime import datetime
 import dateutil.parser
 import logging
 import pycurl
+import sdnotify
 import sys
 import time
 import traceback
@@ -25,6 +26,7 @@ else:
     from urllib.parse import urlencode
 
 logger = logging.getLogger(__name__)
+notify = sdnotify.SystemdNotifier()
 
 
 def parse_ical(vcal):
@@ -101,7 +103,9 @@ def control_loop():
     '''Main loop, retrieving the schedule.
     '''
     set_service_status(Service.SCHEDULE, ServiceStatus.BUSY)
+    notify.notify('READY=1')
     while not terminate():
+        notify.notify('WATCHDOG=1')
         # Try getting an updated schedule
         get_schedule()
         session = get_session()
@@ -112,8 +116,11 @@ def control_loop():
         if next_event:
             logger.info('Next scheduled recording: %s',
                         datetime.fromtimestamp(next_event.start))
+            notify.notify('STATUS=Next scheduled recording: %s' %
+                          datetime.fromtimestamp(next_event.start))
         else:
             logger.info('No scheduled recording')
+            notify.notify('STATUS=No scheduled recording')
         session.close()
 
         next_update = timestamp() + config()['agent']['update_frequency']
