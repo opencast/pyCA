@@ -1,0 +1,14 @@
+[Unit]
+Description=Python Capture Agent UI instance
+Documentation=https://github.com/opencast/pyCA
+Wants=network.target
+
+[Service]
+Type=simple
+User=pyca
+ExecStart=/usr/bin/gunicorn pyca.ui:app
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
