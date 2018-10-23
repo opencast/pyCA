@@ -96,6 +96,10 @@ Available commands are:
  - `agentstate`: Start pyCA agentstate service
  - `ui`: Start web based user interface
 
+As a service
+------------
+
+Example systemd unit files, corresponding to the commands above, are available in ``init/systemd``. Remember to increase the ``WatchdogSec`` parameter in the ``pyca-schedule.service`` unit file if you modify the ``update_frequency`` setting in pyCA, it's recommended to set it at least twice as long as the update_frequency.
 
 User Interface
 **************
