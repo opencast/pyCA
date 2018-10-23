@@ -99,7 +99,15 @@ Available commands are:
 As a service
 ------------
 
-Example systemd unit files, corresponding to the commands above, are available in ``init/systemd``. Remember to increase the ``WatchdogSec`` parameter in the ``pyca-schedule.service`` unit file if you modify the ``update_frequency`` setting in pyCA, it's recommended to set it at least twice as long as the update_frequency.
+Example systemd unit files, corresponding to the commands above, are available
+in ``init/systemd``. These unit files start and manage all pyCA services
+separately to ensures that a problem in one of the services does not effect
+other parts of pyCA.
+
+Remember to increase the ``WatchdogSec`` parameter in the
+``pyca-schedule.service`` unit file if you modify the ``update_frequency``
+setting in pyCA, it's recommended to set it at least twice as long as the
+update_frequency.
 
 User Interface
 **************
