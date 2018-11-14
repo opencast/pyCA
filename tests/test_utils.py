@@ -32,8 +32,8 @@ class TestPycaUtils(unittest.TestCase):
         res = '''{"services":{
                     "service":{
                         "type":"org.opencastproject.capture.admin",
-                        "host":"https:\/\/octestallinone.virtuos.uos.de",
-                        "path":"\/capture-admin",
+                        "host":"https://octestallinone.virtuos.uos.de",
+                        "path":"/capture-admin",
                         "active":true,
                         "online":true,
                         "maintenance":false,
