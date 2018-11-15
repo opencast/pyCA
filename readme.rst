@@ -161,9 +161,9 @@ could look like this::
 This command will record audio and video from a test source and write a WebM
 file while simultaneously updating a still image every second.
 
-.. _Opencast: http://opencast.org
+.. _Opencast: https://opencast.org
 .. _GNU Lesser General Public License: https://raw.githubusercontent.com/opencast/pyCA/master/license.lgpl
-.. _Raspberry Pi: http://www.raspberrypi.org
+.. _Raspberry Pi: https://raspberrypi.org
 .. _AUR: https://aur.archlinux.org/packages/pyca
-.. _Gunicorn online documentation: http://gunicorn.org
+.. _Gunicorn online documentation: https://gunicorn.org
 .. _Travis configuration: https://raw.githubusercontent.com/opencast/pyCA/master/.travis.yml
