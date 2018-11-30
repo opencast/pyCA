@@ -37,12 +37,15 @@ Python 3 if possible.
 Installation
 ************
 
+Note that, by default, pyCA is configured to use FFmpeg_ for recording and you
+will need to have it installed as well if you do not change the configuration.
+
 Here is a short summary for Debian based OS like Raspian::
 
   git clone https://github.com/opencast/pyCA.git
   cd pyCA
   apt-get install python-configobj python-dateutil python-pycurl \
-    python-flask python-sqlalchemy
+    python-flask python-sqlalchemy python-sdnotify
   vim etc/pyca.conf <-- Edit the configuration
   ./start.sh
 
@@ -50,19 +53,29 @@ On Fedora::
 
   git clone https://github.com/opencast/pyCA.git
   cd pyCA
+  dnf copr enable lkiesow/python-sdnotify
   dnf install python-pycurl python-dateutil python-configobj \
-    python-flask python-sqlalchemy
+    python-flask python-sqlalchemy python-sdnotify
   vim etc/pyca.conf <-- Edit the configuration
   ./start.sh
 
-On RHEL/CentOS 7::
+On RHEL/CentOS 7 (we activate Python 3 for this)::
 
   git clone https://github.com/opencast/pyCA.git
-  cd pyCA
-  yum install python-pycurl python-dateutil python-configobj \
-    python-flask python-sqlalchemy
+  cd pyCA/
+  yum install centos-release-scl
+  yum install rh-python36 git gcc libcurl-devel.x86_64 nss-devel.x86_64
+  scl enable rh-python36 bash
+  python -m venv venv
+  . ./venv/bin/activate
+  export PYCURL_SSL_LIBRARY=nss
+  pip install -r requirements.txt
   vim etc/pyca.conf  <-- Edit the configuration
   ./start.sh
+
+To restart pyCA later, reactivate the virtual environment by re-running
+``. ./venv/bin/activate`` again. You can also include this in the start
+script.
 
 On Arch Linux::
 
@@ -167,3 +180,4 @@ file while simultaneously updating a still image every second.
 .. _AUR: https://aur.archlinux.org/packages/pyca
 .. _Gunicorn online documentation: https://gunicorn.org
 .. _Travis configuration: https://raw.githubusercontent.com/opencast/pyCA/master/.travis.yml
+.. _FFmpeg: https://ffmpeg.org
