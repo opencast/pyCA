@@ -8,6 +8,7 @@
 
 import json
 import os.path
+import random
 import string
 from pyca.config import config
 from sqlalchemy.ext.declarative import declarative_base
@@ -153,6 +154,7 @@ class RecordedEvent(Base, BaseEvent):
     status = Column('status', Integer(), nullable=False,
                     default=Status.UPCOMING)
     tracks = Column('tracks', LargeBinary(), nullable=True)
+    ingest_delay = Column('ingest_delay', Integer(), nullable=False, default=0)
 
     def __init__(self, event=None):
         if event:
@@ -163,6 +165,9 @@ class RecordedEvent(Base, BaseEvent):
             self.data = event.data
             if hasattr(event, 'status'):
                 self.status = event.status
+            if not hasattr(event, 'ingest_delay'):
+                self.ingest_delay = random.randint(config()['ingest']['delay_min'],
+                                                   config()['ingest']['delay_max'])
 
     def get_tracks(self):
         '''Load JSON track data from event.

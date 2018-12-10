@@ -129,12 +129,25 @@ def control_loop():
     notify.notify('STATUS=Running')
     while not terminate():
         notify.notify('WATCHDOG=1')
-        # Get next recording
-        event = get_session().query(RecordedEvent)\
-                             .filter(RecordedEvent.status ==
-                                     Status.FINISHED_RECORDING).first()
+        # Get next recording without ingest delay
+        db = get_session()
+        event = db.query(RecordedEvent)\
+                  .filter(RecordedEvent.status ==
+                          Status.FINISHED_RECORDING)\
+                  .filter(RecordedEvent.ingest_delay == 0).first()
         if event:
             safe_start_ingest(event)
+        # Decrement remaining ingest delays
+        delayed_events = db.query(RecordedEvent)\
+                           .filter(RecordedEvent.status ==
+                                   Status.FINISHED_RECORDING)\
+                           .filter(RecordedEvent.ingest_delay > 0)
+
+        for delayed_event in delayed_events:
+            delayed_event.ingest_delay -= 1
+        db.commit()
+        db.close()
+
         time.sleep(1.0)
     logger.info('Shutting down ingest service')
     set_service_status(Service.INGEST, ServiceStatus.STOPPED)
