@@ -129,22 +129,21 @@ def control_loop():
     notify.notify('STATUS=Running')
     while not terminate():
         notify.notify('WATCHDOG=1')
-        # Get next recording without ingest delay
+
         db = get_session()
+        # Get next recording without ingest delay
         event = db.query(RecordedEvent)\
                   .filter(RecordedEvent.status ==
                           Status.FINISHED_RECORDING)\
                   .filter(RecordedEvent.ingest_delay == 0).first()
         if event:
             safe_start_ingest(event)
-        # Decrement remaining ingest delays
-        delayed_events = db.query(RecordedEvent)\
-                           .filter(RecordedEvent.status ==
-                                   Status.FINISHED_RECORDING)\
-                           .filter(RecordedEvent.ingest_delay > 0)
 
-        for delayed_event in delayed_events:
-            delayed_event.ingest_delay -= 1
+        # Decrement remaining ingest delays
+        db.query(RecordedEvent)\
+          .filter(RecordedEvent.status == Status.FINISHED_RECORDING)\
+          .filter(RecordedEvent.ingest_delay > 0)\
+          .update({RecordedEvent.ingest_delay: RecordedEvent.ingest_delay - 1})
         db.commit()
         db.close()
 
