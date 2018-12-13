@@ -31,7 +31,7 @@ def requires_auth(f):
 def jsonapi_mediatype(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        if request.headers['Content-Type'] != 'application/vnd.api+json':
+        if request.headers.get('Content-Type') != 'application/vnd.api+json':
             return Response('Unsupported Media Type', 415)
         response = f(*args, **kwargs)
         response.headers['Content-Type'] = 'application/vnd.api+json'
