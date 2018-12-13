@@ -16,6 +16,9 @@ from sqlalchemy.orm import sessionmaker
 Base = declarative_base()
 
 
+VERSION = 20181213
+
+
 def init():
     '''Initialize connection to database. Additionally the basic database
     structure will be created if nonexistent.
@@ -23,6 +26,16 @@ def init():
     global engine
     engine = create_engine(config()['agent']['database'])
     Base.metadata.create_all(engine)
+    session = sessionmaker(bind=engine)()
+    version = session.query(DatabaseVersion.version).first()
+    if not version:
+        session.add(DatabaseVersion())
+        session.commit()
+    elif version.version != VERSION:
+        raise AssertionError('Invalid database version detected '
+                             '(expected %i, found %i)\n'
+                             'Please remove or update the database.'
+                             % (VERSION, version.version))
 
 
 def get_session():
@@ -190,3 +203,14 @@ class ServiceStates(Base):
         if service:
             self.type = service.type
             self.status = service.status
+
+
+class DatabaseVersion(Base):
+    '''Table to hold the current database version.'''
+
+    __tablename__ = 'database_version'
+
+    version = Column('version', Integer(), nullable=False, primary_key=True)
+
+    def __init__(self):
+        self.version = VERSION
