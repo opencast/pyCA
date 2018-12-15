@@ -144,6 +144,16 @@ For more information, have a look at the help option of gunicorn or go to the
 `Gunicorn online documentation`_.
 
 
+JSON API
+********
+
+The pyCA web interface comes with a JSON API to programatically modify and
+retrieve information about the capture agent. For more information, take a
+look at the API documentation:
+
+    `API Documentation <apidocs.rst>`_
+
+
 Backup Mode
 ***********
 
