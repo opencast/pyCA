@@ -112,6 +112,9 @@ def delete_event(uid):
 def modify_event(uid):
     '''Modify an event specified by its uid. The modifications for the event
     are expected as JSON with the content type correctly set in the request.
+
+    Note that this method works for recorded events only. Upcoming events part
+    of the scheduler cache cannot be modified.
     '''
     try:
         data = request.get_json()['data'][0]
@@ -124,7 +127,8 @@ def modify_event(uid):
         # Check new status
         new_status = data['attributes'].get('status')
         if new_status:
-            data['status'] = int(getattr(Status, new_status.upper()))
+            new_status = new_status.upper().replace(' ', '_')
+            data['attributes']['status'] = int(getattr(Status, new_status))
     except Exception:
         return make_error_response('Invalid data', 400)
 
