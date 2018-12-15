@@ -45,7 +45,7 @@ class TestPycaRestInterface(unittest.TestCase):
         # JSONAPI must respond with 415 when mediatype parameters are present
         param_headers = self.headers.copy()
         param_headers['Content-Type'] = self.headers['Content-Type'] + ' a=b;'
-        with ui.app.test_request_context(headers=param_headers):
+        with ui.app.test_request_context(headers=param_headers, method='PUT'):
             assert ui.jsonapi.internal_state().status_code == 415
             assert ui.jsonapi.events().status_code == 415
             assert ui.jsonapi.event().status_code == 415
