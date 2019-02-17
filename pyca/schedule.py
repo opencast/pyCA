@@ -7,8 +7,8 @@
     :license: LGPL – see license.lgpl for more details.
 '''
 
-from pyca.utils import http_request, configure_service, unix_ts, timestamp
-from pyca.utils import set_service_status, terminate
+from pyca.utils import http_request, configure_service, unix_ts, timestamp, \
+                       set_service_status_immediate, terminate
 from pyca.config import config
 from pyca.db import get_session, UpcomingEvent, Service, ServiceStatus
 from base64 import b64decode
@@ -102,7 +102,7 @@ def get_schedule():
 def control_loop():
     '''Main loop, retrieving the schedule.
     '''
-    set_service_status(Service.SCHEDULE, ServiceStatus.BUSY)
+    set_service_status_immediate(Service.SCHEDULE, ServiceStatus.BUSY)
     notify.notify('READY=1')
     while not terminate():
         notify.notify('WATCHDOG=1')
@@ -128,7 +128,7 @@ def control_loop():
             time.sleep(0.1)
 
     logger.info('Shutting down schedule service')
-    set_service_status(Service.SCHEDULE, ServiceStatus.STOPPED)
+    set_service_status_immediate(Service.SCHEDULE, ServiceStatus.STOPPED)
 
 
 def run():

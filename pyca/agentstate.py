@@ -27,11 +27,13 @@ def control_loop():
     notify.notify('STATUS=Running')
     while not terminate():
         notify.notify('WATCHDOG=1')
-        update_agent_state()
 
         next_update = timestamp() + config()['agent']['update_frequency']
         while not terminate() and timestamp() < next_update:
             time.sleep(0.1)
+
+        if not terminate():
+            update_agent_state()
 
     logger.info('Shutting down agentstate service')
     set_service_status(Service.AGENTSTATE, ServiceStatus.STOPPED)

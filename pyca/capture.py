@@ -163,7 +163,7 @@ def control_loop():
     '''Main loop of the capture agent, retrieving and checking the schedule as
     well as starting the capture process if necessry.
     '''
-    set_service_status(Service.CAPTURE, ServiceStatus.IDLE)
+    set_service_status_immediate(Service.CAPTURE, ServiceStatus.IDLE)
     notify.notify('READY=1')
     notify.notify('STATUS=Waiting')
     while not terminate():
