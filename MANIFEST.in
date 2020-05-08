@@ -1,0 +1,2 @@
+include pyca/ui/static/*
+include pyca/ui/templates/*

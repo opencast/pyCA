@@ -9,7 +9,12 @@ from pyca.db import get_session
 from pyca.ui.utils import dtfmt, requires_auth
 from pyca.utils import get_service_status
 import os.path
-app = Flask(__name__)
+
+__base_dir__ = os.path.abspath(os.path.dirname(__file__))
+app = Flask(
+    __name__,
+    template_folder=os.path.join(__base_dir__, 'templates'),
+    static_folder=os.path.join(__base_dir__, 'static'))
 import pyca.ui.jsonapi  # noqa
 
 
