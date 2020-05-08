@@ -9,6 +9,7 @@ setup(
     license="LGPLv3",
     url="https://github.com/opencast/pyCA",
     packages=find_packages(),
+    include_package_data=True,
     install_requires=[
         "pycurl>=7.19.5",
         "python-dateutil>=2.4.0",
