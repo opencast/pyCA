@@ -49,28 +49,16 @@ Here is a short summary for Debian based OS like Raspian::
   vim etc/pyca.conf <-- Edit the configuration
   ./start.sh
 
-On Fedora::
+On Fedora ≥ 31 or CentOS 8::
 
   git clone https://github.com/opencast/pyCA.git
   cd pyCA
-  dnf copr enable lkiesow/python-sdnotify
-  dnf install python-pycurl python-dateutil python-configobj \
-    python-flask python-sqlalchemy python-sdnotify
-  vim etc/pyca.conf <-- Edit the configuration
-  ./start.sh
-
-On RHEL/CentOS 7 (we activate Python 3 for this)::
-
-  git clone https://github.com/opencast/pyCA.git
-  cd pyCA/
-  yum install centos-release-scl
-  yum install rh-python36 git gcc libcurl-devel.x86_64 nss-devel.x86_64
-  scl enable rh-python36 bash
-  python -m venv venv
+  dnf install gcc python3-devel libcurl-devel openssl-devel
+  python3 -m venv venv
   . ./venv/bin/activate
-  export PYCURL_SSL_LIBRARY=nss
+  export PYCURL_SSL_LIBRARY=openssl
   pip install -r requirements.txt
-  vim etc/pyca.conf  <-- Edit the configuration
+  vim etc/pyca.conf <-- Edit the configuration
   ./start.sh
 
 To restart pyCA later, reactivate the virtual environment by re-running
