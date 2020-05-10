@@ -163,9 +163,24 @@ could look like this::
 
     command          = '''ffmpeg -nostats -re
                           -f lavfi -r 25 -i testsrc
-                          -f lavfi -i sine -t {{time}}
-                          -map 0:v -map 1:a {{dir}}/{{name}}.webm
-                          -map 0:v -r 1 -updatefirst 1 {{previewdir}}/preview.jpg'''
+                          -f lavfi -i sine
+                          -t {{time}} -map 0:v -map 1:a {{dir}}/{{name}}.webm
+                          -t {{time}} -map 0:v -r 1 -update 1 {{previewdir}}/preview.jpg'''
+
+    preview = '{{previewdir}}/preview.jpg'
+
+Of ourse, you can build more complex pipelines. For example, you could include
+a volume meter like this::
+
+    command          = '''ffmpeg -nostats -re
+                          -f lavfi -r 25 -i testsrc
+                          -f lavfi -i sine
+                          -t {{time}} -map 0:v -map 1:a {{dir}}/{{name}}.webm
+                          -t {{time}} -filter_complex '
+                            [1:a] showvolume=w=640:p=0.8 [vol];
+                            [0:v] scale=640:-2 [img];
+                            [img][vol] overlay=0:0 [preview]'
+                          -map '[preview]' -r 1 -update 1 {{previewdir}}/preview.jpg'''
 
     preview = '{{previewdir}}/preview.jpg'
 
