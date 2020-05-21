@@ -131,6 +131,9 @@ using Gunicorn, would be to run::
 For more information, have a look at the help option of gunicorn or go to the
 `Gunicorn online documentation`_.
 
+In addition to the WSGI server, you should use a reverse proxy,
+if you want the ui to listen to anything but `localhost`.
+Some example configuration files for Nginx_ can be found under `reverse-proxy <reverse-proxy>`_.
 
 JSON API
 ********
@@ -175,6 +178,7 @@ file while simultaneously updating a still image every second.
 .. _Opencast: https://opencast.org
 .. _GNU Lesser General Public License: https://raw.githubusercontent.com/opencast/pyCA/master/license.lgpl
 .. _Raspberry Pi: https://raspberrypi.org
+.. _Nginx: https://www.nginx.com
 .. _AUR: https://aur.archlinux.org/packages/pyca
 .. _Gunicorn online documentation: https://gunicorn.org
 .. _Travis configuration: https://raw.githubusercontent.com/opencast/pyCA/master/.travis.yml
