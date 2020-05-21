@@ -7,3 +7,6 @@ venv
 
 .coverage
 pyca.db
+
+# IDEs
+.vscode/

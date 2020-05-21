@@ -33,21 +33,33 @@ configuration`_.
 While we will continue to support Python 2 until the end of 2019, we recommend using
 Python 3 if possible.
 
-
 Installation
 ************
 
 Note that, by default, pyCA is configured to use FFmpeg_ for recording and you
 will need to have it installed as well if you do not change the configuration.
 
-Here is a short summary for Debian based OS like Raspian::
+For **Debian based OS**, like Ubuntu or Raspbian, we maintain an APT repository.
+Here is a short summary how to use it.
 
-  git clone https://github.com/opencast/pyCA.git
-  cd pyCA
-  apt-get install python-configobj python-dateutil python-pycurl \
-    python-flask python-sqlalchemy python-sdnotify
-  vim etc/pyca.conf <-- Edit the configuration
-  ./start.sh
+.. code-block:: shell
+
+  # Install prerequisites
+  apt-get install apt-transport-https
+
+  # Include PyCA's Signing Key
+  apt-key adv --fetch https://pyca.deb.opencast.org/gpg.key
+
+  # Add the Repository
+  echo "deb [arch=all] https://pyca.deb.opencast.org/opencast-pyca buster main" > /etc/apt/sources.list.d/opencast-pyca.list
+
+  # Update your cache and install PyCA
+  apt-get update
+  apt-get install opencast-pyca
+
+Once installed, you can use your regular update mechanisms to keep PyCA up to date.
+The configuration can be found unter `/etc/pyca.conf` and contains reasonable defaults.
+All PyCA components will be started automatically and you can reach the UI under http://localhost:8000.
 
 On Fedora ≥ 31 or CentOS 8::
 
