@@ -91,6 +91,15 @@
                 </table>
 
             </section>
+            <section>
+                <h2>Status</h2>
+                <table>
+                    <template>
+                        <component-metric v-for="item in metrics" v-bind:metric="item" v-bind:key="item.header">
+                        </component-metric>
+                    </template>
+                </table>
+            </section>
         </main>
     </div>
 

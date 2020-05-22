@@ -189,3 +189,55 @@ cURL example::
       }
     ]
   }
+
+
+GET /api/metrics
+-----------------
+
+Metrics about the services of pyCA and the machine it is running on.
+
+cURL example::
+
+  % curl -u admin:opencast \
+      -H 'content-type: application/vnd.api+json' \
+      'http://127.0.0.1:5000/api/metrics'
+  {
+    "meta": {
+      "disk_usage_in_bytes": {
+        "free": 23310340096,
+        "total": 117042683904,
+        "used": 87742750720
+      },
+      "load": {
+        "15m": 0.21,
+        "1m": 0.38,
+        "5m": 0.27
+      },
+      "memory_usage_in_bytes": {
+        "available": 29922299904,
+        "buffers": 155013120,
+        "cached": 1310781440,
+        "free": 28908437504,
+        "total": 33695797248,
+        "used": 3321565184
+      },
+      "services": [
+        {
+          "name": "agentstate",
+          "status": "busy"
+        },
+        {
+          "name": "capture",
+          "status": "idle"
+        },
+        {
+          "name": "ingest",
+          "status": "idle"
+        },
+        {
+          "name": "schedule",
+          "status": "busy"
+        }
+      ]
+    }
+  }
