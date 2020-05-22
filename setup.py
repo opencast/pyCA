@@ -16,6 +16,7 @@ setup(
         "configobj>=5.0.0",
         "sqlalchemy>=0.9.8",
         "sdnotify>=0.3.2",
+        "psutil>=5.0.1",
         "flask"
     ],
     entry_points={

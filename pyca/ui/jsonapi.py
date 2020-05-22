@@ -2,12 +2,13 @@
 from flask import jsonify, make_response, request
 from pyca.config import config
 from pyca.db import Service, ServiceStatus, UpcomingEvent, RecordedEvent
-from pyca.db import get_session, Status
+from pyca.db import get_session, Status, ServiceStates
 from pyca.ui import app
 from pyca.ui.utils import requires_auth, jsonapi_mediatype
 from pyca.utils import get_service_status, ensurelist
 import logging
 import os
+import psutil
 import shutil
 
 logger = logging.getLogger(__name__)
@@ -174,3 +175,51 @@ def modify_event(uid):
     logger.debug('Updating event %s via api', uid)
     db.commit()
     return make_data_response(event.serialize())
+
+
+@app.route('/api/metrics', methods=['GET'])
+@requires_auth
+def metrics():
+    '''Serve several metrics about the pyCA services and the machine via
+    json.'''
+    # Get Disk Usage
+    total, used, free = shutil.disk_usage(config()['capture']['directory'])
+
+    # Get Loads
+    load_1m, load_5m, load_15m = os.getloadavg()
+
+    # Get Memory
+    memory = psutil.virtual_memory()
+
+    # Get Services
+    dbs = get_session()
+    srvs = dbs.query(ServiceStates)
+    services = []
+    for srv in srvs:
+        services.append({
+            'name': Service.str(srv.type),
+            'status': ServiceStatus.str(srv.status)
+        })
+    dbs.close()
+    return make_response(
+        {'meta': {
+            'services': services,
+            'disk_usage_in_bytes': {
+                'total': total,
+                'used': used,
+                'free': free,
+            },
+            'memory_usage_in_bytes': {
+                'total': memory.total,
+                'available': memory.available,
+                'used': memory.used,
+                'free': memory.free,
+                'cached': memory.cached,
+                'buffers': memory.buffers,
+            },
+            'load': {
+                '1m': load_1m,
+                '5m': load_5m,
+                '15m': load_15m,
+            }
+        }})
