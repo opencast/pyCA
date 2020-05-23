@@ -3,16 +3,9 @@
 Helper methods used for the web interface.
 '''
 
-import datetime
 from functools import wraps
 from flask import request, Response
 from pyca.config import config
-
-
-def dtfmt(ts):
-    '''Covert Unix timestamp into human readable form
-    '''
-    return datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
 
 
 def requires_auth(f):

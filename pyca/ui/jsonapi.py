@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 from flask import jsonify, make_response, request
+from pyca.config import config
 from pyca.db import Service, ServiceStatus, UpcomingEvent, RecordedEvent
 from pyca.db import get_session, Status
 from pyca.ui import app
 from pyca.ui.utils import requires_auth, jsonapi_mediatype
 from pyca.utils import get_service_status, ensurelist
 import logging
+import os
 import shutil
 
 logger = logging.getLogger(__name__)
@@ -30,6 +32,32 @@ def make_data_response(data, status=200):
     return make_response(jsonify(content), status)
 
 
+@app.route('/api/name')
+@requires_auth
+@jsonapi_mediatype
+def get_name():
+    '''Serve the name of the capure agent via json.
+    '''
+    return make_response({'name': config()['agent']['name']})
+
+
+@app.route('/api/previews')
+@requires_auth
+@jsonapi_mediatype
+def get_images():
+    '''Serve the list of preview images via json.
+    '''
+    # Get IDs of existing preview images
+    preview = config()['capture']['preview']
+    previewdir = config()['capture']['preview_dir']
+    preview = [p.replace('{{previewdir}}', previewdir) for p in preview]
+    preview = zip(preview, range(len(preview)))
+
+    # Create return
+    preview = [{'id': p[1]} for p in preview if os.path.isfile(p[0])]
+    return make_data_response(preview)
+
+
 @app.route('/api/services')
 @requires_auth
 @jsonapi_mediatype
@@ -50,7 +78,8 @@ def internal_state():
 @requires_auth
 @jsonapi_mediatype
 def events():
-    '''Serve a JSON representation of events
+    '''Serve a JSON representation of events splitted by upcoming and already
+    recorded events.
     '''
     db = get_session()
     upcoming_events = db.query(UpcomingEvent)\
@@ -58,9 +87,12 @@ def events():
     recorded_events = db.query(RecordedEvent)\
                         .order_by(RecordedEvent.start.desc())
 
-    result = [event.serialize() for event in upcoming_events]
-    result += [event.serialize() for event in recorded_events]
-    return make_data_response(result)
+    upcoming = [event.serialize() for event in upcoming_events]
+    recorded = [event.serialize() for event in recorded_events]
+    return make_response({
+        'upcoming': upcoming,
+        'recorded': recorded,
+    })
 
 
 @app.route('/api/events/<uid>')

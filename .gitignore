@@ -3,6 +3,10 @@ venv
 *.pyo
 *.swp
 
+# JavaScript stuff
+node_modules/
+/pyca/ui/static/
+
 /recordings/*
 
 .coverage
