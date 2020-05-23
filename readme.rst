@@ -70,6 +70,7 @@ On Fedora ≥ 31 or CentOS 8::
   . ./venv/bin/activate
   export PYCURL_SSL_LIBRARY=openssl
   pip install -r requirements.txt
+  npm ci
   vim etc/pyca.conf <-- Edit the configuration
   ./start.sh
 
@@ -83,6 +84,7 @@ On Arch Linux::
   cd pyCA
   sudo pacman -S python-pycurl python-dateutil \
     python-configobj python-sqlalchemy
+  npm ci
   vim etc/pyca.conf  <-- Edit the configuration
   ./start.sh
 

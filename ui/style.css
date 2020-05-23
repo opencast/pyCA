@@ -108,3 +108,12 @@ tr.extendlist td {
     max-width: 90%;
     max-height: 300px;
 }
+
+td.more {
+    cursor: pointer;
+    font-style: italic;
+}
+
+td.more:hover {
+    background-color: #eee;
+}

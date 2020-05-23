@@ -1,0 +1,99 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta http-equiv=content-type content="text/html; charset=utf-8" />
+    <meta name=viewport content="width=device-width, initial-scale=1">
+
+    <script src="./func.js"></script>
+
+    <title>pyCA</title>
+    <link rel=stylesheet type=text/css href="./style.css">
+</head>
+
+<body>
+    <div id="app">
+        <header class=center>
+            <a href="/">pyCA</a>
+        </header>
+
+        <h1>
+            <div class=center>Capture Agent “{{ name }}”</div>
+        </h1>
+
+        <summary>
+            <div id=status class=center>
+                <div>
+                    <div>Capture</div>
+                    <div class=active v-if="capture">Recording</div>
+                    <div class=inactive v-else>Idle</div>
+                </div>
+
+                <div>
+                    <div>Upload</div>
+                    <div class=active v-if="uploading">Uploading</div>
+                    <div class=inactive v-else>Idle</div>
+                </div>
+
+                <div>
+                    <div>Upcoming</div>
+                    <div class=inactive>{{ upcoming }}</div>
+                </div>
+
+                <div>
+                    <div>Processed</div>
+                    <div class=inactive>{{ processed }}</div>
+                </div>
+        </summary>
+
+        <main class=center>
+
+            <section id=preview>
+                <h2>Preview Images</h2>
+                <div v-if="previews && previews.length">
+                    <component-preview v-for="item in previews" v-bind:image="item" v-bind:key="item.id">
+                    </component-preview>
+                </div>
+                <div v-else>No preview image</div>
+            </section>
+
+            <section>
+                <h2>Recordings</h2>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Start</th>
+                            <th>End</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template v-if="upcoming > limit_upcoming">
+                            <tr class=extendlist>
+                                <td colspan="3" class="more" v-on:click="limit_upcoming+=5">
+                                    more upcoming events…
+                                </td>
+                            </tr>
+                        </template>
+                        <tr is="component-events" v-for="item in upcoming_events.slice(0,limit_upcoming)"
+                            v-bind:event="item" v-bind:key="item.start">
+                        <tr is="component-events" v-for="item in recorded_events.slice(0,limit_processed)"
+                            v-bind:event="item" v-bind:key="item.start"></tr>
+                        <template v-if="processed > limit_processed">
+                            <tr class=extendlist>
+                                <td colspan="3" class="more" v-on:click="limit_processed+=5">
+                                    more recorded events…
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+
+            </section>
+        </main>
+    </div>
+
+</body>
+
+</html>
