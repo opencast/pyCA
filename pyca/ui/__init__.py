@@ -72,7 +72,9 @@ def serve_image(image_id):
         filepath = os.path.abspath(filepath)
         if os.path.isfile(filepath):
             directory, filename = filepath.rsplit('/', 1)
-            return send_from_directory(directory, filename)
+            response = send_from_directory(directory, filename)
+            response.cache_control.no_cache = True
+            return response
     except (IndexError, KeyError):
         pass
     return '', 404
