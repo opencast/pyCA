@@ -31,8 +31,8 @@ OPTIONS:
 CONFIGURATION:
   PyCA will try to find a configuration in the following order:
    - Configuration specified on the command line
-   - /etc/pyca.conf
    - ./etc/pyca.conf
+   - /etc/pyca.conf
 '''
 
 
