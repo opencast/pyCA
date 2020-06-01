@@ -1,9 +1,7 @@
 PyCA – Opencast Capture Agent
 =============================
-
-.. image:: https://travis-ci.org/opencast/pyCA.svg?branch=master
-    :target: https://travis-ci.org/opencast/pyCA
-    :alt: CI Builds
+.. image:: https://img.shields.io/github/workflow/status/opencast/pyCA/Test%20PyCA/master
+    :alt: GitHub Workflow Status (deimasterbranch)
 .. image:: https://coveralls.io/repos/github/opencast/pyCA/badge.svg?branch=master
     :target: https://coveralls.io/github/opencast/pyCA?branch=master
     :alt: Test Coverage
