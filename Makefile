@@ -1,7 +1,7 @@
 all: lint test
 
 lint:
-	@flake8 $$(find . -name '*.py')
+	@flake8 $$(find pyca tests -name '*.py')
 
 test:
 	@npm run build
