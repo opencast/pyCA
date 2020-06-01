@@ -58,8 +58,8 @@ Here is a short summary how to use it.
   apt-get install opencast-pyca
 
 Once installed, you can use your regular update mechanisms to keep PyCA up to date.
-The configuration can be found unter `/etc/pyca.conf` and contains reasonable defaults.
-All PyCA components will be started automatically and you can reach the UI under http://localhost:8000.
+The configuration can be found at `/etc/pyca/pyca.conf` and contains reasonable defaults.
+All PyCA components will be started automatically and you can reach the user interface at http://localhost:8000.
 
 On Fedora ≥ 31 or CentOS 8::
 

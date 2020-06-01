@@ -68,7 +68,7 @@ def configuration_file(cfgfile):
     # location.
     cfg = './etc/pyca.conf'
     if not os.path.isfile(cfg):
-        return '/etc/pyca.conf'
+        return '/etc/pyca/pyca.conf'
     return cfg
 
 
