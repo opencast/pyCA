@@ -7,6 +7,7 @@ import configobj
 import logging
 import logging.handlers
 import os
+import socket
 import sys
 from validate import Validator
 
@@ -14,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 __CFG = '''
 [agent]
-name             = string(default='pyca')
+name             = string(default='')
 update_frequency = integer(min=5, default=60)
 cal_lookahead    = integer(min=0, default=14)
 backup_mode      = boolean(default=false)
@@ -86,6 +87,8 @@ def update_configuration(cfgfile=None):
         raise ValueError('Invalid configuration: %s' % val)
     if len(cfg['capture']['files']) != len(cfg['capture']['flavors']):
         raise ValueError('List of files and flavors do not match')
+    if not cfg['agent']['name']:
+        cfg['agent']['name'] = 'pyca@' + socket.gethostname()
     globals()['__config'] = cfg
     logger_init()
     if cfg['server'].get('url', '').endswith('/'):
