@@ -78,8 +78,7 @@ class TestPycaRestInterface(unittest.TestCase):
             assert response.status_code == 200
             assert response.headers['Content-Type'] == self.content_type
             self.assertEqual(json.loads(
-                response.data.decode('utf-8')),
-                {'upcoming': [], 'recorded': []})
+                response.data.decode('utf-8')), dict(data=[]))
 
         # With authentication and event
         event = self.add_test_event()
@@ -87,7 +86,7 @@ class TestPycaRestInterface(unittest.TestCase):
             response = ui.jsonapi.events()
             assert response.status_code == 200
             assert response.headers['Content-Type'] == self.content_type
-            events = json.loads(response.data.decode('utf-8'))['recorded'][0]
+            events = json.loads(response.data.decode('utf-8'))['data'][0]
             assert events.get('id') == event.uid
 
     def test_event(self):

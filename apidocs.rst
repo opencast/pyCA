@@ -9,6 +9,46 @@ default.
 .. contents::
 
 
+GET /api/name
+-------------
+
+A JSON representation of name of the pyCA instance.
+
+cURL example::
+
+  % curl -u admin:opencast \
+      -H 'content-type: application/vnd.api+json' \
+      'http://127.0.0.1:5000/api/name'
+  {
+    "meta": {
+      "name": "pyca"
+    }
+  }
+
+
+GET /api/previews
+-----------------
+
+A JSON representation of the current available previews.
+
+cURL example::
+
+  % curl -u admin:opencast \
+      -H 'content-type: application/vnd.api+json' \
+      'http://127.0.0.1:5000/api/previews'
+  {
+    "data": [
+      {
+        "attributes": {
+          "id": 1
+        },
+        "id": "1",
+        "type": "preview"
+      }
+    ]
+  }
+
+
 GET /api/services
 -----------------
 

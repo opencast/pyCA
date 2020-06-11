@@ -29,7 +29,7 @@ var update_data = function () {
     // Get capture agent name.
     axios
         .get('/api/name')
-        .then(response => data.name = response.data.name);
+        .then(response => data.name = response.data.meta.name);
     // Get services.
     axios
         .get('/api/services')
@@ -39,18 +39,22 @@ var update_data = function () {
         });
     // Get events.
     axios
-        .get('/api/events')
+        .get('/api/events/')
         .then(response => {
-            data.upcoming = response.data.upcoming.length;
-            data.processed = response.data.recorded.length;
-            data.upcoming_events = response.data.upcoming.map(x => create_event(x, 'upcoming'));
-            data.recorded_events = response.data.recorded.map(x => create_event(x, x.attributes.status));
+            data.upcoming_events = response.data.data.filter(
+                x => x.attributes.status === "upcoming").map(
+                    x => create_event(x, x.attributes.status));
+            data.upcoming = data.upcoming_events.length;
+            data.recorded_events = response.data.data.filter(
+                x => x.attributes.status !== "upcoming").map(
+                    x => create_event(x, x.attributes.status));
+            data.processed = data.recorded_events.length;
         });
     // Get preview images.
     axios
         .get('/api/previews')
         .then(response => {
-            data.previews = response.data.data.map(x => "/img/" + x.id + "?" + Date.now());
+            data.previews = response.data.data.map(x => "/img/" + x.attributes.id + "?" + Date.now());
         });
 };
 
