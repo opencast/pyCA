@@ -39,7 +39,7 @@ def make_data_response(data, status=200):
 def get_name():
     '''Serve the name of the capure agent via json.
     '''
-    return make_response({'name': config()['agent']['name']})
+    return make_response({'meta': {'name': config()['agent']['name']}})
 
 
 @app.route('/api/previews')
@@ -55,7 +55,8 @@ def get_images():
     preview = zip(preview, range(len(preview)))
 
     # Create return
-    preview = [{'id': p[1]} for p in preview if os.path.isfile(p[0])]
+    preview = [{'attributes': {'id': p[1]}, 'id': str(p[1]), 'type': 'preview'}
+               for p in preview if os.path.isfile(p[0])]
     return make_data_response(preview)
 
 
@@ -70,8 +71,7 @@ def internal_state():
         'ingest': ServiceStatus.str(get_service_status(Service.INGEST)),
         'schedule': ServiceStatus.str(get_service_status(Service.SCHEDULE)),
         'agentstate': ServiceStatus.str(get_service_status(Service.AGENTSTATE))
-        }
-    }
+    }}
     return make_response(jsonify({'meta': data}))
 
 
@@ -88,12 +88,9 @@ def events():
     recorded_events = db.query(RecordedEvent)\
                         .order_by(RecordedEvent.start.desc())
 
-    upcoming = [event.serialize() for event in upcoming_events]
-    recorded = [event.serialize() for event in recorded_events]
-    return make_response({
-        'upcoming': upcoming,
-        'recorded': recorded,
-    })
+    result = [event.serialize() for event in upcoming_events]
+    result += [event.serialize() for event in recorded_events]
+    return make_data_response(result)
 
 
 @app.route('/api/events/<uid>')
