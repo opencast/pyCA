@@ -171,27 +171,26 @@ def recording_state(recording_id, status):
         logger.warning('Could not set recording state to %s: %s', status, e)
 
 
-def update_event_status(event, status):
+@db.with_session
+def update_event_status(dbs, event, status):
     '''Update the status of a particular event in the database.
     '''
-    dbs = db.get_session()
     dbs.query(db.RecordedEvent).filter(db.RecordedEvent.start == event.start)\
                                .update({'status': status})
     event.status = status
     dbs.commit()
 
 
-def set_service_status(service, status):
+@db.with_session
+def set_service_status(dbs, service, status):
     '''Update the status of a particular service in the database.
     '''
     srv = db.ServiceStates()
     srv.type = service
     srv.status = status
 
-    dbs = db.get_session()
     dbs.merge(srv)
     dbs.commit()
-    dbs.close()
 
 
 def set_service_status_immediate(service, status):
@@ -202,10 +201,10 @@ def set_service_status_immediate(service, status):
     update_agent_state()
 
 
-def get_service_status(service):
+@db.with_session
+def get_service_status(dbs, service):
     '''Update the status of a particular service in the database.
     '''
-    dbs = db.get_session()
     srvs = dbs.query(db.ServiceStates).filter(db.ServiceStates.type == service)
 
     if srvs.count():
