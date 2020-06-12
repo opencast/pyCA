@@ -57,11 +57,11 @@ var update_data = function () {
         .then(response => {
             data.upcoming_events = response.data.data.filter(
                 x => x.attributes.status === "upcoming").map(
-                    x => create_event(x, x.attributes.status));
+                x => create_event(x, x.attributes.status));
             data.upcoming = data.upcoming_events.length;
             data.recorded_events = response.data.data.filter(
                 x => x.attributes.status !== "upcoming").map(
-                    x => create_event(x, x.attributes.status));
+                x => create_event(x, x.attributes.status));
             data.processed = data.recorded_events.length;
         });
     // Get preview images.
@@ -117,12 +117,11 @@ var update_data = function () {
             // Service related metrics
             const services = {
                 'header': 'Services',
-                'metrics': response.data.meta.services.map(function (s, _) {
-                    return {
-                        'name': s.name[0].toUpperCase() + s.name.slice(1),
-                        'value': s.status,
-                    };
-                })
+                'metrics': response.data.meta.services.map(
+                    service => ({
+                        'name': service.name[0].toUpperCase() + service.name.slice(1),
+                        'value': service.status,
+                    }))
             };
             // Add Service metrics
             if (services.metrics && services.metrics.length) {
@@ -148,7 +147,7 @@ var update_data = function () {
 
 window.onload = function () {
     // Vue App
-    var vue = new Vue({
+    new Vue({
         el: "#app",
         data: data,
         components: {

@@ -2,6 +2,7 @@ all: lint test
 
 lint:
 	@flake8 $$(find pyca tests -name '*.py')
+	@npm run eslint
 
 test:
 	@npm run build
