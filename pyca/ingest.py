@@ -71,7 +71,7 @@ def ingest(event):
         # Check for dublincore catalogs
         elif attachment.get('fmttype') == 'application/xml' and dcns in data:
             name = attachment.get('x-apple-filename', '').rsplit('.', 1)[0]
-            logger.info('Adding %s DC catalog' % name)
+            logger.info('Adding %s DC catalog', name)
             fields = [('mediaPackage', mediapackage),
                       ('flavor', 'dublincore/%s' % name),
                       ('dublinCore', data.encode('utf-8'))]
