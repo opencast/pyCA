@@ -3,7 +3,8 @@
   "private": true,
   "scripts": {
     "server": "ui/server.js",
-    "build": "parcel build --public-url=/static/ --out-dir=pyca/ui/static/ ui/index.html"
+    "build": "parcel build --public-url=/static/ --out-dir=pyca/ui/static/ ui/index.html",
+    "eslint": "eslint ui/func.js"
   },
   "alias": {
     "vue": "./node_modules/vue/dist/vue.common.js"
@@ -13,6 +14,8 @@
     "vue": "^2.6.11"
   },
   "devDependencies": {
+    "eslint": "^7.2.0",
+    "eslint-plugin-vue": "^6.2.2",
     "express": "^4.17.1",
     "http-proxy-middleware": "^1.0.4",
     "parcel-bundler": "^1.12.4"
