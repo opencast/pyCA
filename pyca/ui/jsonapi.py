@@ -3,7 +3,7 @@ from flask import jsonify, make_response, request
 from pyca.config import config
 from pyca.db import Service, ServiceStatus, UpcomingEvent, \
     RecordedEvent, UpstreamState
-from pyca.db import get_session, Status, ServiceStates
+from pyca.db import with_session, Status, ServiceStates
 from pyca.ui import app
 from pyca.ui.utils import requires_auth, jsonapi_mediatype
 from pyca.utils import get_service_status, ensurelist
@@ -79,11 +79,11 @@ def internal_state():
 @app.route('/api/events/')
 @requires_auth
 @jsonapi_mediatype
-def events():
+@with_session
+def events(db):
     '''Serve a JSON representation of events splitted by upcoming and already
     recorded events.
     '''
-    db = get_session()
     upcoming_events = db.query(UpcomingEvent)\
                         .order_by(UpcomingEvent.start)
     recorded_events = db.query(RecordedEvent)\
@@ -97,10 +97,10 @@ def events():
 @app.route('/api/events/<uid>')
 @requires_auth
 @jsonapi_mediatype
-def event(uid):
+@with_session
+def event(db, uid):
     '''Return a specific events JSON
     '''
-    db = get_session()
     event = db.query(RecordedEvent).filter(RecordedEvent.uid == uid).first() \
         or db.query(UpcomingEvent).filter(UpcomingEvent.uid == uid).first()
 
@@ -112,7 +112,8 @@ def event(uid):
 @app.route('/api/events/<uid>', methods=['DELETE'])
 @requires_auth
 @jsonapi_mediatype
-def delete_event(uid):
+@with_session
+def delete_event(db, uid):
     '''Delete a specific event identified by its uid. Note that only recorded
     events can be deleted. Events in the buffer for upcoming events are
     regularly replaced anyway and a manual removal could have unpredictable
@@ -124,7 +125,6 @@ def delete_event(uid):
     Returns 404 if event does not exist
     '''
     logger.info('deleting event %s via api', uid)
-    db = get_session()
     events = db.query(RecordedEvent).filter(RecordedEvent.uid == uid)
     if not events.count():
         return make_error_response('No event with specified uid', 404)
@@ -140,7 +140,8 @@ def delete_event(uid):
 @app.route('/api/events/<uid>', methods=['PATCH'])
 @requires_auth
 @jsonapi_mediatype
-def modify_event(uid):
+@with_session
+def modify_event(db, uid):
     '''Modify an event specified by its uid. The modifications for the event
     are expected as JSON with the content type correctly set in the request.
 
@@ -163,7 +164,6 @@ def modify_event(uid):
     except Exception:
         return make_error_response('Invalid data', 400)
 
-    db = get_session()
     event = db.query(RecordedEvent).filter(RecordedEvent.uid == uid).first()
     if not event:
         return make_error_response('No event with specified uid', 404)
@@ -177,7 +177,8 @@ def modify_event(uid):
 
 @app.route('/api/metrics', methods=['GET'])
 @requires_auth
-def metrics():
+@with_session
+def metrics(dbs):
     '''Serve several metrics about the pyCA services and the machine via
     json.'''
     # Get Disk Usage
@@ -189,7 +190,6 @@ def metrics():
     # Get Memory
     memory = psutil.virtual_memory()
 
-    dbs = get_session()
     # Get Services
     srvs = dbs.query(ServiceStates)
     services = []
@@ -202,7 +202,6 @@ def metrics():
     state = dbs.query(UpstreamState).filter(
         UpstreamState.url == config()['server']['url']).first()
     last_synchronized = state.last_synced.isoformat() if state else None
-    dbs.close()
     return make_response(
         {'meta': {
             'services': services,

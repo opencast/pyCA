@@ -15,6 +15,7 @@ from sqlalchemy import Column, Integer, Text, LargeBinary, DateTime, \
     create_engine
 from sqlalchemy.orm import sessionmaker
 from datetime import datetime
+from functools import wraps
 Base = declarative_base()
 
 
@@ -37,6 +38,28 @@ def get_session():
         init()
     Session = sessionmaker(bind=engine)
     return Session()
+
+
+def with_session(f):
+    """Wrapper for f to make a SQLAlchemy session present within the function
+
+    :param f: Function to call
+    :type f: Function
+    :raises e: Possible exception of f
+    :return: Result of f
+    """
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        session = get_session()
+        try:
+            result = f(session, *args, **kwargs)
+        except Exception as e:
+            session.rollback()
+            raise e
+        finally:
+            session.close()
+        return result
+    return decorated
 
 
 class Constants():
