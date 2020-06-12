@@ -95,7 +95,7 @@ def update_configuration(cfgfile=None):
         logger.warning('Base URL ends with /. This is most likely a '
                        'configuration error. The URL should contain nothing '
                        'of the service paths.')
-    logger.info('Configuration loaded from %s' % cfgfile)
+    logger.info('Configuration loaded from %s', cfgfile)
     check()
     return cfg
 
@@ -135,4 +135,4 @@ def logger_init():
         logging.root.addHandler(handler)
 
     logging.root.setLevel(logconf['level'].upper())
-    logger.info('Log level set to %s' % logconf['level'])
+    logger.info('Log level set to %s', logconf['level'])

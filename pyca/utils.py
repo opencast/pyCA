@@ -33,7 +33,7 @@ logger = logging.getLogger(__name__)
 def http_request(url, post_data=None):
     '''Make an HTTP request to a given URL with optional parameters.
     '''
-    logger.debug('Requesting URL: %s' % url)
+    logger.debug('Requesting URL: %s', url)
     buf = bio()
     curl = pycurl.Curl()
     curl.setopt(curl.URL, url.encode('ascii', 'ignore'))
@@ -118,8 +118,8 @@ def configure_service(service):
             config()['service-' + service] = \
                 get_service('org.opencastproject.' + service)
         except pycurl.error as e:
-            logger.error('Could not get %s endpoint: %s. Retrying in 5s' %
-                         (service, e))
+            logger.error('Could not get %s endpoint: %s. Retrying in 5s',
+                         service, e)
             time.sleep(5.0)
 
 
@@ -147,7 +147,7 @@ def register_ca(status='idle'):
         if response:
             logger.info(response)
     except pycurl.error as e:
-        logger.warning('Could not set agent state to %s: %s' % (status, e))
+        logger.warning('Could not set agent state to %s: %s', status, e)
 
 
 def recording_state(recording_id, status):
@@ -168,7 +168,7 @@ def recording_state(recording_id, status):
         result = http_request(url, params)
         logger.info(result)
     except pycurl.error as e:
-        logger.warning('Could not set recording state to %s: %s' % (status, e))
+        logger.warning('Could not set recording state to %s: %s', status, e)
 
 
 def update_event_status(event, status):

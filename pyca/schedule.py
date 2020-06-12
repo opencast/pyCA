@@ -76,7 +76,7 @@ def get_schedule():
         vcal = http_request(uri)
         UpstreamState.update_sync_time(config()['server']['url'])
     except pycurl.error as e:
-        logger.error('Could not get schedule: %s' % e)
+        logger.error('Could not get schedule: %s', e)
         return
 
     try:
