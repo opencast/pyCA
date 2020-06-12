@@ -46,7 +46,7 @@ summary {
 
 #status > div {
     display: inline-block;
-    width: 90px;
+    min-width: 90px;
     height: 75px;
     margin: 5px;
     padding: 20px;
