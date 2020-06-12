@@ -10,7 +10,8 @@
 from pyca.utils import http_request, configure_service, unix_ts, timestamp, \
                        set_service_status_immediate, terminate
 from pyca.config import config
-from pyca.db import get_session, UpcomingEvent, Service, ServiceStatus
+from pyca.db import get_session, UpcomingEvent, Service, ServiceStatus, \
+    UpstreamState
 from base64 import b64decode
 from datetime import datetime
 import dateutil.parser
@@ -73,6 +74,7 @@ def get_schedule():
                                urlencode(params))
     try:
         vcal = http_request(uri)
+        UpstreamState.update_sync_time(config()['server']['url'])
     except pycurl.error as e:
         logger.error('Could not get schedule: %s' % e)
         return

@@ -124,6 +124,21 @@ var update_data = function () {
             if (services.metrics && services.metrics.length) {
                 data.metrics.push(services)
             }
+
+            // Upstream related metrics
+            const upstream = {
+                'header': 'Upstream',
+                'metrics': [{
+                    'name': 'Last Schedule Update',
+                    'value': response.data.meta.upstream.last_synchronized ?
+                        Date(response.data.meta.upstream.last_synchronized).toString() :
+                        'never'
+                }]
+            };
+            // Add upstream metrics
+            if (upstream.metrics && upstream.metrics.length) {
+                data.metrics.push(upstream)
+            }
         });
 };
 

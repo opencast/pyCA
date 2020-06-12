@@ -11,8 +11,10 @@ import os.path
 import string
 from pyca.config import config
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, Text, LargeBinary, create_engine
+from sqlalchemy import Column, Integer, Text, LargeBinary, DateTime, \
+    create_engine
 from sqlalchemy.orm import sessionmaker
+from datetime import datetime
 Base = declarative_base()
 
 
@@ -156,8 +158,8 @@ class BaseEvent():
                 'title': self.title,
                 'data': self.get_data(),
                 'status': Status.str(self.status)
-                }
             }
+        }
 
 
 class UpcomingEvent(Base, BaseEvent):
@@ -194,3 +196,17 @@ class ServiceStates(Base):
         if service:
             self.type = service.type
             self.status = service.status
+
+
+class UpstreamState(Base):
+    '''State of the upstream Opencast server.'''
+    __tablename__ = 'upstream_state'
+    url = Column('url', Text(), primary_key=True)
+    last_synced = Column('last_synced', DateTime())
+
+    @staticmethod
+    def update_sync_time(url):
+        s = get_session()
+        s.merge(UpstreamState(url=url, last_synced=datetime.utcnow()))
+        s.commit()
+        s.close()

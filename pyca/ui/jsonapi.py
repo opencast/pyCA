@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 from flask import jsonify, make_response, request
 from pyca.config import config
-from pyca.db import Service, ServiceStatus, UpcomingEvent, RecordedEvent
+from pyca.db import Service, ServiceStatus, UpcomingEvent, \
+    RecordedEvent, UpstreamState
 from pyca.db import get_session, Status, ServiceStates
 from pyca.ui import app
 from pyca.ui.utils import requires_auth, jsonapi_mediatype
@@ -191,8 +192,8 @@ def metrics():
     # Get Memory
     memory = psutil.virtual_memory()
 
-    # Get Services
     dbs = get_session()
+    # Get Services
     srvs = dbs.query(ServiceStates)
     services = []
     for srv in srvs:
@@ -200,6 +201,10 @@ def metrics():
             'name': Service.str(srv.type),
             'status': ServiceStatus.str(srv.status)
         })
+    # Get Upstream State
+    state = dbs.query(UpstreamState).filter(
+        UpstreamState.url == config()['server']['url']).first()
+    last_synchronized = state.last_synced.isoformat() if state else None
     dbs.close()
     return make_response(
         {'meta': {
@@ -221,5 +226,8 @@ def metrics():
                 '1m': load_1m,
                 '5m': load_5m,
                 '15m': load_15m,
+            },
+            'upstream': {
+                'last_synchronized': last_synchronized,
             }
         }})
