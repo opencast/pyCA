@@ -18,13 +18,9 @@ import dateutil.parser
 import logging
 import pycurl
 import sdnotify
-import sys
 import time
 import traceback
-if sys.version_info[0] == 2:
-    from urllib import urlencode
-else:
-    from urllib.parse import urlencode
+from urllib.parse import urlencode
 
 logger = logging.getLogger(__name__)
 notify = sdnotify.SystemdNotifier()

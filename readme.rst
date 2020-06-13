@@ -25,13 +25,7 @@ devices like the `Raspberry Pi`_.
 Python Versions
 ***************
 
-PyCA supports both Python 2 and Python 3. For Python 2, we only support
-version 2.7, while for Python 3 we test against all recent versions. For a
-detailed list of supported versions, have a look at the `Travis
-configuration`_.
-
-While we will continue to support Python 2 until the end of 2019, we recommend using
-Python 3 if possible.
+PyCA requires Python ≥ 3.6. Older versions of Python will not work.
 
 Installation
 ************
