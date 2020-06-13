@@ -17,14 +17,9 @@ import logging
 import os
 import os.path
 import pycurl
-import sys
 import time
-if sys.version_info[0] == 2:
-    from cStringIO import StringIO as bio
-    from urllib import quote as urlquote
-else:
-    from io import BytesIO as bio
-    from urllib.parse import quote as urlquote
+from io import BytesIO as bio
+from urllib.parse import quote as urlquote
 
 
 logger = logging.getLogger(__name__)
