@@ -8,7 +8,7 @@ After=pyca.service
 [Service]
 Type=simple
 User=pyca
-ExecStart=/usr/bin/gunicorn --config=/etc/pyca/gunicorn.conf.py pyca.ui:app
+ExecStart=/usr/bin/python3 -m gunicorn.app.wsgiapp --config=/etc/pyca/gunicorn.conf.py pyca.ui:app
 Restart=always
 RestartSec=10
 
