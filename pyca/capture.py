@@ -13,6 +13,7 @@ from pyca.utils import recording_state, update_event_status
 from pyca.config import config
 from pyca.db import get_session, RecordedEvent, UpcomingEvent, Status,\
                     Service, ServiceStatus
+import glob
 import logging
 import os
 import os.path
@@ -56,7 +57,7 @@ def start_capture(upcoming_event):
         db.commit()
 
     try_mkdir(config()['capture']['directory'])
-    os.mkdir(event.directory())
+    try_mkdir(event.directory())
 
     # Set state
     update_event_status(event, Status.RECORDING)
@@ -64,12 +65,17 @@ def start_capture(upcoming_event):
     set_service_status_immediate(Service.CAPTURE, ServiceStatus.BUSY)
 
     # Recording
-    tracks = recording_command(event)
-    event.set_tracks(tracks)
+    files = recording_command(event)
+    # [(flavor,path),…]
+    event.set_tracks(list(zip(config('capture')['flavors'], files)))
     db.commit()
 
     # Set status
-    update_event_status(event, Status.FINISHED_RECORDING)
+    # If part files exist, its an partial recording
+    p = any([glob.glob(f'{f}-part-*') for f in files])
+    state = Status.PARTIAL_RECORDING if p else Status.FINISHED_RECORDING
+    logger.info("Set %s to %s", event.uid, Status.str(state))
+    update_event_status(event, state)
     recording_state(event.uid, 'capture_finished')
     set_service_status_immediate(Service.CAPTURE, ServiceStatus.IDLE)
 
@@ -101,6 +107,25 @@ def recording_command(event):
     cmd = cmd.replace('{{dir}}', event.directory())
     cmd = cmd.replace('{{name}}', event.name())
     cmd = cmd.replace('{{previewdir}}', conf['preview_dir'])
+
+    # Parse files into list
+    files = (f.replace('{{dir}}', event.directory()) for f in conf['files'])
+    files = [f.replace('{{name}}', event.name()) for f in files]
+
+    # Move existing files from previous failed recordings
+    for f in files:
+        if not os.path.exists(f):
+            continue
+        # New filename
+        i = 0
+        while True:
+            new_filename = f'{f}-part-{i}'
+            if not os.path.exists(new_filename):
+                break
+            i += 1
+        # Move file
+        os.rename(f, new_filename)
+        logger.warning("Moved file %s to %s to keep it", f, new_filename)
 
     # Signal configuration
     sigterm_time = conf['sigterm_time']
@@ -153,10 +178,8 @@ def recording_command(event):
     # Reset systemd status
     notify.notify('STATUS=Waiting')
 
-    # Return [(flavor,path),…]
-    files = (f.replace('{{dir}}', event.directory()) for f in conf['files'])
-    files = (f.replace('{{name}}', event.name()) for f in files)
-    return list(zip(conf['flavors'], files))
+    # files
+    return files
 
 
 def control_loop():
