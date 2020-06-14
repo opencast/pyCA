@@ -36,6 +36,7 @@ exit_code        = integer(min=0, max=255, default=0)
 
 [server]
 url              = string(default='https://develop.opencast.org')
+auth_method      = option('basic', 'digest', default='digest')
 username         = string(default='opencast_system_account')
 password         = string(default='CHANGE_ME')
 insecure         = boolean(default=False)
