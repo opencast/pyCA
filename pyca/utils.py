@@ -48,10 +48,13 @@ def http_request(url, post_data=None):
     if post_data:
         curl.setopt(curl.HTTPPOST, post_data)
     curl.setopt(curl.WRITEFUNCTION, buf.write)
-    curl.setopt(pycurl.HTTPAUTH, pycurl.HTTPAUTH_DIGEST)
+    logger.debug('Using authentication method %s',
+                 config('server')['auth_method'])
+    if config('server')['auth_method'] == 'digest':
+        curl.setopt(curl.HTTPHEADER, ['X-Requested-Auth: Digest'])
+        curl.setopt(pycurl.HTTPAUTH, pycurl.HTTPAUTH_DIGEST)
     curl.setopt(pycurl.USERPWD, ':'.join([config('server', 'username'),
                                           config('server', 'password')]))
-    curl.setopt(curl.HTTPHEADER, ['X-Requested-Auth: Digest'])
     curl.setopt(curl.FAILONERROR, True)
     curl.setopt(curl.FOLLOWLOCATION, True)
     curl.perform()
