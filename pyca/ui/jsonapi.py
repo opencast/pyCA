@@ -40,7 +40,8 @@ def make_data_response(data, status=200):
 def get_name():
     '''Serve the name of the capure agent via json.
     '''
-    return make_response({'meta': {'name': config()['agent']['name']}})
+    return make_response(
+        jsonify({'meta': {'name': config()['agent']['name']}}))
 
 
 @app.route('/api/previews')
@@ -202,7 +203,7 @@ def metrics(dbs):
     state = dbs.query(UpstreamState).filter(
         UpstreamState.url == config()['server']['url']).first()
     last_synchronized = state.last_synced.isoformat() if state else None
-    return make_response(
+    return make_response(jsonify(
         {'meta': {
             'services': services,
             'disk_usage_in_bytes': {
@@ -226,4 +227,4 @@ def metrics(dbs):
             'upstream': {
                 'last_synchronized': last_synchronized,
             }
-        }})
+        }}))
