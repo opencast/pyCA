@@ -114,9 +114,20 @@ def check():
                     'Opencast')
 
 
-def config(key=None):
+def config(*args):
+    '''Get a specific configuration value or the whole configuration, loading
+    the configuration file if it was not before.
+
+    :param key: optional configuration key to return
+    :type key: string
+    :return: dictionary containing the configuration or configuration value
+    '''
     cfg = __config or update_configuration()
-    return cfg[key] if key else cfg
+    for key in args:
+        if cfg is None:
+            return
+        cfg = cfg.get(key)
+    return cfg
 
 
 def logger_init():

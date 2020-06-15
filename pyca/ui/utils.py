@@ -12,10 +12,10 @@ def requires_auth(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         auth = request.authorization
-        if config()['ui']['password'] and not auth \
-                or auth.username != config()['ui']['username'] \
-                or auth.password != config()['ui']['password']:
-            return Response('pyCA', 401,
+        if config('ui', 'password') and not auth \
+                or auth.username != config('ui', 'username') \
+                or auth.password != config('ui', 'password'):
+            return Response('pyCA: Login required\n', 401,
                             {'WWW-Authenticate': 'Basic realm="pyCA Login"'})
         return f(*args, **kwargs)
     return decorated

@@ -20,7 +20,7 @@ import pyca.ui.jsonapi  # noqa
 def home():
     '''Serve the status page of the capture agent.
     '''
-    refresh_rate = config()['ui']['refresh_rate']
+    refresh_rate = config('ui', 'refresh_rate')
 
     return redirect(url_for(
         'static', filename='index.html', refresh=refresh_rate))
@@ -32,8 +32,8 @@ def serve_image(image_id):
     '''Serve the preview image with the given id
     '''
     try:
-        preview_dir = config()['capture']['preview_dir']
-        filepath = config()['capture']['preview'][image_id]
+        preview_dir = config('capture', 'preview_dir')
+        filepath = config('capture', 'preview')[image_id]
         filepath = filepath.replace('{{previewdir}}', preview_dir)
         filepath = os.path.abspath(filepath)
         if os.path.isfile(filepath):

@@ -34,23 +34,23 @@ def http_request(url, post_data=None):
     curl.setopt(curl.URL, url.encode('ascii', 'ignore'))
 
     # Disable HTTPS verification methods if insecure is set
-    if config()['server']['insecure']:
+    if config('server', 'insecure'):
         curl.setopt(curl.SSL_VERIFYPEER, 0)
         curl.setopt(curl.SSL_VERIFYHOST, 0)
 
-    if config()['server']['certificate']:
+    if config('server', 'certificate'):
         # Make sure verification methods are turned on
         curl.setopt(curl.SSL_VERIFYPEER, 1)
         curl.setopt(curl.SSL_VERIFYHOST, 2)
         # Import your certificates
-        curl.setopt(pycurl.CAINFO, config()['server']['certificate'])
+        curl.setopt(pycurl.CAINFO, config('server', 'certificate'))
 
     if post_data:
         curl.setopt(curl.HTTPPOST, post_data)
     curl.setopt(curl.WRITEFUNCTION, buf.write)
     curl.setopt(pycurl.HTTPAUTH, pycurl.HTTPAUTH_DIGEST)
-    curl.setopt(pycurl.USERPWD, "%s:%s" % (config()['server']['username'],
-                                           config()['server']['password']))
+    curl.setopt(pycurl.USERPWD, ':'.join([config('server', 'username'),
+                                          config('server', 'password')]))
     curl.setopt(curl.HTTPHEADER, ['X-Requested-Auth: Digest'])
     curl.setopt(curl.FAILONERROR, True)
     curl.setopt(curl.FOLLOWLOCATION, True)
@@ -66,9 +66,9 @@ def get_service(service_type):
     Opencast ServiceRegistry.
     '''
     endpoint = '/services/available.json?serviceType=' + str(service_type)
-    url = '%s%s' % (config()['server']['url'], endpoint)
+    url = config('server', 'url') + endpoint
     response = http_request(url).decode('utf-8')
-    services = (json.loads(response).get('services') or {}).get('service', [])
+    services = json.loads(response).get('services', {}).get('service', [])
     services = ensurelist(services)
     endpoints = [service['host'] + service['path'] for service in services
                  if service['online'] and service['active']]
@@ -108,7 +108,7 @@ def configure_service(service):
     '''Get the location of a given service from Opencast and add it to the
     current configuration.
     '''
-    while not config().get('service-' + service) and not terminate():
+    while not config('service-' + service) and not terminate():
         try:
             config()['service-' + service] = \
                 get_service('org.opencastproject.' + service)
@@ -132,11 +132,11 @@ def register_ca(status='idle'):
     '''
     # If this is a backup CA we don't tell the Matterhorn core that we are
     # here.  We will just run silently in the background:
-    if config()['agent']['backup_mode']:
+    if config('agent', 'backup_mode'):
         return
-    params = [('address', config()['ui']['url']), ('state', status)]
-    name = urlquote(config()['agent']['name'].encode('utf-8'), safe='')
-    url = '%s/agents/%s' % (config()['service-capture.admin'][0], name)
+    params = [('address', config('ui', 'url')), ('state', status)]
+    name = urlquote(config('agent', 'name').encode('utf-8'), safe='')
+    url = '%s/agents/%s' % (config('service-capture.admin')[0], name)
     try:
         response = http_request(url, params).decode('utf-8')
         if response:
@@ -154,10 +154,10 @@ def recording_state(recording_id, status):
     # If this is a backup CA we do not update the recording state since the
     # actual CA does that and we want to interfere.  We will just run silently
     # in the background:
-    if config()['agent']['backup_mode']:
+    if config('agent', 'backup_mode'):
         return
     params = [('state', status)]
-    url = config()['service-capture.admin'][0]
+    url = config('service-capture.admin')[0]
     url += '/recordings/%s' % recording_id
     try:
         result = http_request(url, params)

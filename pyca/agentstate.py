@@ -28,7 +28,7 @@ def control_loop():
     while not terminate():
         notify.notify('WATCHDOG=1')
 
-        next_update = timestamp() + config()['agent']['update_frequency']
+        next_update = timestamp() + config('agent', 'update_frequency')
         while not terminate() and timestamp() < next_update:
             time.sleep(0.1)
 

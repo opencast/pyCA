@@ -62,15 +62,15 @@ def get_schedule():
     '''Try to load schedule from the Matterhorn core. Returns a valid schedule
     or None on failure.
     '''
-    params = {'agentid': config()['agent']['name'].encode('utf8')}
-    lookahead = config()['agent']['cal_lookahead'] * 24 * 60 * 60
+    params = {'agentid': config('agent', 'name').encode('utf8')}
+    lookahead = config('agent', 'cal_lookahead') * 24 * 60 * 60
     if lookahead:
         params['cutoff'] = str((timestamp() + lookahead) * 1000)
-    uri = '%s/calendars?%s' % (config()['service-scheduler'][0],
+    uri = '%s/calendars?%s' % (config('service-scheduler')[0],
                                urlencode(params))
     try:
         vcal = http_request(uri)
-        UpstreamState.update_sync_time(config()['server']['url'])
+        UpstreamState.update_sync_time(config('server', 'url'))
     except pycurl.error as e:
         logger.error('Could not get schedule: %s', e)
         return
@@ -121,7 +121,7 @@ def control_loop():
             notify.notify('STATUS=No scheduled recording')
         session.close()
 
-        next_update = timestamp() + config()['agent']['update_frequency']
+        next_update = timestamp() + config('agent', 'update_frequency')
         while not terminate() and timestamp() < next_update:
             time.sleep(0.1)
 
