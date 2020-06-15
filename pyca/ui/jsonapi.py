@@ -183,7 +183,11 @@ def metrics(dbs):
     '''Serve several metrics about the pyCA services and the machine via
     json.'''
     # Get Disk Usage
-    total, used, free = shutil.disk_usage(config()['capture']['directory'])
+    # If the capture directory do not exists, use the parent directory.
+    directory = config()['capture']['directory']
+    if not os.path.exists(directory):
+        directory = os.path.abspath(os.path.join(directory, os.pardir))
+    total, used, free = shutil.disk_usage(directory)
 
     # Get Loads
     load_1m, load_5m, load_15m = os.getloadavg()
