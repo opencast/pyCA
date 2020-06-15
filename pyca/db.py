@@ -24,7 +24,7 @@ def init():
     structure will be created if nonexistent.
     '''
     global engine
-    engine = create_engine(config()['agent']['database'])
+    engine = create_engine(config('agent', 'database'))
     Base.metadata.create_all(engine)
 
 
@@ -136,7 +136,7 @@ class BaseEvent():
     def directory(self):
         '''Returns recording directory of this event.
         '''
-        return os.path.join(config()['capture']['directory'], self.name())
+        return os.path.join(config('capture', 'directory'), self.name())
 
     def remaining_duration(self, time):
         '''Returns the remaining duration for a recording.

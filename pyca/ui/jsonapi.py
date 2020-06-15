@@ -41,7 +41,7 @@ def get_name():
     '''Serve the name of the capure agent via json.
     '''
     return make_response(
-        jsonify({'meta': {'name': config()['agent']['name']}}))
+        jsonify({'meta': {'name': config('agent', 'name')}}))
 
 
 @app.route('/api/previews')
@@ -51,8 +51,8 @@ def get_images():
     '''Serve the list of preview images via json.
     '''
     # Get IDs of existing preview images
-    preview = config()['capture']['preview']
-    previewdir = config()['capture']['preview_dir']
+    preview = config('capture', 'preview')
+    previewdir = config('capture', 'preview_dir')
     preview = [p.replace('{{previewdir}}', previewdir) for p in preview]
     preview = zip(preview, range(len(preview)))
 
@@ -184,7 +184,7 @@ def metrics(dbs):
     json.'''
     # Get Disk Usage
     # If the capture directory do not exists, use the parent directory.
-    directory = config()['capture']['directory']
+    directory = config('capture', 'directory')
     if not os.path.exists(directory):
         directory = os.path.abspath(os.path.join(directory, os.pardir))
     total, used, free = shutil.disk_usage(directory)
@@ -205,7 +205,7 @@ def metrics(dbs):
         })
     # Get Upstream State
     state = dbs.query(UpstreamState).filter(
-        UpstreamState.url == config()['server']['url']).first()
+        UpstreamState.url == config('server', 'url')).first()
     last_synchronized = state.last_synced.isoformat() if state else None
     return make_response(jsonify(
         {'meta': {

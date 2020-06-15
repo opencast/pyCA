@@ -56,7 +56,7 @@ def start_capture(upcoming_event):
         db.add(event)
         db.commit()
 
-    try_mkdir(config()['capture']['directory'])
+    try_mkdir(config('capture', 'directory'))
     try_mkdir(event.directory())
 
     # Set state
@@ -67,7 +67,7 @@ def start_capture(upcoming_event):
     # Recording
     files = recording_command(event)
     # [(flavor,path),…]
-    event.set_tracks(list(zip(config('capture')['flavors'], files)))
+    event.set_tracks(list(zip(config('capture', 'flavors'), files)))
     db.commit()
 
     # Set status
@@ -171,7 +171,7 @@ def recording_command(event):
             logger.warning(traceback.format_exc())
 
     # Check process for errors
-    exitcode = config()['capture']['exit_code']
+    exitcode = conf['exit_code']
     if captureproc.poll() > 0 and captureproc.returncode != exitcode:
         raise RuntimeError('Recording failed (%i)' % captureproc.returncode)
 
