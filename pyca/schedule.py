@@ -7,8 +7,8 @@
     :license: LGPL – see license.lgpl for more details.
 '''
 
-from pyca.utils import http_request, configure_service, timestamp, \
-                       set_service_status_immediate, terminate
+from pyca.utils import http_request, service, timestamp, terminate, \
+                       set_service_status_immediate
 from pyca.config import config
 from pyca.db import get_session, UpcomingEvent, Service, ServiceStatus, \
     UpstreamState
@@ -66,7 +66,7 @@ def get_schedule():
     lookahead = config('agent', 'cal_lookahead') * 24 * 60 * 60
     if lookahead:
         params['cutoff'] = str((timestamp() + lookahead) * 1000)
-    uri = '%s/calendars?%s' % (config('service-scheduler')[0],
+    uri = '%s/calendars?%s' % (service('scheduler')[0],
                                urlencode(params))
     try:
         vcal = http_request(uri)
@@ -132,5 +132,4 @@ def control_loop():
 def run():
     '''Start the capture agent.
     '''
-    configure_service('scheduler')
     control_loop()

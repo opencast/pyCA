@@ -26,7 +26,7 @@ class TestPycaCapture(unittest.TestCase):
         config.config()['capture']['command'] = 'touch {{dir}}/{{name}}.mp4'
         config.config()['capture']['directory'] = self.cadir
         config.config()['capture']['preview'] = [preview]
-        config.config()['service-capture.admin'] = ['']
+        config.config()['services']['org.opencastproject.capture.admin'] = ['']
 
         # Mock event
         db.init()

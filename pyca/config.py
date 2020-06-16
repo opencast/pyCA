@@ -55,6 +55,8 @@ stderr           = boolean(default=True)
 file             = string(default='')
 level            = option('debug', 'info', 'warning', 'error', default='info')
 format           = string(default='[%(name)s:%(lineno)s:%(funcName)s()] [%(levelname)s] %(message)s')
+
+[services]
 '''  # noqa
 
 cfgspec = __CFG.split('\n')

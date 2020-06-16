@@ -24,8 +24,8 @@ class TestPycaIngest(unittest.TestCase):
         self.cadir = tempfile.mkdtemp()
         config.config('agent')['database'] = 'sqlite:///' + self.dbfile
         config.config('capture')['directory'] = self.cadir
-        config.config()['service-ingest'] = ['']
-        config.config()['service-capture.admin'] = ['']
+        config.config()['services']['org.opencastproject.ingest'] = ['']
+        config.config()['services']['org.opencastproject.capture.admin'] = ['']
 
         # Mock event
         db.init()
