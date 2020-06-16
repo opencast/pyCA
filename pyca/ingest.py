@@ -9,7 +9,7 @@
 
 from pyca.config import config
 from pyca.db import get_session, RecordedEvent, Status, Service, ServiceStatus
-from pyca.utils import http_request, configure_service, set_service_status
+from pyca.utils import http_request, service, set_service_status
 from pyca.utils import set_service_status_immediate, recording_state
 from pyca.utils import update_event_status, terminate
 from random import randrange
@@ -52,13 +52,13 @@ def ingest(event):
     # The ingest service to use is selected at random from the available
     # ingest services to ensure that not every capture agent uses the same
     # service at the same time
-    service = config('service-ingest')
-    service = service[randrange(0, len(service))]
-    logger.info('Selecting ingest service to use: ' + service)
+    service_url = service('ingest', force_update=True)
+    service_url = service_url[randrange(0, len(service_url))]
+    logger.info('Selecting ingest service to use: ' + service_url)
 
     # create mediapackage
     logger.info('Creating new mediapackage')
-    mediapackage = http_request(service + '/createMediaPackage')
+    mediapackage = http_request(service_url + '/createMediaPackage')
 
     # extract workflow_def, workflow_config and add DC catalogs
     prop = 'org.opencastproject.capture.agent.properties'
@@ -75,7 +75,7 @@ def ingest(event):
             fields = [('mediaPackage', mediapackage),
                       ('flavor', 'dublincore/%s' % name),
                       ('dublinCore', data.encode('utf-8'))]
-            mediapackage = http_request(service + '/addDCCatalog', fields)
+            mediapackage = http_request(service_url + '/addDCCatalog', fields)
 
     # add track
     for (flavor, track) in event.get_tracks():
@@ -83,7 +83,7 @@ def ingest(event):
         track = track.encode('ascii', 'ignore')
         fields = [('mediaPackage', mediapackage), ('flavor', flavor),
                   ('BODY1', (pycurl.FORM_FILE, track))]
-        mediapackage = http_request(service + '/addTrack', fields)
+        mediapackage = http_request(service_url + '/addTrack', fields)
 
     # ingest
     logger.info('Ingest recording')
@@ -94,7 +94,7 @@ def ingest(event):
         fields.append(('workflowInstanceId',
                        event.uid.encode('ascii', 'ignore')))
     fields += workflow_config
-    mediapackage = http_request(service + '/ingest', fields)
+    mediapackage = http_request(service_url + '/ingest', fields)
 
     # Update status
     recording_state(event.uid, 'upload_finished')
@@ -148,6 +148,4 @@ def run():
     if config('agent')['backup_mode']:
         return
 
-    configure_service('ingest')
-    configure_service('capture.admin')
     control_loop()

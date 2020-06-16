@@ -32,8 +32,8 @@ class TestPycaCapture(unittest.TestCase):
         utils.http_request = lambda x, y=False: b'xxx'
         self.fd, self.dbfile = tempfile.mkstemp()
         config.config()['agent']['database'] = 'sqlite:///' + self.dbfile
-        config.config()['service-scheduler'] = ['']
-        config.config()['service-capture.admin'] = ['']
+        config.config()['services']['org.opencastproject.scheduler'] = ['']
+        config.config()['services']['org.opencastproject.capture.admin'] = ['']
 
         # Mock event
         db.init()

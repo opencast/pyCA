@@ -100,18 +100,33 @@ def try_mkdir(directory):
             raise err
 
 
-def configure_service(service):
+def service(service_name, force_update=False):
     '''Get the location of a given service from Opencast and add it to the
     current configuration.
+
+    :param service_name: Name of the service type to request locations for
+    :param force_update: Force an update, possibly wait for a service to
+                         become available if none is available right now.
+    :return: List of service locations
     '''
-    while not config('service-' + service) and not terminate():
+    service_id = f'org.opencastproject.{service_name}'
+    service_url = config('services', service_id)
+    logger.debug('Cached service URLs for %s: %s', service_name, service_url)
+    if service_url and not force_update:
+        return service_url
+
+    # Get service from Opencast server
+    config('services')[service_id] = []
+    while not config('services', service_id) and not terminate():
         try:
-            config()['service-' + service] = \
-                get_service('org.opencastproject.' + service)
+            config('services')[service_id] = get_service(service_id)
+            logger.debug('Updates service URL for %s: %s',
+                         service_name,
+                         config('services', service_id))
         except pycurl.error as e:
-            logger.error('Could not get %s endpoint: %s. Retrying in 5s',
-                         service, e)
+            logger.error(f'Could not get {service} endpoint: {e}. Retry in 5s')
             time.sleep(5.0)
+    return config('services', service_id)
 
 
 def ensurelist(x):
@@ -130,7 +145,7 @@ def register_ca(status='idle'):
     # here.  We will just run silently in the background:
     if config('agent', 'backup_mode'):
         return
-    service_endpoint = config('service-capture.admin')
+    service_endpoint = service('capture.admin')
     if not service_endpoint:
         logger.warning('Missing endpoint for updating agent status.')
         return
@@ -157,8 +172,8 @@ def recording_state(recording_id, status):
     if config('agent', 'backup_mode'):
         return
     params = [('state', status)]
-    url = config('service-capture.admin')[0]
-    url += '/recordings/%s' % recording_id
+    url = service('capture.admin')[0]
+    url += f'/recordings/{recording_id}'
     try:
         result = http_request(url, params).decode('utf-8')
         logger.info(result)
@@ -211,7 +226,6 @@ def get_service_status(dbs, service):
 def update_agent_state():
     '''Update the current agent state in opencast.
     '''
-    configure_service('capture.admin')
     status = 'idle'
 
     # Determine reported agent state with priority list

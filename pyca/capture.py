@@ -7,7 +7,7 @@
     :license: LGPL – see license.lgpl for more details.
 '''
 
-from pyca.utils import timestamp, try_mkdir, configure_service, terminate
+from pyca.utils import timestamp, try_mkdir, terminate
 from pyca.utils import set_service_status, set_service_status_immediate
 from pyca.utils import recording_state, update_event_status
 from pyca.config import config
@@ -209,5 +209,4 @@ def run():
     '''Start the capture agent.
     '''
     signal.signal(signal.SIGTERM, sigterm_handler)
-    configure_service('capture.admin')
     control_loop()

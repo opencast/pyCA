@@ -15,7 +15,7 @@ from tests.tools import should_fail, CurlMock, reload
 class TestPycaUtils(unittest.TestCase):
 
     def setUp(self):
-        config.config()['service-capture.admin'] = ['']
+        config.config()['services']['org.opencastproject.capture.admin'] = ['']
 
         # db
         self.fd, self.dbfile = tempfile.mkstemp()
@@ -52,11 +52,10 @@ class TestPycaUtils(unittest.TestCase):
         self.assertEqual(utils.ensurelist(1), [1])
         self.assertEqual(utils.ensurelist([1]), [1])
 
-    def test_configure_service(self):
+    def test_service(self):
         utils.terminate(False)
         utils.get_service = lambda x: 'x'
-        utils.configure_service('x')
-        self.assertEqual(config.config()['service-x'], 'x')
+        self.assertEqual(utils.service('x'), 'x')
 
     def test_http_request(self):
         config.config()['server']['insecure'] = True
@@ -84,8 +83,7 @@ class TestPycaUtils(unittest.TestCase):
         utils.register_ca()
 
     def test_recording_state(self):
-        utils.http_request = lambda x, y=False: b'xxx'
-        config.config()['service-capture.admin'] = ['']
+        utils.http_request = lambda x, y=False: b''
         utils.recording_state('123', 'recording')
         utils.http_request = should_fail
         utils.recording_state('123', 'recording')
