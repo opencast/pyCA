@@ -160,7 +160,7 @@ def recording_state(recording_id, status):
     url = config()['service-capture.admin'][0]
     url += '/recordings/%s' % recording_id
     try:
-        result = http_request(url, params)
+        result = http_request(url, params).decode('utf-8')
         logger.info(result)
     except pycurl.error as e:
         logger.warning('Could not set recording state to %s: %s', status, e)
