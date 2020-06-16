@@ -126,9 +126,13 @@ def register_ca(status='idle'):
     # here.  We will just run silently in the background:
     if config('agent', 'backup_mode'):
         return
+    service_endpoint = config('service-capture.admin')
+    if not service_endpoint:
+        logger.warning('Missing endpoint for updating agent status.')
+        return
     params = [('address', config('ui', 'url')), ('state', status)]
     name = urlquote(config('agent', 'name').encode('utf-8'), safe='')
-    url = '%s/agents/%s' % (config('service-capture.admin')[0], name)
+    url = f'{service_endpoint[0]}/agents/{name}'
     try:
         response = http_request(url, params).decode('utf-8')
         if response:
