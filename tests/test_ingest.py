@@ -78,3 +78,16 @@ class TestPycaIngest(unittest.TestCase):
         ingest.run()
         config.config('agent')['backup_mode'] = True
         ingest.run()
+
+    def test_get_config_params(self):
+        properties = '\n'.join([
+            'org.opencastproject.workflow.config.encode_720p=true',
+            'org.opencastproject.workflow.config.cutting=false',
+            'org.opencastproject.workflow.definition=fast',
+            'org.opencastproject.nonsense=whatever'
+            ])
+        workflow, parameters = ingest.get_config_params(properties)
+        self.assertEqual(workflow, 'fast')
+        self.assertEqual(
+                set([('encode_720p', 'true'), ('cutting', 'false')]),
+                set(parameters))
