@@ -89,12 +89,14 @@ def safe_start_capture(event):
     try:
         start_capture(event)
     except Exception:
-        logger.error('Recording failed')
-        logger.error(traceback.format_exc())
-        # Update state
-        recording_state(event.uid, 'capture_error')
-        update_event_status(event, Status.FAILED_RECORDING)
-        set_service_status_immediate(Service.CAPTURE, ServiceStatus.IDLE)
+        logger.exception('Recording failed')
+        # Update current status in Opencast
+        try:
+            set_service_status_immediate(Service.CAPTURE, ServiceStatus.IDLE)
+            recording_state(event.uid, 'capture_error')
+            update_event_status(event, Status.FAILED_RECORDING)
+        except Exception:
+            logger.exception('Could not update recording status')
 
 
 def recording_command(event):
