@@ -77,21 +77,10 @@ def get_service(service_type):
     return endpoints
 
 
-def unix_ts(dtval):
-    '''Convert datetime into a unix timestamp.
-    This is the equivalent to Python 3's int(datetime.timestamp()).
-
-    :param dt: datetime to convert
-    '''
-    epoch = datetime(1970, 1, 1, 0, 0, tzinfo=tzutc())
-    delta = (dtval - epoch)
-    return delta.days * 24 * 3600 + delta.seconds
-
-
 def timestamp():
     '''Get current unix timestamp
     '''
-    return unix_ts(datetime.now(tzutc()))
+    return int(datetime.now(tzutc()).timestamp())
 
 
 def try_mkdir(directory):

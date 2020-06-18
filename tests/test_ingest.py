@@ -10,10 +10,7 @@ import shutil
 import tempfile
 import unittest
 
-try:
-    from unittest.mock import patch
-except ImportError:
-    from mock import patch
+from unittest.mock import patch
 
 from pyca import ingest, config, db, utils
 from tests.tools import should_fail, terminate_fn

@@ -6,10 +6,7 @@ Some helper tools for pyCA testing.
 import logging
 import pycurl
 
-try:
-    from importlib import reload  # noqa
-except ImportError:
-    from imp import reload  # noqa
+from importlib import reload  # noqa
 
 
 # Raise log level above maximum to silence logging in tests.

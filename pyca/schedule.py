@@ -7,7 +7,7 @@
     :license: LGPL – see license.lgpl for more details.
 '''
 
-from pyca.utils import http_request, configure_service, unix_ts, timestamp, \
+from pyca.utils import http_request, configure_service, timestamp, \
                        set_service_status_immediate, terminate
 from pyca.config import config
 from pyca.db import get_session, UpcomingEvent, Service, ServiceStatus, \
@@ -41,7 +41,7 @@ def parse_ical(vcal):
             if len(line) <= 1 or key == 'end':
                 continue
             if key.startswith('dt'):
-                event[key] = unix_ts(dateutil.parser.parse(line[1]))
+                event[key] = int(dateutil.parser.parse(line[1]).timestamp())
                 continue
             if not key.startswith('attach'):
                 event[key] = line[1]
