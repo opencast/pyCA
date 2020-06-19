@@ -121,7 +121,11 @@ def config(*args):
 
     :param key: optional configuration key to return
     :type key: string
-    :return: dictionary containing the configuration or configuration value
+    :return: Part of the configuration object containing the configuration
+             or configuration value.
+             If a part of the configuration object (e.g. configobj.Section) is
+             returned, it can be treated like a dictionary.
+             Returning None, if the configuration value is not found.
     '''
     cfg = __config or update_configuration()
     for key in args:
