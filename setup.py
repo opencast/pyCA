@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="pyca",
-    version="3.0",
+    version="3.1",
     description="Opencast Capture Agent",
     author="Lars Kiesow",
     author_email='lkiesow@uos.de',
