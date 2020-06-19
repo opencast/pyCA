@@ -33,6 +33,10 @@ def http_request(url, post_data=None):
     curl = pycurl.Curl()
     curl.setopt(curl.URL, url.encode('ascii', 'ignore'))
 
+    # More verbose curl calls in debug mode
+    if logger.getEffectiveLevel() == logging.DEBUG:
+        curl.setopt(pycurl.VERBOSE, True)
+
     # Disable HTTPS verification methods if insecure is set
     if config('server', 'insecure'):
         curl.setopt(curl.SSL_VERIFYPEER, 0)
