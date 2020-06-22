@@ -117,3 +117,12 @@ td.more {
 td.more:hover {
     background-color: #eee;
 }
+
+div.event_status {
+    display: flex;
+    justify-content: space-between;
+}
+
+div.event_status span {
+    color: red;
+}

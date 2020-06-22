@@ -25,7 +25,6 @@ var create_event = function (event, status) {
     };
 }
 
-
 // format_bytes format a number of bytes in a representable format inclusive unit.
 function format_bytes(bytes) {
     if (bytes === 0) return '0 Bytes';
@@ -161,8 +160,20 @@ window.onload = function () {
                 <tr>
                     <td>{{ event.start }}</td>
                     <td>{{ event.end }}</td>
-                    <td>{{ event.status }}</td>
+                    <td>
+                        <div class=event_status>
+                            {{ event.status }}
+                            <span v-if="is_error_state(event)">⚠</span>
+                        </div>
+                    </td>
                 </tr>`,
+                methods: {
+                    is_error_state: event => [
+                        'partial recording',
+                        'failed recording',
+                        'failed uploading'
+                    ].indexOf(event.status) >= 0
+                }
             },
             'component-metric': {
                 props: ['metric'],
@@ -175,8 +186,7 @@ window.onload = function () {
                                 <td>{{ item.value }}</td>
                             </tr>
                         </template>
-                    </tbody>
-`,
+                    </tbody>`,
             }
         },
         created: update_data,
