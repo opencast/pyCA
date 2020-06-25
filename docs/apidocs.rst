@@ -281,3 +281,47 @@ cURL example::
       ]
     }
   }
+
+
+GET /api/logs
+-------------
+
+Get logs of pyCA in reverse order.
+Use the `?limit=100` parameter to limit the number of logs.
+It is limited per default to 50 logs.
+
+cURL example::
+
+  %curl -u admin:opencast \
+      -H 'content-type: application/vnd.api+json' \
+      'http://127.0.0.1:5000/api/logs?limit=2'
+  {
+    "data": [
+      {
+        "attributes": {
+          "created": "Thu, 25 Jun 2020 23:57:07 GMT",
+          "formatted": "[werkzeug:113:_log()] [INFO] 127.0.0.1 - - [25/Jun/2020 23:57:07] \"\u001b[37mGET /api/logs HTTP/1.1\u001b[0m\" 200 -",
+          "funcName": "_log",
+          "levelname": "INFO",
+          "lineno": 113,
+          "message": "127.0.0.1 - - [25/Jun/2020 23:57:07] \"\u001b[37mGET /api/logs HTTP/1.1\u001b[0m\" 200 -",
+          "name": "werkzeug"
+        },
+        "id": "152",
+        "type": "log"
+      },
+      {
+        "attributes": {
+          "created": "Thu, 25 Jun 2020 23:57:04 GMT",
+          "formatted": "[werkzeug:113:_log()] [INFO] 127.0.0.1 - - [25/Jun/2020 23:57:04] \"\u001b[37mGET /api/logs HTTP/1.1\u001b[0m\" 200 -",
+          "funcName": "_log",
+          "levelname": "INFO",
+          "lineno": 113,
+          "message": "127.0.0.1 - - [25/Jun/2020 23:57:04] \"\u001b[37mGET /api/logs HTTP/1.1\u001b[0m\" 200 -",
+          "name": "werkzeug"
+        },
+        "id": "151",
+        "type": "log"
+      }
+    ]
+  }

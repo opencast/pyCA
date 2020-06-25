@@ -11,6 +11,8 @@ import socket
 import sys
 from validate import Validator
 
+from pyca.logger import DatabaseHandler
+
 logger = logging.getLogger(__name__)
 
 __CFG = '''
@@ -52,6 +54,7 @@ url              = string(default='http://localhost:5000')
 syslog           = boolean(default=False)
 stderr           = boolean(default=True)
 file             = string(default='')
+ui               = boolean(default=False)
 level            = option('debug', 'info', 'warning', 'error', default='info')
 format           = string(default='[%(name)s:%(lineno)s:%(funcName)s()] [%(levelname)s] %(message)s')
 '''  # noqa
@@ -146,6 +149,8 @@ def logger_init():
         handlers.append(logging.StreamHandler(sys.stderr))
     if logconf['file']:
         handlers.append(logging.handlers.WatchedFileHandler(logconf['file']))
+    if logconf['ui']:
+        handlers.append(DatabaseHandler())
     for handler in handlers:
         handler.setFormatter(logging.Formatter(logconf['format']))
         logging.root.addHandler(handler)

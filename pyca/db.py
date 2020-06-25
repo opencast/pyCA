@@ -234,3 +234,35 @@ class UpstreamState(Base):
         s.merge(UpstreamState(url=url, last_synced=datetime.utcnow()))
         s.commit()
         s.close()
+
+
+class Log(Base):
+    '''Log entry'''
+    __tablename__ = 'log'
+    id = Column('id', Integer, primary_key=True)  # Only needed for the ORM
+    name = Column('name', Text)
+    levelname = Column('levelname', Text)
+    lineno = Column('lineno', Integer)
+    funcName = Column('funcName', Text)
+    created = Column('created', DateTime, index=True)
+    message = Column('message', Text)
+    formatted = Column('formatted', Text)
+
+    def serialize(self):
+        '''Serialize this object as dictionary usable for conversion to JSON.
+
+        :return: Dictionary representing this object.
+        '''
+        return {
+            'type': 'log',
+            'id': str(self.id),
+            'attributes': {
+                'name': self.name,
+                'levelname': self.levelname,
+                'lineno': self.lineno,
+                'funcName': self.funcName,
+                'created': self.created,
+                'message': self.message,
+                'formatted': self.formatted,
+            }
+        }

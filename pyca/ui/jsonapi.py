@@ -2,7 +2,7 @@
 from flask import jsonify, make_response, request
 from pyca.config import config
 from pyca.db import Service, ServiceStatus, UpcomingEvent, \
-    RecordedEvent, UpstreamState
+    RecordedEvent, UpstreamState, Log
 from pyca.db import with_session, Status, ServiceStates
 from pyca.ui import app
 from pyca.ui.utils import requires_auth, jsonapi_mediatype
@@ -232,3 +232,29 @@ def metrics(dbs):
                 'last_synchronized': last_synchronized,
             }
         }}))
+
+
+@app.route('/api/logs')
+@requires_auth
+@jsonapi_mediatype
+@with_session
+def logs(db):
+    '''Serve a JSON representation of logs.
+    '''
+
+    if not config('logging', 'ui'):
+        return make_error_response('not configured', 404)
+
+    # Get limit
+    limit = request.args.get('limit', 10)
+    try:
+        limit = int(limit)
+    except ValueError:
+        return make_error_response('malformed limit', 400)
+
+    # Get logs
+    logs = db.query(Log).order_by(Log.created.desc()).limit(limit)
+
+    # Format output
+    result = [event.serialize() for event in logs]
+    return make_data_response(result)
