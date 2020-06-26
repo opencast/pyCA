@@ -63,11 +63,8 @@ class TestPycaCapture(unittest.TestCase):
 
     def test_start_capture_recording_command_failure(self):
         config.config()['capture']['command'] = 'false'
-        try:
+        with self.assertRaises(RuntimeError):
             capture.start_capture(self.event)
-            assert False
-        except RuntimeError:
-            assert True
 
     def test_start_capture_sigterm(self):
         config.config()['capture']['command'] = 'sleep 10'
@@ -91,8 +88,7 @@ class TestPycaCapture(unittest.TestCase):
         capture.run()
 
     def test_sigterm(self):
-        try:
+        with self.assertRaises(BaseException) as e:
             capture.sigterm_handler(0, 0)
-        except BaseException as e:
-            assert e.code == 0
-            assert utils.terminate()
+        self.assertEqual(e.exception.code, 0)
+        self.assertTrue(utils.terminate())

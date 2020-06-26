@@ -14,8 +14,5 @@ class TestPycaConfig(unittest.TestCase):
     def test_check(self):
         config.config()['server']['insecure'] = True
         config.config()['server']['certificate'] = '/xxx'
-        try:
+        with self.assertRaises(IOError):
             config.check()
-            assert False
-        except IOError:
-            assert True

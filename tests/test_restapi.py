@@ -46,37 +46,40 @@ class TestPycaRestInterface(unittest.TestCase):
         param_headers = self.headers.copy()
         param_headers['Content-Type'] = self.headers['Content-Type'] + ' a=b;'
         with ui.app.test_request_context(headers=param_headers, method='PUT'):
-            assert ui.jsonapi.internal_state().status_code == 415
-            assert ui.jsonapi.events().status_code == 415
-            assert ui.jsonapi.event().status_code == 415
-            assert ui.jsonapi.delete_event().status_code == 415
-            assert ui.jsonapi.modify_event().status_code == 415
+            self.assertEqual(ui.jsonapi.internal_state().status_code, 415)
+            self.assertEqual(ui.jsonapi.events().status_code, 415)
+            self.assertEqual(ui.jsonapi.event().status_code, 415)
+            self.assertEqual(ui.jsonapi.delete_event().status_code, 415)
+            self.assertEqual(ui.jsonapi.modify_event().status_code, 415)
 
     def test_servicestatus(self):
         # Without authentication
         with ui.app.test_request_context():
-            assert ui.jsonapi.internal_state().status_code == 401
+            self.assertEqual(ui.jsonapi.internal_state().status_code, 401)
 
         # With authentication
         with ui.app.test_request_context(headers=self.headers):
             response = ui.jsonapi.internal_state()
-            assert response.headers['Content-Type'] == self.content_type
-            assert response.status_code == 200
+            self.assertEqual(
+                response.headers['Content-Type'], self.content_type)
+            self.assertEqual(response.status_code, 200)
             meta = json.loads(response.data.decode('utf-8'))['meta']
             for service, status in meta['services'].items():
-                assert hasattr(db.Service, service.upper())
-                assert status == db.ServiceStatus.str(db.ServiceStatus.STOPPED)
+                self.assertTrue(hasattr(db.Service, service.upper()))
+                self.assertEqual(status, db.ServiceStatus.str(
+                    db.ServiceStatus.STOPPED))
 
     def test_events(self):
         # Without authentication
         with ui.app.test_request_context():
-            assert ui.jsonapi.events().status_code == 401
+            self.assertEqual(ui.jsonapi.events().status_code, 401)
 
         # With authentication
         with ui.app.test_request_context(headers=self.headers):
             response = ui.jsonapi.events()
-            assert response.status_code == 200
-            assert response.headers['Content-Type'] == self.content_type
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(
+                response.headers['Content-Type'], self.content_type)
             self.assertEqual(json.loads(
                 response.data.decode('utf-8')), dict(data=[]))
 
@@ -84,55 +87,60 @@ class TestPycaRestInterface(unittest.TestCase):
         event = self.add_test_event()
         with ui.app.test_request_context(headers=self.headers):
             response = ui.jsonapi.events()
-            assert response.status_code == 200
-            assert response.headers['Content-Type'] == self.content_type
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(
+                response.headers['Content-Type'], self.content_type)
             events = json.loads(response.data.decode('utf-8'))['data'][0]
-            assert events.get('id') == event.uid
+            self.assertEqual(events.get('id'), event.uid)
 
     def test_event(self):
         # Without authentication
         with ui.app.test_request_context():
-            assert ui.jsonapi.event().status_code == 401
+            self.assertEqual(ui.jsonapi.event().status_code, 401)
 
         # With authentication but invalid uid
         with ui.app.test_request_context(headers=self.headers):
             response = ui.jsonapi.event('123')
-            assert response.status_code == 404
-            assert response.headers['Content-Type'] == self.content_type
+            self.assertEqual(response.status_code, 404)
+            self.assertEqual(
+                response.headers['Content-Type'], self.content_type)
             error = json.loads(response.data.decode('utf-8'))['errors'][0]
-            assert error == dict(title='No event with specified uid',
-                                 status=404)
+            self.assertEqual(error, dict(title='No event with specified uid',
+                                         status=404))
 
         # With authentication and valid uid
         event = self.add_test_event()
         with ui.app.test_request_context(headers=self.headers):
             response = ui.jsonapi.event(event.uid)
-            assert response.status_code == 200
-            assert response.headers['Content-Type'] == self.content_type
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(
+                response.headers['Content-Type'], self.content_type)
             events = json.loads(response.data.decode('utf-8'))['data'][0]
-            assert events.get('id') == event.uid
+            self.assertEqual(events.get('id'), event.uid)
 
     def test_delete_event(self):
         # Without authentication
         with ui.app.test_request_context():
-            assert ui.jsonapi.delete_event().status_code == 401
+            self.assertEqual(ui.jsonapi.delete_event().status_code, 401)
 
         # With authentication but invalid uid
         with ui.app.test_request_context(headers=self.headers):
             response = ui.jsonapi.delete_event('')
-            assert response.status_code == 404
-            assert response.headers['Content-Type'] == self.content_type
+            self.assertEqual(response.status_code, 404)
+            self.assertEqual(
+                response.headers['Content-Type'], self.content_type)
             error = json.loads(response.data.decode('utf-8'))['errors'][0]
-            assert error == dict(title='No event with specified uid',
-                                 status=404)
+            self.assertEqual(error, dict(title='No event with specified uid',
+                                         status=404))
 
         # With authentication and valid uid
         event = self.add_test_event()
         with ui.app.test_request_context(headers=self.headers):
             response = ui.jsonapi.delete_event(event.uid)
-            assert response.status_code == 204
-            assert response.headers['Content-Type'] == self.content_type
-            assert not response.data
+            self.assertEqual(response.status_code, 204)
+            self.assertEqual(
+                response.headers['Content-Type'], self.content_type)
+            self.assertFalse(response.data)
 
         # With hard deletion
         event = self.add_test_event()
@@ -143,15 +151,16 @@ class TestPycaRestInterface(unittest.TestCase):
         with ui.app.test_request_context(headers=self.headers,
                                          query_string='hard=true'):
             response = ui.jsonapi.delete_event(event.uid)
-            assert response.status_code == 204
-            assert response.headers['Content-Type'] == self.content_type
-            assert not response.data
-            assert not os.path.exists(directory)
+            self.assertEqual(response.status_code, 204)
+            self.assertEqual(
+                response.headers['Content-Type'], self.content_type)
+            self.assertFalse(response.data)
+            self.assertFalse(os.path.exists(directory))
 
     def test_modify_event(self):
         # Without authentication
         with ui.app.test_request_context():
-            assert ui.jsonapi.modify_event().status_code == 401
+            self.assertEqual(ui.jsonapi.modify_event().status_code, 401)
 
         args = dict(headers=self.headers)
 
@@ -163,10 +172,11 @@ class TestPycaRestInterface(unittest.TestCase):
             args['data'] = {'data': [data]}
             with ui.app.test_request_context(**args):
                 response = ui.jsonapi.modify_event(0)
-                assert response.status_code == 400
-                assert response.headers['Content-Type'] == self.content_type
+                self.assertEqual(response.status_code, 400)
+                self.assertEqual(
+                    response.headers['Content-Type'], self.content_type)
                 error = json.loads(response.data.decode('utf-8'))['errors'][0]
-            assert error == dict(title='Invalid data', status=400)
+            self.assertEqual(error, dict(title='Invalid data', status=400))
 
         # With authentication but invalid uid
         content = {
@@ -182,10 +192,11 @@ class TestPycaRestInterface(unittest.TestCase):
         args['data'] = json.dumps(content)
         with ui.app.test_request_context(**args):
             response = ui.jsonapi.modify_event('')
-            assert response.status_code == 400
-            assert response.headers['Content-Type'] == self.content_type
+            self.assertEqual(response.status_code, 400)
+            self.assertEqual(
+                response.headers['Content-Type'], self.content_type)
             error = json.loads(response.data.decode('utf-8'))['errors'][0]
-            assert error == dict(title='Invalid data', status=400)
+            self.assertEqual(error, dict(title='Invalid data', status=400))
 
         # With authentication and valid uid
         event = self.add_test_event()
@@ -193,9 +204,10 @@ class TestPycaRestInterface(unittest.TestCase):
         args['data'] = json.dumps(content)
         with ui.app.test_request_context(**args):
             response = ui.jsonapi.modify_event(event.uid)
-            assert response.status_code == 200
-            assert response.headers['Content-Type'] == self.content_type
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(
+                response.headers['Content-Type'], self.content_type)
             jsonevent = json.loads(response.data.decode('utf-8'))['data'][0]
-            assert jsonevent.get('id') == event.uid
-            assert jsonevent['attributes'].get('start') == 1000
-            assert jsonevent['attributes'].get('end') == 2000
+            self.assertEqual(jsonevent.get('id'), event.uid)
+            self.assertEqual(jsonevent['attributes'].get('start'), 1000)
+            self.assertEqual(jsonevent['attributes'].get('end'), 2000)

@@ -46,26 +46,24 @@ class TestPycaUtils(unittest.TestCase):
         # Mock http_request method
         utils.http_request = lambda x, y=False: res
         endpoint = u'https://octestallinone.virtuos.uos.de/capture-admin'
-        assert utils.get_service('') == [endpoint]
+        self.assertEqual(utils.get_service(''), [endpoint])
 
     def test_ensurelist(self):
-        assert utils.ensurelist(1) == [1]
-        assert utils.ensurelist([1]) == [1]
+        self.assertEqual(utils.ensurelist(1), [1])
+        self.assertEqual(utils.ensurelist([1]), [1])
 
     def test_configure_service(self):
         utils.terminate(False)
         utils.get_service = lambda x: 'x'
         utils.configure_service('x')
-        assert config.config()['service-x'] == 'x'
+        self.assertEqual(config.config()['service-x'], 'x')
 
     def test_http_request(self):
         config.config()['server']['insecure'] = True
         config.config()['server']['certificate'] = 'nowhere'
-        try:
+        with self.assertRaises(Exception) as e:
             utils.http_request('http://127.0.0.1:8', [('x', 'y')])
-            assert False
-        except Exception as e:
-            assert e.args[0] == 7  # connection error
+        self.assertEqual(e.exception.args[0], 7)
 
     def test_http_request_mocked_curl(self):
         config.config()['server']['insecure'] = True
@@ -73,9 +71,8 @@ class TestPycaUtils(unittest.TestCase):
         utils.pycurl.Curl = CurlMock
         try:
             utils.http_request('http://127.0.0.1:8', [('x', 'y')])
-            assert True
         except Exception:
-            assert False
+            self.fail()
         reload(utils.pycurl)
 
     def test_register_ca(self):
