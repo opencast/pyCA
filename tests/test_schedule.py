@@ -48,17 +48,17 @@ class TestPycaCapture(unittest.TestCase):
         # Failed request
         schedule.http_request = should_fail
         schedule.get_schedule()
-        assert not db.get_session().query(db.UpcomingEvent).count()
+        self.assertEqual(db.get_session().query(db.UpcomingEvent).count(), 0)
 
         # Failed parsing ical
         schedule.http_request = lambda x: ShouldFailException
         schedule.get_schedule()
-        assert not db.get_session().query(db.UpcomingEvent).count()
+        self.assertEqual(db.get_session().query(db.UpcomingEvent).count(), 0)
 
         # Get schedule
         schedule.http_request = lambda x: self.VCAL
         schedule.get_schedule()
-        assert db.get_session().query(db.UpcomingEvent).count()
+        self.assertGreater(db.get_session().query(db.UpcomingEvent).count(), 0)
 
     def test_run(self):
         schedule.terminate = terminate_fn(2)

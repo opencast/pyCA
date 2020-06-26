@@ -33,4 +33,4 @@ class TestPycaAgentState(unittest.TestCase):
         try:
             agentstate.run()
         except Exception:
-            assert False
+            self.fail()

@@ -27,7 +27,7 @@ class TestPycaDb(unittest.TestCase):
         os.remove(self.dbfile)
 
     def test_get_session(self):
-        assert 'autocommit' in db.get_session().__dict__.keys()
+        self.assertIn('autocommit', db.get_session().__dict__.keys())
 
     def test_event_data(self):
         series = u'äöüßÄÖÜ'
@@ -38,11 +38,11 @@ class TestPycaDb(unittest.TestCase):
 
         # Check data serialization
         data = e.get_data()
-        assert data['title'] == title
-        assert data['series'] == series
+        self.assertEqual(data['title'], title)
+        self.assertEqual(data['series'], series)
 
     def test_status(self):
-        assert db.Status.str(db.Status.UPCOMING) == 'upcoming'
+        self.assertEqual(db.Status.str(db.Status.UPCOMING), 'upcoming')
 
     def test_event(self):
         e = db.BaseEvent()
@@ -52,13 +52,13 @@ class TestPycaDb(unittest.TestCase):
         e.status = db.Status.UPCOMING
         e.set_data({})
 
-        assert str(e) == '<Event(start=123, uid="asd")>'
+        self.assertEqual(str(e), '<Event(start=123, uid="asd")>')
 
         e = db.RecordedEvent(e)
-        assert e.name() == 'recording-123-asd'
-        assert e.status_str() == 'upcoming'
-        assert e.serialize()['id'] == 'asd'
-        assert e.get_tracks() == []
+        self.assertEqual(e.name(), 'recording-123-asd')
+        self.assertEqual(e.status_str(), 'upcoming')
+        self.assertEqual(e.serialize()['id'], 'asd')
+        self.assertEqual(e.get_tracks(), [])
 
     def test_servicestate(self):
         s = db.ServiceStates()
@@ -66,5 +66,5 @@ class TestPycaDb(unittest.TestCase):
         s.status = 0
         s = db.ServiceStates(s)
 
-        assert s.type == 0
-        assert s.status == 0
+        self.assertEqual(s.type, 0)
+        self.assertEqual(s.status, 0)

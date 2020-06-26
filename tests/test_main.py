@@ -30,22 +30,22 @@ class TestPycaMain(unittest.TestCase):
         try:
             __main__.main()
         except BaseException as e:
-            assert e.code == 0
+            self.assertEqual(e.code, 0)
         sys.argv = ['pyca', '-x']
         try:
             __main__.main()
         except BaseException as e:
-            assert e.code == 1
+            self.assertEqual(e.code, 1)
         sys.argv = ['pyca', 'too', 'many', 'arguments']
         try:
             __main__.main()
         except BaseException as e:
-            assert e.code == 2
+            self.assertEqual(e.code, 2)
         sys.argv = ['pyca', 'fail']
         try:
             __main__.main()
         except BaseException as e:
-            assert e.code == 3
+            self.assertEqual(e.code, 3)
 
     def test_broken_configuration_type(self):
         configs = ('[capture]\nflavors = "x/source"\nfiles = a, b',
@@ -58,7 +58,7 @@ class TestPycaMain(unittest.TestCase):
             try:
                 __main__.main()
             except BaseException as e:
-                assert e.code == 4
+                self.assertEqual(e.code, 4)
             os.close(fd)
             os.remove(fn)
 
@@ -66,20 +66,14 @@ class TestPycaMain(unittest.TestCase):
         for mod in (agentstate, capture, ingest, schedule):
             mod.run = should_fail
             sys.argv = ['pyca', mod.__name__.split('.')[-1]]
-            try:
+            with self.assertRaises(ShouldFailException):
                 __main__.main()
-                assert False
-            except ShouldFailException:
-                assert True
 
         # Test ui start
         ui.app.run = should_fail
         sys.argv = ['pyca', 'ui']
-        try:
+        with self.assertRaises(ShouldFailException):
             __main__.main()
-            assert False
-        except ShouldFailException:
-            assert True
 
         # Test run all
         for mod in (agentstate, capture, ingest, schedule):
@@ -88,14 +82,13 @@ class TestPycaMain(unittest.TestCase):
         try:
             __main__.main()
         except Exception:
-            assert False
+            self.fail()
 
         for mod in (agentstate, capture, ingest, schedule):
             reload(mod)
 
     def test_sigterm(self):
-        try:
+        with self.assertRaises(BaseException) as e:
             __main__.sigterm_handler(0, 0)
-        except BaseException as e:
-            assert e.code == 0
-            assert utils.terminate()
+        self.assertEqual(e.exception.code, 0)
+        self.assertTrue(utils.terminate())

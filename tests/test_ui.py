@@ -40,12 +40,12 @@ class TestPycaUI(unittest.TestCase):
     def test_ui(self):
         # Without authentication
         with ui.app.test_request_context():
-            assert ui.serve_image(0).status_code == 401
+            self.assertEqual(ui.serve_image(0).status_code, 401)
 
         # With authentication
         with ui.app.test_request_context(headers=self.auth):
-            assert ui.serve_image(9)[1] == 404
+            self.assertEqual(ui.serve_image(9)[1], 404)
         with ui.app.test_request_context(headers=self.auth):
             r = ui.serve_image(0)
-            assert r.status_code == 200
+            self.assertEqual(r.status_code, 200)
             r.close()
