@@ -40,3 +40,8 @@ API
 ---
 
 - `API Documentation <apidocs.rst>`_
+
+Developer Information
+---------------------
+
+- `Upload to PyPI <pypi.rst>`_
