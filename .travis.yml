@@ -1,12 +1,13 @@
+---
 language: python
 
 dist: bionic
 
 # https://devguide.python.org/#branchstatus
 python:
-   - 3.6
-   - 3.7
-   - 3.8
+  - 3.6
+  - 3.7
+  - 3.8
 
 addons:
   apt:
@@ -14,12 +15,12 @@ addons:
       - libgnutls28-dev
 
 before_install:
-   - pip install flake8 python-coveralls mock coverage
-   - npm ci
+  - pip install flake8 python-coveralls mock coverage
+  - npm ci
 
 script:
-   - make test
-   - make lint
+  - make test
+  - make lint
 
 after_success:
-   - coveralls
+  - coveralls
