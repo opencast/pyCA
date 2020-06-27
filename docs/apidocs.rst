@@ -281,3 +281,32 @@ cURL example::
       ]
     }
   }
+
+
+GET /api/logs
+-------------
+
+Get logs of pyCA gather via the command specified in the configuration.
+By default, this API endpoint is disabled and will return a HTTP 404 status
+code.
+
+cURL example::
+
+  %curl -u admin:opencast \
+      -H 'content-type: application/vnd.api+json' \
+      'http://127.0.0.1:5000/api/logs?limit=2'
+  {
+    "data": [
+      {
+        "attributes": {
+          "lines": [
+            "-- Logs begin at Fri 2020-04-24 23:25:38 CEST, end at Wed 2020-07-01 21:34:56 CEST. --",
+            "Jun 23 02:44:55 example.io systemd[1]: pyca.service: Succeeded.",
+            "Jun 23 02:44:55 example.io systemd[1]: Stopped PyCA."
+          ]
+        },
+        "id": "1593632272",
+        "type": "logs"
+      }
+    ]
+  }
