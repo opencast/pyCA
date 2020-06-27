@@ -6,11 +6,12 @@ from pyca.db import Service, ServiceStatus, UpcomingEvent, \
 from pyca.db import with_session, Status, ServiceStates
 from pyca.ui import app
 from pyca.ui.utils import requires_auth, jsonapi_mediatype
-from pyca.utils import get_service_status, ensurelist
+from pyca.utils import get_service_status, ensurelist, timestamp
 import logging
 import os
 import psutil
 import shutil
+import subprocess
 
 logger = logging.getLogger(__name__)
 
@@ -232,3 +233,25 @@ def metrics(dbs):
                 'last_synchronized': last_synchronized,
             }
         }}))
+
+
+@app.route('/api/logs')
+@requires_auth
+@jsonapi_mediatype
+def logs():
+    '''Serve a JSON representation of logs.
+    '''
+    cmd = config('ui', 'log_command')
+    if not cmd:
+        return make_error_response('Logs are disabled.', 404)
+
+    logs = subprocess.run(cmd, shell=True, check=True, capture_output=True)\
+        .stdout\
+        .decode('utf-8')\
+        .rstrip()\
+        .split('\n')
+    return make_data_response({
+        'id': str(timestamp()),
+        'type': 'logs',
+        'attributes': {
+            'lines': logs}})
