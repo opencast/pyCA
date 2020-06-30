@@ -35,6 +35,8 @@ sigkill_time     = integer(min=-1, default=120)
 exit_code        = integer(min=0, max=255, default=0)
 
 [ingest]
+delay_max        = integer(min=0, default=0)
+delay_min        = integer(min=0, default=0)
 delete_after_upload = boolean(default=false)
 upload_catalogs  = boolean(default=false)
 

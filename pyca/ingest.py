@@ -12,9 +12,9 @@ from pyca.db import get_session, RecordedEvent, Status, Service, ServiceStatus
 from pyca.utils import http_request, service, set_service_status
 from pyca.utils import set_service_status_immediate, recording_state
 from pyca.utils import update_event_status, terminate
-from random import randrange
 import logging
 import pycurl
+import random
 import sdnotify
 import shutil
 import time
@@ -53,7 +53,7 @@ def ingest(event):
     # ingest services to ensure that not every capture agent uses the same
     # service at the same time
     service_url = service('ingest', force_update=True)
-    service_url = service_url[randrange(0, len(service_url))]
+    service_url = service_url[random.randrange(0, len(service_url))]
     logger.info('Selecting ingest service to use: ' + service_url)
 
     # create mediapackage
@@ -144,6 +144,10 @@ def control_loop():
                        .filter(RecordedEvent.status ==
                                Status.FINISHED_RECORDING).first()
         if event:
+            delay = random.randint(config('ingest', 'delay_min'),
+                                   config('ingest', 'delay_max'))
+            logger.info("Delaying ingest for %s seconds", delay)
+            time.sleep(delay)
             safe_start_ingest(event)
         session.close()
         time.sleep(1.0)
