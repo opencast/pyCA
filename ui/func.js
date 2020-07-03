@@ -1,6 +1,13 @@
 import Vue from 'vue';
 import axios from 'axios';
 
+import { library } from '@fortawesome/fontawesome-svg-core'
+import { faExclamationTriangle } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+
+library.add(faExclamationTriangle)
+Vue.component('font-awesome-icon', FontAwesomeIcon)
+
 // Main data structure.
 var data = {
     limit_upcoming: 5,
@@ -163,7 +170,9 @@ window.onload = function () {
                     <td>
                         <div class=event_status>
                             {{ event.status }}
-                            <span v-if="is_error_state(event)">⚠</span>
+                            <span v-if="is_error_state(event)">
+                            <font-awesome-icon icon="exclamation-triangle" />
+                            </span>
                         </div>
                     </td>
                 </tr>`,
