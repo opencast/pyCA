@@ -34,6 +34,9 @@ sigterm_time     = integer(min=-1, default=-1)
 sigkill_time     = integer(min=-1, default=120)
 exit_code        = integer(min=0, max=255, default=0)
 
+[ingest]
+delete_after_upload = boolean(default=false)
+
 [server]
 url              = string(default='https://develop.opencast.org')
 auth_method      = option('basic', 'digest', default='digest')
