@@ -77,7 +77,7 @@
                             </tr>
                         </template>
                         <tr is="component-events" v-for="item in upcoming_events.slice(0,limit_upcoming)"
-                            v-bind:event="item" v-bind:key="item.start">
+                            v-bind:event="item" v-bind:key="item.start"></tr>
                         <tr is="component-events" v-for="item in recorded_events.slice(0,limit_processed)"
                             v-bind:event="item" v-bind:key="item.start"></tr>
                         <template v-if="processed > limit_processed">
@@ -99,6 +99,17 @@
                         </component-metric>
                     </template>
                 </table>
+            </section>
+
+            <section v-if="logs.length > 0">
+                <h2>Logs</h2>
+                <div class=logs>
+                    <pre>
+                        <template v-for="item in logs" v-bind:metric="item">
+                            {{ item }}<br />
+                        </template>
+                    </pre>
+                </div>
             </section>
         </main>
     </div>

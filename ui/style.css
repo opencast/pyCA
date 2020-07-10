@@ -126,3 +126,15 @@ div.event_status {
 div.event_status span {
     color: red;
 }
+
+div.logs {
+    width: 100%;
+    overflow-x: scroll;
+    border: 1px solid silver;
+}
+
+div.logs pre {
+    white-space: nowrap;
+    padding: 10px;
+    font-family: sans;
+}
