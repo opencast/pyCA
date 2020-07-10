@@ -21,6 +21,7 @@ var data = {
     upcoming_events: [],
     recorded_events: [],
     metrics: [],
+    logs: [],
 };
 
 // create_event creates entries for the event list.
@@ -147,6 +148,17 @@ var update_data = function () {
             // Add upstream metrics
             if (upstream.metrics && upstream.metrics.length) {
                 data.metrics.push(upstream)
+            }
+        });
+
+    axios
+        .get('/api/logs')
+        .then(response => {
+            data.logs = response.data.data[0].attributes.lines;
+        })
+        .catch(error => {
+            if (error.response.status != 404) {
+                console.error(error);
             }
         });
 };
