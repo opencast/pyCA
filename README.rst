@@ -3,10 +3,13 @@ PyCA – Opencast Capture Agent
 
 .. image:: https://travis-ci.org/opencast/pyCA.svg?branch=master
     :target: https://travis-ci.org/opencast/pyCA
-
+    :alt: CI Builds
 .. image:: https://coveralls.io/repos/github/opencast/pyCA/badge.svg?branch=master
     :target: https://coveralls.io/github/opencast/pyCA?branch=master
-
+    :alt: Test Coverage
+.. image:: https://img.shields.io/github/license/emissions-api/sentinel5dl
+    :target: https://github.com/emissions-api/sentinel5dl/blob/master/LICENSE
+    :alt: LGPL-3 license
 
 **PyCA** is a fully functional Opencast_ capture agent written in Python.
 It is free software licensed under the terms of the `GNU Lesser General Public
