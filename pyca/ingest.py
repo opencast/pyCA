@@ -16,6 +16,7 @@ from random import randrange
 import logging
 import pycurl
 import sdnotify
+import shutil
 import time
 import traceback
 
@@ -99,6 +100,10 @@ def ingest(event):
     # Update status
     recording_state(event.uid, 'upload_finished')
     update_event_status(event, Status.FINISHED_UPLOADING)
+    if config('ingest', 'delete_after_upload'):
+        directory = event.directory()
+        logger.info("Removing uploaded event directory %s", directory)
+        shutil.rmtree(directory)
     notify.notify('STATUS=Running')
     set_service_status_immediate(Service.INGEST, ServiceStatus.IDLE)
 
