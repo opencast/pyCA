@@ -2,7 +2,7 @@ import Vue from 'vue';
 import axios from 'axios';
 
 import { library } from '@fortawesome/fontawesome-svg-core'
-import { faExclamationTriangle } from '@fortawesome/free-solid-svg-icons'
+import { faExclamationTriangle } from '@fortawesome/free-solid-svg-icons/faExclamationTriangle'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 
 library.add(faExclamationTriangle)
