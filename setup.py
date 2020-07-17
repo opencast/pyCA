@@ -17,7 +17,7 @@ setup(
     author_email='lkiesow@uos.de',
     license="LGPLv3",
     url="https://github.com/opencast/pyCA",
-    long_description=read('readme.rst'),
+    long_description=read('README.rst'),
     long_description_content_type='text/x-rst',
     packages=find_packages(),
     include_package_data=True,
