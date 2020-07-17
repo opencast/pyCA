@@ -61,4 +61,4 @@ Make sure to have it installed or adjust the configuration to use something else
 .. _Raspberry Pi: https://raspberrypi.org
 .. _Travis configuration: https://raw.githubusercontent.com/opencast/pyCA/master/.travis.yml
 .. _FFmpeg: https://ffmpeg.org
-.. _PyCA documentation: docs/#welcome-to-the-pyca-documentation
+.. _PyCA documentation: https://github.com/opencast/pyCA/tree/master/docs#welcome-to-the-pyca-documentation
