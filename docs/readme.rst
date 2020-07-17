@@ -30,6 +30,7 @@ Recording Commands
 ------------------
 
 - `FFmpeg <recording/ffmpeg.rst>`_
+- `GStreamer <recording/gstreamer.rst>`_
 - `Raspberry Pi Camera Module <recording/raspivid.rst>`_
 
 API
