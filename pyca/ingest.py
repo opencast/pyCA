@@ -135,11 +135,13 @@ def control_loop():
     while not terminate():
         notify.notify('WATCHDOG=1')
         # Get next recording
-        event = get_session().query(RecordedEvent)\
-                             .filter(RecordedEvent.status ==
-                                     Status.FINISHED_RECORDING).first()
+        session = get_session()
+        event = session.query(RecordedEvent)\
+                       .filter(RecordedEvent.status ==
+                               Status.FINISHED_RECORDING).first()
         if event:
             safe_start_ingest(event)
+        session.close()
         time.sleep(1.0)
     logger.info('Shutting down ingest service')
     set_service_status(Service.INGEST, ServiceStatus.STOPPED)
