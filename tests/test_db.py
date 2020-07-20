@@ -41,9 +41,6 @@ class TestPycaDb(unittest.TestCase):
         self.assertEqual(data['title'], title)
         self.assertEqual(data['series'], series)
 
-    def test_status(self):
-        self.assertEqual(db.Status.str(db.Status.UPCOMING), 'upcoming')
-
     def test_event(self):
         e = db.BaseEvent()
         e.uid = 'asd'
@@ -56,7 +53,7 @@ class TestPycaDb(unittest.TestCase):
 
         e = db.RecordedEvent(e)
         self.assertEqual(e.name(), 'recording-123-asd')
-        self.assertEqual(e.status_str(), 'upcoming')
+        self.assertEqual(e.status.name, 'UPCOMING')
         self.assertEqual(e.serialize()['id'], 'asd')
         self.assertEqual(e.get_tracks(), [])
 

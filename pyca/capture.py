@@ -74,7 +74,7 @@ def start_capture(upcoming_event):
     # If part files exist, its an partial recording
     p = any([glob.glob(f'{f}-part-*') for f in files])
     state = Status.PARTIAL_RECORDING if p else Status.FINISHED_RECORDING
-    logger.info("Set %s to %s", event.uid, Status.str(state))
+    logger.info("Set %s to %s", event.uid, state.name)
     update_event_status(event, state)
     recording_state(event.uid, 'capture_finished')
     set_service_status_immediate(Service.CAPTURE, ServiceStatus.IDLE)

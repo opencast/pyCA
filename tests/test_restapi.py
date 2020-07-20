@@ -66,8 +66,7 @@ class TestPycaRestInterface(unittest.TestCase):
             meta = json.loads(response.data.decode('utf-8'))['meta']
             for service, status in meta['services'].items():
                 self.assertTrue(hasattr(db.Service, service.upper()))
-                self.assertEqual(status, db.ServiceStatus.str(
-                    db.ServiceStatus.STOPPED))
+                self.assertEqual(status, db.ServiceStatus.STOPPED.name)
 
     def test_events(self):
         # Without authentication

@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 from flask import jsonify, make_response, request
 from pyca.config import config
-from pyca.db import Service, ServiceStatus, UpcomingEvent, \
-    RecordedEvent, UpstreamState
+from pyca.db import Service, UpcomingEvent, RecordedEvent, UpstreamState
 from pyca.db import with_session, Status, ServiceStates
 from pyca.ui import app
 from pyca.ui.utils import requires_auth, jsonapi_mediatype
@@ -70,10 +69,10 @@ def internal_state():
     '''Serve a json representation of internal agentstate as meta data
     '''
     data = {'services': {
-        'capture': ServiceStatus.str(get_service_status(Service.CAPTURE)),
-        'ingest': ServiceStatus.str(get_service_status(Service.INGEST)),
-        'schedule': ServiceStatus.str(get_service_status(Service.SCHEDULE)),
-        'agentstate': ServiceStatus.str(get_service_status(Service.AGENTSTATE))
+        'capture': get_service_status(Service.CAPTURE).name,
+        'ingest': get_service_status(Service.INGEST).name,
+        'schedule': get_service_status(Service.SCHEDULE).name,
+        'agentstate': get_service_status(Service.AGENTSTATE).name
     }}
     return make_response(jsonify({'meta': data}))
 
@@ -201,8 +200,8 @@ def metrics(dbs):
     services = []
     for srv in srvs:
         services.append({
-            'name': Service.str(srv.type),
-            'status': ServiceStatus.str(srv.status)
+            'name': srv.type.name,
+            'status': srv.status.name
         })
     # Get Upstream State
     state = dbs.query(UpstreamState).filter(

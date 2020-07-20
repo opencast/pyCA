@@ -6,12 +6,12 @@
     Database specification for pyCA
 '''
 
+import enum
 import json
 import os.path
-import string
 from pyca.config import config
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, Text, LargeBinary, DateTime, \
+from sqlalchemy import Column, Integer, Text, LargeBinary, DateTime, Enum, \
     create_engine
 from sqlalchemy.orm import sessionmaker
 from datetime import datetime
@@ -62,17 +62,7 @@ def with_session(f):
     return decorated
 
 
-class Constants():
-
-    @classmethod
-    def str(cls, value):
-        '''Convert status (id) to its string name.'''
-        for k, v in cls.__dict__.items():
-            if k[0] in string.ascii_uppercase and v == value:
-                return k.lower().replace('_', ' ')
-
-
-class Status(Constants):
+class Status(enum.Enum):
     '''Event status definitions
     '''
     UPCOMING = 1
@@ -85,7 +75,7 @@ class Status(Constants):
     PARTIAL_RECORDING = 8
 
 
-class ServiceStatus(Constants):
+class ServiceStatus(enum.Enum):
     '''Service status type definitions
     '''
     STOPPED = 1
@@ -93,7 +83,7 @@ class ServiceStatus(Constants):
     BUSY = 3
 
 
-class Service(Constants):
+class Service(enum.Enum):
     '''Service type definitions
     '''
     AGENTSTATE = 1
@@ -113,7 +103,7 @@ class BaseEvent():
     end = Column('end', Integer(), nullable=False)
     title = Column('title', Text())
     data = Column('data', LargeBinary(), nullable=False)
-    status = Column('status', Integer(), nullable=False,
+    status = Column('status', Enum(Status), nullable=False,
                     default=Status.UPCOMING)
     tracks = Column('tracks', LargeBinary(), nullable=True)
 
@@ -142,11 +132,6 @@ class BaseEvent():
         '''Returns the remaining duration for a recording.
         '''
         return max(0, self.end - max(self.start, time))
-
-    def status_str(self):
-        '''Return status as string.
-        '''
-        return Status.str(self.status)
 
     def get_tracks(self):
         '''Load JSON track data from event.
@@ -181,7 +166,7 @@ class BaseEvent():
                 'uid': self.uid,
                 'title': self.title,
                 'data': self.get_data(),
-                'status': Status.str(self.status)
+                'status': self.status.name
             }
         }
 
@@ -212,8 +197,8 @@ class ServiceStates(Base):
 
     __tablename__ = 'service_states'
 
-    type = Column('type', Integer(), nullable=False, primary_key=True)
-    status = Column('status', Integer(), nullable=False,
+    type = Column('type', Enum(Service), nullable=False, primary_key=True)
+    status = Column('status', Enum(ServiceStatus), nullable=False,
                     default=ServiceStatus.STOPPED)
 
     def __init__(self, service=None):
