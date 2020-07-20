@@ -11,7 +11,7 @@ from pyca.utils import http_request, service, timestamp, terminate, \
                        set_service_status_immediate
 from pyca.config import config
 from pyca.db import get_session, UpcomingEvent, Service, ServiceStatus, \
-    UpstreamState
+    UpstreamState, with_session
 from base64 import b64decode
 from datetime import datetime
 import dateutil.parser
@@ -58,7 +58,8 @@ def parse_ical(vcal):
     return events
 
 
-def get_schedule():
+@with_session
+def get_schedule(db):
     '''Try to load schedule from the Matterhorn core. Returns a valid schedule
     or None on failure.
     '''
@@ -81,7 +82,6 @@ def get_schedule():
         logger.error('Could not parse ical')
         logger.error(traceback.format_exc())
         return
-    db = get_session()
     db.query(UpcomingEvent).delete()
     for event in cal:
         # Ignore events that have already ended

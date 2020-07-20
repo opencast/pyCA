@@ -12,7 +12,7 @@ from pyca.utils import set_service_status, set_service_status_immediate
 from pyca.utils import recording_state, update_event_status
 from pyca.config import config
 from pyca.db import get_session, RecordedEvent, UpcomingEvent, Status,\
-                    Service, ServiceStatus
+                    Service, ServiceStatus, with_session
 import glob
 import logging
 import os
@@ -39,14 +39,14 @@ def sigterm_handler(signum, frame):
     sys.exit(0)
 
 
-def start_capture(upcoming_event):
+@with_session
+def start_capture(db, upcoming_event):
     '''Start the capture process, creating all necessary files and directories
     as well as ingesting the captured files if no backup mode is configured.
     '''
     logger.info('Start recording')
 
     # First move event to recording_event table
-    db = get_session()
     event = db.query(RecordedEvent)\
               .filter(RecordedEvent.uid == upcoming_event.uid)\
               .filter(RecordedEvent.start == upcoming_event.start)\
@@ -194,12 +194,14 @@ def control_loop():
     while not terminate():
         notify.notify('WATCHDOG=1')
         # Get next recording
-        event = get_session().query(UpcomingEvent)\
-                             .filter(UpcomingEvent.start <= timestamp())\
-                             .filter(UpcomingEvent.end > timestamp())\
-                             .first()
+        session = get_session()
+        event = session.query(UpcomingEvent)\
+                       .filter(UpcomingEvent.start <= timestamp())\
+                       .filter(UpcomingEvent.end > timestamp())\
+                       .first()
         if event:
             safe_start_capture(event)
+        session.close()
         time.sleep(1.0)
     logger.info('Shutting down capture service')
     set_service_status(Service.CAPTURE, ServiceStatus.STOPPED)
