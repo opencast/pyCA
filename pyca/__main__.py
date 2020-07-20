@@ -12,6 +12,7 @@ import multiprocessing
 import signal
 import sys
 from pyca import capture, config, schedule, ingest, ui, agentstate, utils
+from pyca.db import get_session
 
 USAGE = '''
 Usage %s [OPTIONS] COMMAND
@@ -101,6 +102,8 @@ def main():
     cmd = (args + ['run'])[0]
 
     if cmd == 'run':
+        # ensure database is created first
+        get_session().close()
         run_all(schedule, capture, ingest, agentstate)
     elif cmd == 'schedule':
         schedule.run()
