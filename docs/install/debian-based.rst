@@ -29,6 +29,16 @@ After adding the repository, we can install pyCA via package manager:
     apt update
     apt install opencast-pyca
 
+By default, pyCA is disabled.
+The default configuration allows you to run pyCA against the official Opencast test server.
+If you do not want you installation to show up on the test server take a look at the sections `Configuration`_ first.
+If you do not mind, continue.
+
+To start pyCA and make sure it is automatically started after a reboot, run::
+
+    systemctl start pyca-agentstate.service pyca-capture.service pyca-ingest.service pyca-schedule.service pyca-ui.service pyca.service
+    systemctl enable pyca-agentstate.service pyca-capture.service pyca-ingest.service pyca-schedule.service pyca-ui.service pyca.service
+
 That's it. We already have pyCA up and running.
 You can test if it's up by querying the status of the Systemd units which will list several services::
 
