@@ -1,0 +1,58 @@
+version: '3'
+
+volumes:
+  pyca: {}
+  database: {}
+
+services:
+  pyca-schedule:
+    command: schedule
+    image: quay.io/opencast/pyca
+    restart: always
+    volumes:
+      - ./pyca.postgres.conf:/etc/pyca/pyca.conf
+      - pyca:/var/lib/pyca
+
+  pyca-ingest:
+    command: ingest
+    image: quay.io/opencast/pyca
+    restart: always
+    volumes:
+      - ./pyca.postgres.conf:/etc/pyca/pyca.conf
+      - pyca:/var/lib/pyca
+
+  pyca-capture:
+    command: capture
+    image: quay.io/opencast/pyca
+    restart: always
+    volumes:
+      - ./pyca.postgres.conf:/etc/pyca/pyca.conf
+      - pyca:/var/lib/pyca
+
+  pyca-agentstate:
+    command: agentstate
+    image: quay.io/opencast/pyca
+    restart: always
+    volumes:
+      - ./pyca.postgres.conf:/etc/pyca/pyca.conf
+      - pyca:/var/lib/pyca
+
+  pyca-ui:
+    entrypoint: ["gunicorn", "--config=/etc/pyca/gunicorn.conf.py", "pyca.ui:app"]
+    image: quay.io/opencast/pyca
+    restart: always
+    volumes:
+      - ./pyca.postgres.conf:/etc/pyca/pyca.conf
+      - pyca:/var/lib/pyca
+    ports:
+      - 8000:8000
+
+  database:
+    image: postgres:12.3
+    restart: always
+    environment:
+      - POSTGRES_PASSWORD=pyca
+      - POSTGRES_USER=pyca
+      - POSTGRES_DB=pyca
+    volumes:
+      - database:/var/lib/postgresql/data

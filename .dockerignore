@@ -1,0 +1,16 @@
+.git
+Dockerfile
+venv
+*.pyc
+*.pyo
+*.swp
+build/
+*.egg-info/
+node_modules/
+/pyca/ui/static/
+.cache/
+dist/
+/recordings/*
+.coverage
+pyca.db
+.vscode/

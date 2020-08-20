@@ -1,0 +1,58 @@
+version: '3'
+
+volumes:
+  pyca: {}
+  database: {}
+
+services:
+  pyca-schedule:
+    command: schedule
+    image: quay.io/opencast/pyca
+    restart: always
+    volumes:
+      - ./pyca.mariadb.conf:/etc/pyca/pyca.conf
+      - pyca:/var/lib/pyca
+
+  pyca-ingest:
+    command: ingest
+    image: quay.io/opencast/pyca
+    restart: always
+    volumes:
+      - ./pyca.mariadb.conf:/etc/pyca/pyca.conf
+      - pyca:/var/lib/pyca
+
+  pyca-capture:
+    command: capture
+    image: quay.io/opencast/pyca
+    restart: always
+    volumes:
+      - ./pyca.mariadb.conf:/etc/pyca/pyca.conf
+      - pyca:/var/lib/pyca
+
+  pyca-agentstate:
+    command: agentstate
+    image: quay.io/opencast/pyca
+    restart: always
+    volumes:
+      - ./pyca.mariadb.conf:/etc/pyca/pyca.conf
+      - pyca:/var/lib/pyca
+
+  pyca-ui:
+    entrypoint: ["gunicorn", "--config=/etc/pyca/gunicorn.conf.py", "pyca.ui:app"]
+    image: quay.io/opencast/pyca
+    restart: always
+    volumes:
+      - ./pyca.mariadb.conf:/etc/pyca/pyca.conf
+      - pyca:/var/lib/pyca
+    ports:
+      - 8000:8000
+
+  database:
+    image: mariadb:10.5
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=pyca
+      - MYSQL_USER=pyca
+      - MYSQL_PASSWORD=pyca
+    volumes:
+      - database:/var/lib/mysql
