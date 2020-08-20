@@ -10,7 +10,7 @@ services:
     image: quay.io/opencast/pyca
     restart: always
     volumes:
-      - ./pyca.postgres.conf:/etc/pyca/pyca.conf
+      - ./pyca.postgres.conf:/etc/pyca/pyca.conf:ro
       - pyca:/var/lib/pyca
 
   pyca-ingest:
@@ -18,7 +18,7 @@ services:
     image: quay.io/opencast/pyca
     restart: always
     volumes:
-      - ./pyca.postgres.conf:/etc/pyca/pyca.conf
+      - ./pyca.postgres.conf:/etc/pyca/pyca.conf:ro
       - pyca:/var/lib/pyca
 
   pyca-capture:
@@ -26,7 +26,7 @@ services:
     image: quay.io/opencast/pyca
     restart: always
     volumes:
-      - ./pyca.postgres.conf:/etc/pyca/pyca.conf
+      - ./pyca.postgres.conf:/etc/pyca/pyca.conf:ro
       - pyca:/var/lib/pyca
 
   pyca-agentstate:
@@ -34,7 +34,7 @@ services:
     image: quay.io/opencast/pyca
     restart: always
     volumes:
-      - ./pyca.postgres.conf:/etc/pyca/pyca.conf
+      - ./pyca.postgres.conf:/etc/pyca/pyca.conf:ro
       - pyca:/var/lib/pyca
 
   pyca-ui:
@@ -42,10 +42,10 @@ services:
     image: quay.io/opencast/pyca
     restart: always
     volumes:
-      - ./pyca.postgres.conf:/etc/pyca/pyca.conf
+      - ./pyca.postgres.conf:/etc/pyca/pyca.conf:ro
       - pyca:/var/lib/pyca
     ports:
-      - 8000:8000
+      - "8000:8000"
 
   database:
     image: postgres:12.3
