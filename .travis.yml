@@ -15,7 +15,7 @@ addons:
       - libgnutls28-dev
 
 before_install:
-  - pip install flake8 python-coveralls mock coverage
+  - pip install flake8 coveralls mock coverage
   - npm ci
 
 script:
