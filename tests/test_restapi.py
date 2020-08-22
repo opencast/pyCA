@@ -41,6 +41,31 @@ class TestPycaRestInterface(unittest.TestCase):
         session.commit()
         return db.RecordedEvent(event)
 
+    def test_images(self):
+        # Without authentication
+        with ui.app.test_request_context():
+            self.assertEqual(ui.jsonapi.get_images().status_code, 401)
+
+        # With authentication
+        with ui.app.test_request_context(headers=self.headers):
+            response = ui.jsonapi.get_images()
+            self.assertEqual(
+                response.headers['Content-Type'], self.content_type)
+            self.assertEqual(response.status_code, 200)
+            data = json.loads(response.data.decode('utf-8'))
+            self.assertEqual(data['data'], [])
+
+        # With authentication and configuration
+        config.config()['capture']['preview'] = [__file__]
+        config.config()['capture']['preview_dir'] = '/tmp'
+        with ui.app.test_request_context(headers=self.headers):
+            response = ui.jsonapi.get_images()
+            self.assertEqual(
+                response.headers['Content-Type'], self.content_type)
+            self.assertEqual(response.status_code, 200)
+            data = json.loads(response.data.decode('utf-8'))
+            self.assertEqual(len(data['data']), 1)
+
     def test_mediatype_param(self):
         # JSONAPI must respond with 415 when mediatype parameters are present
         param_headers = self.headers.copy()
