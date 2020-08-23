@@ -46,25 +46,34 @@ class TestPycaRestInterface(unittest.TestCase):
         with ui.app.test_request_context():
             self.assertEqual(ui.jsonapi.get_images().status_code, 401)
 
+        config.config()['capture']['preview_dir'] = '/tmp'
+
+        # With authentication
+        for preview, response_len in (([], 0), ([__file__], 1)):
+            config.config()['capture']['preview'] = preview
+            with ui.app.test_request_context(headers=self.headers):
+                response = ui.jsonapi.get_images()
+                self.assertEqual(
+                    response.headers['Content-Type'], self.content_type)
+                self.assertEqual(response.status_code, 200)
+                data = json.loads(response.data.decode('utf-8'))
+                self.assertEqual(len(data['data']), response_len)
+
+    def test_name(self):
+        config.config()['agent']['name'] = 'a'
+
+        # Without authentication
+        with ui.app.test_request_context():
+            self.assertEqual(ui.jsonapi.get_name().status_code, 401)
+
         # With authentication
         with ui.app.test_request_context(headers=self.headers):
-            response = ui.jsonapi.get_images()
+            response = ui.jsonapi.get_name()
             self.assertEqual(
                 response.headers['Content-Type'], self.content_type)
             self.assertEqual(response.status_code, 200)
             data = json.loads(response.data.decode('utf-8'))
-            self.assertEqual(data['data'], [])
-
-        # With authentication and configuration
-        config.config()['capture']['preview'] = [__file__]
-        config.config()['capture']['preview_dir'] = '/tmp'
-        with ui.app.test_request_context(headers=self.headers):
-            response = ui.jsonapi.get_images()
-            self.assertEqual(
-                response.headers['Content-Type'], self.content_type)
-            self.assertEqual(response.status_code, 200)
-            data = json.loads(response.data.decode('utf-8'))
-            self.assertEqual(len(data['data']), 1)
+            self.assertEqual(data['meta']['name'], 'a')
 
     def test_mediatype_param(self):
         # JSONAPI must respond with 415 when mediatype parameters are present
