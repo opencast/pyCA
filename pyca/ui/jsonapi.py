@@ -179,6 +179,7 @@ def modify_event(db, uid):
 
 @app.route('/api/metrics', methods=['GET'])
 @requires_auth
+@jsonapi_mediatype
 @with_session
 def metrics(dbs):
     '''Serve several metrics about the pyCA services and the machine via

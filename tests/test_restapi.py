@@ -75,6 +75,22 @@ class TestPycaRestInterface(unittest.TestCase):
             data = json.loads(response.data.decode('utf-8'))
             self.assertEqual(data['meta']['name'], 'a')
 
+    def test_metrics(self):
+        # Without authentication
+        with ui.app.test_request_context():
+            self.assertEqual(ui.jsonapi.metrics().status_code, 401)
+
+        # With authentication
+        with ui.app.test_request_context(headers=self.headers):
+            response = ui.jsonapi.metrics()
+            self.assertEqual(
+                response.headers['Content-Type'], self.content_type)
+            self.assertEqual(response.status_code, 200)
+            keys = json.loads(response.data.decode('utf-8'))['meta'].keys()
+            expect = {'disk_usage_in_bytes', 'load', 'memory_usage_in_bytes',
+                      'services', 'upstream'}
+            self.assertEqual(set(keys), expect)
+
     def test_mediatype_param(self):
         # JSONAPI must respond with 415 when mediatype parameters are present
         param_headers = self.headers.copy()
