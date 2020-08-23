@@ -75,6 +75,27 @@ class TestPycaRestInterface(unittest.TestCase):
             data = json.loads(response.data.decode('utf-8'))
             self.assertEqual(data['meta']['name'], 'a')
 
+    def test_logs(self):
+        # Without authentication
+        with ui.app.test_request_context():
+            self.assertEqual(ui.jsonapi.logs().status_code, 401)
+
+        # With authentication but without command
+        with ui.app.test_request_context(headers=self.headers):
+            self.assertEqual(ui.jsonapi.logs().status_code, 404)
+
+        config.config()['ui']['log_command'] = 'echo test'
+
+        # With authentication
+        with ui.app.test_request_context(headers=self.headers):
+            response = ui.jsonapi.logs()
+            self.assertEqual(
+                response.headers['Content-Type'], self.content_type)
+            self.assertEqual(response.status_code, 200)
+            data = json.loads(response.data.decode('utf-8'))
+            self.assertEqual(len(data['data']), 1)
+            self.assertEqual(data['data'][0]['attributes']['lines'], ['test'])
+
     def test_metrics(self):
         # Without authentication
         with ui.app.test_request_context():

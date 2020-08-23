@@ -246,7 +246,8 @@ def logs():
     if not cmd:
         return make_error_response('Logs are disabled.', 404)
 
-    logs = subprocess.run(cmd, shell=True, check=True, capture_output=True)\
+    logs = subprocess.run(cmd, shell=True, check=True, stdout=subprocess.PIPE,
+                          stderr=subprocess.STDOUT)\
         .stdout\
         .decode('utf-8')\
         .rstrip()\
