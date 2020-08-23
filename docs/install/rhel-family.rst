@@ -18,13 +18,13 @@ First, enable the Copr repository by executing:
 
 .. code-block:: bash
 
-    dnf copr enable lkiesow/pyca
+    % dnf copr enable lkiesow/pyca
 
 After adding the repository, we can install pyCA via package manager:
 
 .. code-block:: bash
 
-    dnf install pyca
+    % dnf install pyca
 
 By default, pyCA is disabled.
 The default configuration allows you to run pyCA against the official Opencast test server.
@@ -33,8 +33,8 @@ If you do not mind, continue.
 
 To start pyCA and make sure it is automatically started after a reboot, run::
 
-    systemctl start pyca-agentstate.service pyca-capture.service pyca-ingest.service pyca-schedule.service pyca-ui.service pyca.service
-    systemctl enable pyca-agentstate.service pyca-capture.service pyca-ingest.service pyca-schedule.service pyca-ui.service pyca.service
+    % systemctl start pyca-agentstate.service pyca-capture.service pyca-ingest.service pyca-schedule.service pyca-ui.service pyca.service
+    % systemctl enable pyca-agentstate.service pyca-capture.service pyca-ingest.service pyca-schedule.service pyca-ui.service pyca.service
 
 That's it. We already have pyCA up and running.
 You can test if it's up by querying the status of the Systemd units which will list several services::
@@ -75,7 +75,7 @@ All configuration keys are documented in the configuration file itself.
 
 After updating the configuration, make sure to restart all pyCA services::
 
-    systemctl restart pyca.service
+    % systemctl restart pyca.service
 
 
 Install Nginx
@@ -109,7 +109,7 @@ Then, edit the configuration in ``/etc/nginx/nginx.conf`` and set the server sec
 
 Next, configure SELinux to allow Nginx to relay HTTP requests to pyCA::
 
-    setsebool httpd_can_network_relay true
+    % setsebool httpd_can_network_relay true
 
 Finally, (re)start the Nginx service::
 
@@ -174,9 +174,9 @@ firewalld
 A popular choice for a firewall is firewalld which is usually installed and enabled by default.
 Run the follwing commands to allow HTTP and HTTPS::
 
-    firewall-cmd --add-service=http --permanent
-    firewall-cmd --add-service=https --permanent
+    % firewall-cmd --add-service=http --permanent
+    % firewall-cmd --add-service=https --permanent
 
 Finally, reload the set of currently active rules::
 
-    firewall-cmd --reload
+    % firewall-cmd --reload

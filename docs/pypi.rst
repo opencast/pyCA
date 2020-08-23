@@ -7,7 +7,7 @@ So you can simply call
 
 .. code-block:: bash
 
-    make pypi
+    % make pypi
 
 to build a clean package.
 

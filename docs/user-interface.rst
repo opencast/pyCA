@@ -12,12 +12,12 @@ For testing, it comes with a minimal built-in server:
 
 To start the test server, run (additional to pyCA)::
 
-    ./start.sh ui
+    % ./start.sh ui
 
 For a production deployment, use a WSGI server instead.
 For example, use Gunicorn by running::
 
-    gunicorn pyca.ui:app
+    % gunicorn pyca.ui:app
 
 For more information, have a look at the help option of gunicorn or go to the `Gunicorn online documentation`_.
 

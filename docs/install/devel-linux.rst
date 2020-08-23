@@ -11,8 +11,8 @@ Get the Code
 
 Clone the git repository::
 
-  git clone https://github.com/opencast/pyCA.git
-  cd pyCA
+    % git clone https://github.com/opencast/pyCA.git
+    % cd pyCA
 
 
 Python Dependencies
@@ -29,18 +29,18 @@ PyCA also relies on some Python libraries with native C bindings.
 To allow them to be installed via ``pip`` make sure
 the base libraries are installed using a command like (Fedora, CentOS)::
 
-  dnf install gcc python3-devel libcurl-devel openssl-devel
-  export PYCURL_SSL_LIBRARY=openssl
+    % dnf install gcc python3-devel libcurl-devel openssl-devel
+    % export PYCURL_SSL_LIBRARY=openssl
 
 or (Debian, Ubuntu)::
 
-  apt install git python3 python3-venv libcurl4-openssl-dev libssl-dev gcc python3-dev
+    % apt install git python3 python3-venv libcurl4-openssl-dev libssl-dev gcc python3-dev
 
 Next, create and enable a virtual environment and install the Python dependencies::
 
-  python3 -m venv venv
-  . ./venv/bin/activate
-  pip install -r requirements.txt
+    % python3 -m venv venv
+    % . ./venv/bin/activate
+    % pip install -r requirements.txt
 
 Make sure to always enable your virtual environment before starting pyCA.
 
@@ -50,7 +50,7 @@ To check which packages need to be installed, take a look at the `requirements.t
 
 For example, on Arch Linux, you could install the dependencies using::
 
-    pacman -S python-pycurl python-dateutil python-configobj python-sqlalchemy
+    % pacman -S python-pycurl python-dateutil python-configobj python-sqlalchemy
 
 JavaScript Dependencies
 -----------------------
@@ -58,7 +58,7 @@ JavaScript Dependencies
 PyCA uses Vue.js for the web interface.
 To install all necessary JavaScript libraries, run::
 
-  npm ci
+    % npm ci
 
 This will allow you to build the JavaScript part of the web interface.
 
@@ -75,7 +75,7 @@ The default configuration should usually work great for testing:
 
 If you want to modify the configuration (e.g. to use a different Opencast server)::
 
-  vim etc/pyca.conf
+    % vim etc/pyca.conf
 
 
 Starting pyCA
@@ -83,7 +83,7 @@ Starting pyCA
 
 You can start pyCA by running::
 
-    ./start.sh
+    % ./start.sh
 
 This start script will take an optional command allowing you to separately launch pyCA services and run them as separate processes.
 By default (or using the ``run`` command) all services except the UI are launched as a single process.
@@ -96,4 +96,4 @@ and ``start.sh`` is a convenient way of building the JavaScript code and running
 
 To list all available CLI options, run::
 
-    ./start.sh -h
+    % ./start.sh -h
