@@ -210,9 +210,9 @@ window.onload = function () {
                                     "attributes": {"status": "finished recording"},
                                     "id": event.id,
                                     "type": "event"
-                                    }]})
+                                }]})
                         };
-                        fetch("/api/events/" + event.id, requestOptions).then(function(response){
+                        fetch("/api/events/" + event.id, requestOptions).then(function(){
                             update_data;
                         })
                     }
