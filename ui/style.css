@@ -118,6 +118,14 @@ td.more:hover {
     background-color: #eee;
 }
 
+button.more {
+    cursor: pointer;
+}
+
+button.more:hover {
+    background-color: #eee;
+}
+
 div.event_status {
     display: flex;
     justify-content: space-between;

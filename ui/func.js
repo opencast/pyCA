@@ -3,9 +3,11 @@ import axios from 'axios';
 
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { faExclamationTriangle } from '@fortawesome/free-solid-svg-icons/faExclamationTriangle'
+import { faSync } from '@fortawesome/free-solid-svg-icons/faSync'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 
 library.add(faExclamationTriangle)
+library.add(faSync)
 Vue.component('font-awesome-icon', FontAwesomeIcon)
 
 // Main data structure.
@@ -25,11 +27,12 @@ var data = {
 };
 
 // create_event creates entries for the event list.
-var create_event = function (event, status) {
+var create_event = function (event, status, id) {
     return {
         'start': new Date(event.attributes.start * 1000).toLocaleString(),
         'end': new Date(event.attributes.end * 1000).toLocaleString(),
         'status': status,
+        'id': id
     };
 }
 
@@ -64,11 +67,11 @@ var update_data = function () {
         .then(response => {
             data.upcoming_events = response.data.data.filter(
                 x => x.attributes.status === "upcoming").map(
-                x => create_event(x, x.attributes.status));
+                x => create_event(x, x.attributes.status, x.id));
             data.upcoming = data.upcoming_events.length;
             data.recorded_events = response.data.data.filter(
                 x => x.attributes.status !== "upcoming").map(
-                x => create_event(x, x.attributes.status));
+                x => create_event(x, x.attributes.status, x.id));
             data.processed = data.recorded_events.length;
         });
     // Get preview images.
@@ -185,15 +188,34 @@ window.onload = function () {
                             <span v-if="is_error_state(event)">
                             <font-awesome-icon icon="exclamation-triangle" />
                             </span>
+                            <span v-if="event.status == 'failed uploading'">
+                            <button type="button" class="more" v-on:click="retry_ingest(event)">
+                                <font-awesome-icon icon="sync" /> retry
+                            </button>
+                            </span>
                         </div>
                     </td>
                 </tr>`,
                 methods: {
                     is_error_state: event => [
                         'partial recording',
-                        'failed recording',
-                        'failed uploading'
-                    ].indexOf(event.status) >= 0
+                        'failed recording'
+                    ].indexOf(event.status) >= 0,
+                    retry_ingest: event => {
+                        var requestOptions = {
+                            method: "PATCH",
+                            headers: { "Content-Type": "application/vnd.api+json" },
+                            body: JSON.stringify(
+                                {"data": [{
+                                    "attributes": {"status": "finished recording"},
+                                    "id": event.id,
+                                    "type": "event"
+                                    }]})
+                        };
+                        fetch("/api/events/" + event.id, requestOptions).then(function(response){
+                            update_data;
+                        })
+                    }
                 }
             },
             'component-metric': {
