@@ -19,12 +19,11 @@ RUN make pypi
 FROM alpine:3.12
 LABEL maintainer="pyCA team"
 
-ENV FFMPEG_VERSION="20200820042749-N-98762-gc0aa3dfaa8"
-
 COPY --from=build /usr/local/src/dist/pyca-*.tar.gz /tmp/pyca.tar.gz
 
 RUN apk --no-cache --virtual .run-deps add \
       python3 py3-pip \
+      ffmpeg \
       libcurl postgresql-libs mariadb-connector-c \
  && apk --no-cache --virtual .build-deps add \
       curl tar xz \
@@ -34,9 +33,6 @@ RUN apk --no-cache --virtual .run-deps add \
       /tmp/pyca.tar.gz \
       psycopg2 mysqlclient \
       gunicorn \
- && cd /usr/local/bin \
- && curl -sSL "https://pkg.opencast.org/bin/ffmpeg/ffmpeg-${FFMPEG_VERSION}.tar.xz" \
-     | tar xJf - --strip-components 1 --wildcards '*/ffmpeg' '*/ffprobe' \
  && apk del .build-deps \
  && rm -rf /tmp/pyca.tar.gz
 
