@@ -118,21 +118,17 @@ td.more:hover {
     background-color: #eee;
 }
 
-button.more {
-    cursor: pointer;
-}
-
-button.more:hover {
-    background-color: #eee;
-}
-
 div.event_status {
     display: flex;
     justify-content: space-between;
 }
 
-div.event_status span {
+div.event_status span.warning {
     color: red;
+}
+
+div.event_status span.action {
+    cursor: pointer;
 }
 
 div.logs {

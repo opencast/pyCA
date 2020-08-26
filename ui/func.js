@@ -32,7 +32,8 @@ var create_event = function (event, status, id) {
         'start': new Date(event.attributes.start * 1000).toLocaleString(),
         'end': new Date(event.attributes.end * 1000).toLocaleString(),
         'status': status,
-        'id': id
+        'id': id,
+        'processing': false,
     };
 }
 
@@ -185,13 +186,14 @@ window.onload = function () {
                     <td>
                         <div class=event_status>
                             {{ event.status }}
-                            <span v-if="is_error_state(event)">
+                            <span class=warning v-if="is_error_state(event)">
                             <font-awesome-icon icon="exclamation-triangle" />
                             </span>
-                            <span v-if="event.status == 'failed uploading'">
-                            <button type="button" class="more" v-on:click="retry_ingest(event)">
-                                <font-awesome-icon icon="sync" /> retry
-                            </button>
+                            <span class=action
+                                  v-if="event.status == 'failed uploading'"
+                                  v-on:click="retry_ingest(event)"
+                                  title="Retry upload">
+                                <font-awesome-icon icon="sync" v-bind:class="{ 'fa-spin': event.processing }" />
                             </span>
                         </div>
                     </td>
@@ -201,20 +203,27 @@ window.onload = function () {
                         'partial recording',
                         'failed recording'
                     ].indexOf(event.status) >= 0,
-                    retry_ingest: event => {
-                        var requestOptions = {
-                            method: "PATCH",
-                            headers: { "Content-Type": "application/vnd.api+json" },
-                            body: JSON.stringify(
-                                {"data": [{
-                                    "attributes": {"status": "finished recording"},
-                                    "id": event.id,
-                                    "type": "event"
-                                }]})
-                        };
-                        fetch("/api/events/" + event.id, requestOptions).then(function(){
-                            update_data;
-                        })
+                    retry_ingest: function(event) {
+                        if (!event.processing) {
+                            event.processing = true;
+                            var requestOptions = {
+                                method: "PATCH",
+                                headers: { "Content-Type": "application/vnd.api+json" },
+                                body: JSON.stringify(
+                                    {"data": [{
+                                        "attributes": {"status": "finished recording"},
+                                        "id": event.id,
+                                        "type": "event"
+                                    }]})
+                            };
+
+                            fetch("/api/events/" + event.id, requestOptions)
+                            .then( function(response) {
+                                if (response.status != 200) {throw "Error: request failed - status "; }
+                            })
+                            .catch(function(error) { console.log(error); })
+                            .finally ( update_data )
+                        }
                     }
                 }
             },
