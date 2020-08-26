@@ -218,11 +218,11 @@ window.onload = function () {
                             };
 
                             fetch("/api/events/" + event.id, requestOptions)
-                            .then( function(response) {
-                                if (response.status != 200) {throw "Error: request failed - status "; }
-                            })
-                            .catch(function(error) { console.log(error); })
-                            .finally ( update_data )
+                                .then( function(response) {
+                                    if (response.status != 200) {throw "Error: request failed - status "; }
+                                })
+                                .catch(function(error) { console.log(error); })
+                                .finally ( update_data )
                         }
                     }
                 }
