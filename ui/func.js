@@ -26,6 +26,8 @@ var data = {
     logs: [],
 };
 
+var processing_events = [];
+
 // create_event creates entries for the event list.
 var create_event = function (event, status, id) {
     return {
@@ -33,7 +35,7 @@ var create_event = function (event, status, id) {
         'end': new Date(event.attributes.end * 1000).toLocaleString(),
         'status': status,
         'id': id,
-        'processing': false,
+        'processing': processing_events.indexOf(id) >= 0,
     };
 }
 
@@ -206,6 +208,7 @@ window.onload = function () {
                     retry_ingest: function(event) {
                         if (!event.processing) {
                             event.processing = true;
+                            processing_events.push(event.id);
                             var requestOptions = {
                                 method: "PATCH",
                                 headers: { "Content-Type": "application/vnd.api+json" },
@@ -222,7 +225,10 @@ window.onload = function () {
                                     if (response.status != 200) {throw "Error: request failed - status "; }
                                 })
                                 .catch(function(error) { console.log(error); })
-                                .finally ( update_data )
+                                .finally ( () => {
+                                    processing_events.pop(event.id);
+                                    update_data
+                                })
                         }
                     }
                 }
