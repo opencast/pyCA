@@ -123,8 +123,12 @@ div.event_status {
     justify-content: space-between;
 }
 
-div.event_status span {
+div.event_status span.warning {
     color: red;
+}
+
+div.event_status span.action {
+    cursor: pointer;
 }
 
 div.logs {
