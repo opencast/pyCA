@@ -123,8 +123,9 @@ def service(service_name, force_update=False):
             logger.debug('Updates service URL for %s: %s',
                          service_name,
                          config('services', service_id))
-        except pycurl.error as e:
-            logger.error(f'Could not get {service} endpoint: {e}. Retry in 5s')
+        except pycurl.error:
+            logger.exception('Could not get %s endpoint. Retry in 5s',
+                             service_name)
             time.sleep(5.0)
     return config('services', service_id)
 
