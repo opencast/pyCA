@@ -19,7 +19,6 @@ import logging
 import pycurl
 import sdnotify
 import time
-import traceback
 from urllib.parse import urlencode
 
 logger = logging.getLogger(__name__)
@@ -79,8 +78,7 @@ def get_schedule(db):
     try:
         cal = parse_ical(vcal.decode('utf-8'))
     except Exception:
-        logger.error('Could not parse ical')
-        logger.error(traceback.format_exc())
+        logger.exception('Could not parse ical')
         return
     db.query(UpcomingEvent).delete()
     for event in cal:

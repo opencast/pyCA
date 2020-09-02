@@ -23,7 +23,6 @@ import signal
 import subprocess
 import sys
 import time
-import traceback
 
 logger = logging.getLogger(__name__)
 notify = sdnotify.SystemdNotifier()
@@ -169,8 +168,7 @@ def recording_command(event):
         try:
             os.remove(preview.replace('{{previewdir}}', conf['preview_dir']))
         except OSError:
-            logger.warning('Could not remove preview files')
-            logger.warning(traceback.format_exc())
+            logger.warning('Could not remove preview files', exc_info=True)
 
     # Check process for errors
     exitcode = conf['exit_code']

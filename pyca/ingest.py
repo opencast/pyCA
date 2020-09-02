@@ -18,7 +18,6 @@ import pycurl
 import sdnotify
 import shutil
 import time
-import traceback
 
 logger = logging.getLogger(__name__)
 notify = sdnotify.SystemdNotifier()
@@ -80,7 +79,7 @@ def ingest(event):
 
     # add track
     for (flavor, track) in event.get_tracks():
-        logger.info('Adding track ({0} -> {1})'.format(flavor, track))
+        logger.info('Adding track (%s -> %s)', flavor, track)
         track = track.encode('ascii', 'ignore')
         fields = [('mediaPackage', mediapackage), ('flavor', flavor),
                   ('BODY1', (pycurl.FORM_FILE, track))]
@@ -117,8 +116,7 @@ def safe_start_ingest(event):
     try:
         ingest(event)
     except Exception:
-        logger.error('Something went wrong during the upload')
-        logger.error(traceback.format_exc())
+        logger.exception('Something went wrong during the upload')
         # Update state if something went wrong
         recording_state(event.uid, 'upload_error')
         update_event_status(event, Status.FAILED_UPLOADING)
