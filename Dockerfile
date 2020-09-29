@@ -19,7 +19,7 @@ RUN make pypi
 FROM alpine:3.12
 LABEL maintainer="pyCA team"
 
-ENV FFMPEG_VERSION="20200820042749-N-98762-gc0aa3dfaa8"
+ENV FFMPEG_VERSION="20200918044515-N-99257-g01506c290a"
 
 COPY --from=build /usr/local/src/dist/pyca-*.tar.gz /tmp/pyca.tar.gz
 

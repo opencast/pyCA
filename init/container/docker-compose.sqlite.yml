@@ -9,7 +9,7 @@ services:
     image: quay.io/opencast/pyca
     restart: always
     volumes:
-      - ./pyca.sqlite.conf:/etc/pyca/pyca.conf:ro
+      - ./pyca.conf:/etc/pyca/pyca.conf:ro
       - pyca:/var/lib/pyca
 
   pyca-ingest:
@@ -17,7 +17,7 @@ services:
     image: quay.io/opencast/pyca
     restart: always
     volumes:
-      - ./pyca.sqlite.conf:/etc/pyca/pyca.conf:ro
+      - ./pyca.conf:/etc/pyca/pyca.conf:ro
       - pyca:/var/lib/pyca
 
   pyca-capture:
@@ -25,7 +25,7 @@ services:
     image: quay.io/opencast/pyca
     restart: always
     volumes:
-      - ./pyca.sqlite.conf:/etc/pyca/pyca.conf:ro
+      - ./pyca.conf:/etc/pyca/pyca.conf:ro
       - pyca:/var/lib/pyca
 
   pyca-agentstate:
@@ -33,7 +33,7 @@ services:
     image: quay.io/opencast/pyca
     restart: always
     volumes:
-      - ./pyca.sqlite.conf:/etc/pyca/pyca.conf:ro
+      - ./pyca.conf:/etc/pyca/pyca.conf:ro
       - pyca:/var/lib/pyca
 
   pyca-ui:
@@ -41,7 +41,7 @@ services:
     image: quay.io/opencast/pyca
     restart: always
     volumes:
-      - ./pyca.sqlite.conf:/etc/pyca/pyca.conf:ro
+      - ./pyca.conf:/etc/pyca/pyca.conf:ro
       - pyca:/var/lib/pyca
     ports:
       - "8000:8000"

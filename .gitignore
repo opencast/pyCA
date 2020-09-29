@@ -13,6 +13,7 @@ node_modules/
 dist/
 
 /recordings/*
+/init/container/pyca.conf
 
 .coverage
 pyca.db
