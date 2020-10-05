@@ -18,7 +18,7 @@
   },
   "devDependencies": {
     "eslint": "^7.10.0",
-    "eslint-plugin-vue": "^7.0.0",
+    "eslint-plugin-vue": "^7.0.1",
     "express": "^4.17.1",
     "http-proxy-middleware": "^1.0.5",
     "parcel-bundler": "^1.12.4"
