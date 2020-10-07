@@ -68,18 +68,20 @@ def ingest(event):
         if attachment.get('x-apple-filename') == prop:
             workflow_def, workflow_config = get_config_params(data)
 
-        # Check for dublincore catalogs
-        elif attachment.get('fmttype') == 'application/xml' and dcns in data:
+        # dublin core catalogs
+        elif attachment.get('fmttype') == 'application/xml' \
+                and dcns in data \
+                and config('ingest', 'upload_catalogs'):
             name = attachment.get('x-apple-filename', '').rsplit('.', 1)[0]
-            if config('ingest', 'skip_catalogs'):
-                logger.info(
-                    'Skipping adding catalog %s due to configuration', name)
-                continue
             logger.info('Adding %s DC catalog', name)
             fields = [('mediaPackage', mediapackage),
                       ('flavor', 'dublincore/%s' % name),
                       ('dublinCore', data.encode('utf-8'))]
             mediapackage = http_request(service_url + '/addDCCatalog', fields)
+
+        else:
+            logger.info('Not uploading %s', attachment.get('x-apple-filename'))
+            continue
 
     # add track
     for (flavor, track) in event.get_tracks():
