@@ -36,6 +36,7 @@ exit_code        = integer(min=0, max=255, default=0)
 
 [ingest]
 delete_after_upload = boolean(default=false)
+skip_catalogs    = boolean(default=false)
 
 [server]
 url              = string(default='https://develop.opencast.org')
