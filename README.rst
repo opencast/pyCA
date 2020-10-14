@@ -1,7 +1,9 @@
 PyCA – Opencast Capture Agent
 =============================
-.. image:: https://img.shields.io/github/workflow/status/opencast/pyCA/Test%20PyCA/master
-    :alt: GitHub Workflow Status (deimasterbranch)
+
+.. image:: https://github.com/opencast/pyCA/workflows/Test%20PyCA/badge.svg?branch=master
+    :target: https://github.com/opencast/pyCA/actions?query=workflow%3A%22Test+PyCA%22+branch%3Amaster
+    :alt: Test PyCA GitHub Workflow Status
 .. image:: https://coveralls.io/repos/github/opencast/pyCA/badge.svg?branch=master
     :target: https://coveralls.io/github/opencast/pyCA?branch=master
     :alt: Test Coverage
