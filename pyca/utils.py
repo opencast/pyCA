@@ -49,6 +49,11 @@ def http_request(url, post_data=None):
         # Import your certificates
         curl.setopt(pycurl.CAINFO, config('server', 'certificate'))
 
+    if config('ingest', 'upload_rate') > 0:
+        curl.setopt(
+            curl.MAX_SEND_SPEED_LARGE,
+            config('ingest', 'upload_rate'))
+
     if post_data:
         curl.setopt(curl.HTTPPOST, post_data)
     curl.setopt(curl.WRITEFUNCTION, buf.write)
