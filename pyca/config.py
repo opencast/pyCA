@@ -39,6 +39,7 @@ delay_max        = integer(min=0, default=0)
 delay_min        = integer(min=0, default=0)
 delete_after_upload = boolean(default=false)
 upload_catalogs  = boolean(default=false)
+upload_rate      = string(default='0')
 
 [server]
 url              = string(default='https://develop.opencast.org')
@@ -105,6 +106,20 @@ def update_configuration(cfgfile=None):
         logger.warning('Base URL ends with /. This is most likely a '
                        'configuration error. The URL should contain nothing '
                        'of the service paths.')
+    if cfg['ingest'].get('upload_rate'):
+        # Limit upload rate in bytes per second
+        upload_rate = cfg['ingest'].get('upload_rate').lower()
+        if upload_rate.endswith('m'):
+            upload_rate = upload_rate[0:-1] + '000000'
+        elif upload_rate.endswith('k'):
+            upload_rate = upload_rate[0:-1] + '000'
+        try:
+            cfg['ingest']['upload_rate'] = int(upload_rate)
+        except ValueError:
+            logger.warning(
+                'Configuration value ingest.upload_rate is invalid. '
+                'Disabling upload rate limitation.')
+            cfg['ingest']['upload_rate'] = 0
     logger.info('Configuration loaded from %s', cfgfile)
     check()
     return cfg
