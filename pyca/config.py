@@ -113,13 +113,7 @@ def update_configuration(cfgfile=None):
             upload_rate = upload_rate[0:-1] + '000000'
         elif upload_rate.endswith('k'):
             upload_rate = upload_rate[0:-1] + '000'
-        try:
-            cfg['ingest']['upload_rate'] = int(upload_rate)
-        except ValueError:
-            logger.warning(
-                'Configuration value ingest.upload_rate is invalid. '
-                'Disabling upload rate limitation.')
-            cfg['ingest']['upload_rate'] = 0
+        cfg['ingest']['upload_rate'] = int(upload_rate)
     logger.info('Configuration loaded from %s', cfgfile)
     check()
     return cfg
