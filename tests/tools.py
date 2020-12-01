@@ -49,6 +49,7 @@ class CurlMock():
     WRITEFUNCTION = 10
     FAILONERROR = 11
     FOLLOWLOCATION = 12
+    MAX_SEND_SPEED_LARGE = 13
 
     def setopt(self, *args):
         pass
