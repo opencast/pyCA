@@ -1,4 +1,4 @@
-name: Test PyCA
+name: Test pyCA
 
 on:
   - push
