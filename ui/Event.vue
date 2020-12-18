@@ -9,7 +9,7 @@
                 <font-awesome-icon icon="exclamation-triangle" />
                 </span>
                 <span class=action
-                      v-if="event.status == 'failed uploading'"
+                      v-if="event.status == 'failed uploading' || event.status == 'finished recording paused'"
                       v-on:click="retry_ingest(event)"
                       title="Retry upload">
                     <font-awesome-icon icon="sync" v-bind:class="{ 'fa-spin': event.processing }" />
