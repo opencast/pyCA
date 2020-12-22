@@ -6,6 +6,10 @@ import { faExclamationTriangle } from '@fortawesome/free-solid-svg-icons/faExcla
 import { faSync } from '@fortawesome/free-solid-svg-icons/faSync'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 
+import Event from './Event.vue'
+import Metrics from './Metrics.vue'
+import Preview from './Preview.vue'
+
 library.add(faExclamationTriangle)
 library.add(faSync)
 Vue.component('font-awesome-icon', FontAwesomeIcon)
@@ -66,7 +70,7 @@ var update_data = function () {
         });
     // Get events.
     axios
-        .get('/api/events/')
+        .get('/api/events')
         .then(response => {
             data.upcoming_events = response.data.data.filter(
                 x => x.attributes.status === "upcoming").map(
@@ -175,77 +179,9 @@ window.onload = function () {
         el: "#app",
         data: data,
         components: {
-            'component-preview': {
-                props: ['image'],
-                template: '<img :src="image" />',
-            },
-            'component-events': {
-                props: ['event'],
-                template: `
-                <tr>
-                    <td>{{ event.start }}</td>
-                    <td>{{ event.end }}</td>
-                    <td>
-                        <div class=event_status>
-                            {{ event.status }}
-                            <span class=warning v-if="is_error_state(event)">
-                            <font-awesome-icon icon="exclamation-triangle" />
-                            </span>
-                            <span class=action
-                                  v-if="event.status == 'failed uploading'"
-                                  v-on:click="retry_ingest(event)"
-                                  title="Retry upload">
-                                <font-awesome-icon icon="sync" v-bind:class="{ 'fa-spin': event.processing }" />
-                            </span>
-                        </div>
-                    </td>
-                </tr>`,
-                methods: {
-                    is_error_state: event => [
-                        'partial recording',
-                        'failed recording'
-                    ].indexOf(event.status) >= 0,
-                    retry_ingest: function(event) {
-                        if (!event.processing) {
-                            event.processing = true;
-                            processing_events.push(event.id);
-                            var requestOptions = {
-                                method: "PATCH",
-                                headers: { "Content-Type": "application/vnd.api+json" },
-                                body: JSON.stringify(
-                                    {"data": [{
-                                        "attributes": {"status": "finished recording"},
-                                        "id": event.id,
-                                        "type": "event"
-                                    }]})
-                            };
-
-                            fetch("/api/events/" + event.id, requestOptions)
-                                .then( function(response) {
-                                    if (response.status != 200) {throw "Error: request failed - status "; }
-                                })
-                                .catch(function(error) { console.log(error); })
-                                .finally ( () => {
-                                    processing_events.pop(event.id);
-                                    update_data
-                                })
-                        }
-                    }
-                }
-            },
-            'component-metric': {
-                props: ['metric'],
-                template: `
-                    <tbody>
-                    <th colspan="2">{{ metric.header }}</th>
-                        <template v-for="item in metric.metrics">
-                            <tr>
-                                <td>{{ item.name }}</td>
-                                <td>{{ item.value }}</td>
-                            </tr>
-                        </template>
-                    </tbody>`,
-            }
+            Preview,
+            Event,
+            Metrics,
         },
         created: update_data,
     });
