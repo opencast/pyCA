@@ -51,8 +51,8 @@
             <section id=preview>
                 <h2>Preview Images</h2>
                 <div v-if="previews && previews.length">
-                    <component-preview v-for="item in previews" v-bind:image="item" v-bind:key="item.id">
-                    </component-preview>
+                    <Preview v-for="item in previews" v-bind:image="item" v-bind:key="item.id">
+                    </Preview>
                 </div>
                 <div v-else>No preview image</div>
             </section>
@@ -76,9 +76,9 @@
                                 </td>
                             </tr>
                         </template>
-                        <tr is="component-events" v-for="item in upcoming_events.slice(0,limit_upcoming)"
+                        <tr is="Event" v-for="item in upcoming_events.slice(0,limit_upcoming)"
                             v-bind:event="item" v-bind:key="item.start"></tr>
-                        <tr is="component-events" v-for="item in recorded_events.slice(0,limit_processed)"
+                        <tr is="Event" v-for="item in recorded_events.slice(0,limit_processed)"
                             v-bind:event="item" v-bind:key="item.start"></tr>
                         <template v-if="processed > limit_processed">
                             <tr class=extendlist>
@@ -95,8 +95,8 @@
                 <h2>Status</h2>
                 <table>
                     <template>
-                        <component-metric v-for="item in metrics" v-bind:metric="item" v-bind:key="item.header">
-                        </component-metric>
+                        <Metrics v-for="item in metrics" v-bind:metric="item" v-bind:key="item.header">
+                        </Metrics>
                     </template>
                 </table>
             </section>

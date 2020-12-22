@@ -104,11 +104,6 @@ tr.extendlist td {
     text-align: center;
 }
 
-#preview img {
-    max-width: 90%;
-    max-height: 300px;
-}
-
 td.more {
     cursor: pointer;
     font-style: italic;
@@ -116,19 +111,6 @@ td.more {
 
 td.more:hover {
     background-color: #eee;
-}
-
-div.event_status {
-    display: flex;
-    justify-content: space-between;
-}
-
-div.event_status span.warning {
-    color: red;
-}
-
-div.event_status span.action {
-    cursor: pointer;
 }
 
 div.logs {
