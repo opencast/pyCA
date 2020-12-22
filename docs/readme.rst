@@ -16,7 +16,7 @@ This section contains installation guides for specific operating systems or Linu
 Configuration
 -------------
 
-Most configuration documentation is contained in the `documentation file <../etc/pyca.conf>`_.
+Most configuration documentation is contained in the `configuration file <../etc/pyca.conf>`_.
 This sections just contains a few additional notes to convey ideas behind some specific configuration settings.
 
 - `System Service (Systemd) <systemd.rst>`_
