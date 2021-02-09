@@ -30,16 +30,13 @@ var data = {
     logs: [],
 };
 
-var processing_events = [];
-
 // create_event creates entries for the event list.
 var create_event = function (event, status, id) {
     return {
         'start': new Date(event.attributes.start * 1000).toLocaleString(),
         'end': new Date(event.attributes.end * 1000).toLocaleString(),
         'status': status,
-        'id': id,
-        'processing': processing_events.indexOf(id) >= 0,
+        'id': id
     };
 }
 
