@@ -44,4 +44,4 @@ jobs:
     - name: upload test coverage to coveralls
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: coveralls
+      run: coveralls --service=github
