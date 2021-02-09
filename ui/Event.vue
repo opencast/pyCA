@@ -30,7 +30,7 @@ export default {
         retry_ingest: function(event) {
             if (!event.processing) {
                 event.processing = true;
-                processing_events.push(event.id);
+                event.status = 'action pending'
                 var requestOptions = {
                     method: "PATCH",
                     headers: { "Content-Type": "application/vnd.api+json" },
@@ -48,8 +48,7 @@ export default {
                     })
                     .catch(function(error) { console.log(error); })
                     .finally ( () => {
-                        processing_events.pop(event.id);
-                        update_data
+                        event.processing = false;
                     })
             }
         }
