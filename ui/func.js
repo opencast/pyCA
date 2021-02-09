@@ -72,14 +72,16 @@ var update_data = function () {
     axios
         .get('/api/events')
         .then(response => {
-            data.upcoming_events = response.data.data.filter(
-                x => x.attributes.status === "upcoming").map(
-                x => create_event(x, x.attributes.status, x.id));
-            data.upcoming = data.upcoming_events.length;
-            data.recorded_events = response.data.data.filter(
-                x => x.attributes.status !== "upcoming").map(
-                x => create_event(x, x.attributes.status, x.id));
+            data.recorded_events = response.data.data
+                .filter(x => x.attributes.status !== "upcoming")
+                .map(x => create_event(x, x.attributes.status, x.id));
             data.processed = data.recorded_events.length;
+            var event_in_processing = data.processed > 0 ? data.recorded_events[0].id : null;
+            data.upcoming_events = response.data.data
+                .filter(x => x.attributes.status === "upcoming")
+                .filter(x => x.id !== event_in_processing)
+                .map(x => create_event(x, x.attributes.status, x.id));
+            data.upcoming = data.upcoming_events.length;
         });
     // Get preview images.
     axios
