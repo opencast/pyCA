@@ -1,22 +1,16 @@
+.git
+Dockerfile
 venv
 *.pyc
 *.pyo
 *.swp
 build/
 *.egg-info/
-
-
-# JavaScript stuff
 node_modules/
 /pyca/ui/static/
 .cache/
 dist/
-
 /recordings/*
-/init/container/pyca.conf
-
 .coverage
 pyca.db
-
-# IDEs
 .vscode/
