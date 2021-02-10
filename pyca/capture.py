@@ -71,8 +71,14 @@ def start_capture(db, upcoming_event):
 
     # Set status
     # If part files exist, its an partial recording
-    p = any([glob.glob(f'{f}-part-*') for f in files])
-    state = Status.PARTIAL_RECORDING if p else Status.FINISHED_RECORDING
+    part_files = any([glob.glob(f'{f}-part-*') for f in files])
+    if part_files:
+        state = Status.PARTIAL_RECORDING
+    elif config('agent', 'backup_mode'):
+        state = Status.PAUSED_AFTER_RECORDING
+    else:
+        state = Status.FINISHED_RECORDING
+
     logger.info("Set %s to %s", event.uid, Status.str(state))
     update_event_status(event, state)
     recording_state(event.uid, 'capture_finished')

@@ -83,6 +83,7 @@ class Status(Constants):
     FAILED_UPLOADING = 6
     FINISHED_UPLOADING = 7
     PARTIAL_RECORDING = 8
+    PAUSED_AFTER_RECORDING = 9
 
 
 class ServiceStatus(Constants):

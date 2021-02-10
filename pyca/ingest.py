@@ -158,9 +158,5 @@ def control_loop():
 def run():
     '''Start the capture agent.
     '''
-    # If we are a backup CA, we don't want to actually upload anything. So
-    # let's just quit here and do not run the ingest service at all.
-    if config('agent')['backup_mode']:
-        return
 
     control_loop()
