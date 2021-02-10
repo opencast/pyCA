@@ -1,4 +1,4 @@
-FROM alpine:3.12 AS build
+FROM alpine:3.13 AS build
 
 RUN apk --no-cache add \
       curl-dev \
@@ -23,7 +23,7 @@ RUN pip install -r requirements.txt \
 COPY . .
 RUN make pypi
 
-FROM alpine:3.12
+FROM alpine:3.13
 LABEL maintainer="pyCA team"
 
 ENV FFMPEG_VERSION="20200918044515-N-99257-g01506c290a"
