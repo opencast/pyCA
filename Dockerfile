@@ -1,10 +1,17 @@
 FROM alpine:3.12 AS build
 
 RUN apk --no-cache add \
+      curl-dev \
+      gcc \
+      linux-headers \
+      make \
+      musl-dev \
+      nodejs \
+      npm \
+      py3-pip \
+      python3 \
+      python3-dev \
       util-linux \
-      nodejs npm \
-      python3 py3-pip \
-      gcc make linux-headers musl-dev python3-dev curl-dev \
  && ln -s /usr/bin/python3 /usr/bin/python
 
 WORKDIR /usr/local/src
@@ -24,16 +31,26 @@ ENV FFMPEG_VERSION="20200918044515-N-99257-g01506c290a"
 COPY --from=build /usr/local/src/dist/pyca-*.tar.gz /tmp/pyca.tar.gz
 
 RUN apk --no-cache --virtual .run-deps add \
-      python3 py3-pip \
-      libcurl postgresql-libs mariadb-connector-c \
+      libcurl \
+      postgresql-libs \
+      py3-pip \
+      python3 \
  && apk --no-cache --virtual .build-deps add \
-      curl tar xz \
-      gcc make linux-headers musl-dev python3-dev curl-dev postgresql-dev mariadb-connector-c-dev \
+      curl \
+      curl-dev \
+      gcc \
+      linux-headers \
+      make \
+      musl-dev \
+      postgresql-dev \
+      python3-dev \
+      tar \
+      xz \
  && ln -s /usr/bin/python3 /usr/bin/python \
  && pip install \
       /tmp/pyca.tar.gz \
-      psycopg2 mysqlclient \
       gunicorn \
+      psycopg2 \
  && cd /usr/local/bin \
  && curl -sSL "https://pkg.opencast.org/bin/ffmpeg/ffmpeg-${FFMPEG_VERSION}.tar.xz" \
      | tar xJf - --strip-components 1 --wildcards '*/ffmpeg' '*/ffprobe' \

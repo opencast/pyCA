@@ -12,16 +12,6 @@ PyCA + SQLite
     sed -i "s|#name .*|name = pyca-container|g" init/container/pyca.conf
     docker-compose -f init/container/docker-compose.sqlite.yml up
 
-PyCA + MariaDB
--------------
-
-.. code-block:: bash
-
-    cp etc/pyca.conf init/container/pyca.conf
-    sed -i "s|#name .*|name = pyca-container|g" init/container/pyca.conf
-    sed -i "s|#database .*|database = mysql://pyca:pyca@database/pyca|g" init/container/pyca.conf
-    docker-compose -f init/container/docker-compose.mariadb.yml up
-
 PyCA + PostgreSQL
 -------------
 
