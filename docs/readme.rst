@@ -11,6 +11,7 @@ This section contains installation guides for specific operating systems or Linu
 - `Ubuntu <install/debian-based.rst>`_
 - `CentOS 8 <install/rhel-family.rst>`_
 - `Fedora <install/rhel-family.rst>`_
+- `Container <install/container.rst>`_
 
 
 Configuration
