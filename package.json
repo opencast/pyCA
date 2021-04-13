@@ -9,16 +9,16 @@
     "vue": "./node_modules/vue/dist/vue.common.js"
   },
   "dependencies": {
-    "@fortawesome/fontawesome-svg-core": "^1.2.34",
-    "@fortawesome/free-solid-svg-icons": "^5.15.2",
+    "@fortawesome/fontawesome-svg-core": "^1.2.35",
+    "@fortawesome/free-solid-svg-icons": "^5.15.3",
     "@fortawesome/vue-fontawesome": "^2.0.2",
     "axios": "^0.21.1",
     "vue": "^2.6.12"
   },
   "devDependencies": {
     "@vue/component-compiler-utils": "^3.2.0",
-    "eslint": "^7.23.0",
-    "eslint-plugin-vue": "^7.8.0",
+    "eslint": "^7.24.0",
+    "eslint-plugin-vue": "^7.9.0",
     "parcel-bundler": "^1.12.5",
     "vue-template-compiler": "^2.6.12"
   }
