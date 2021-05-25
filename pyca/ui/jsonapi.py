@@ -78,7 +78,7 @@ def internal_state():
     return make_response(jsonify({'meta': data}))
 
 
-@app.route('/api/events/')
+@app.route('/api/events')
 @requires_auth
 @jsonapi_mediatype
 @with_session
