@@ -28,7 +28,7 @@ setup(
         "sqlalchemy>=0.9.8",
         "sdnotify>=0.3.2",
         "psutil>=5.0.1",
-        "flask>=1.0.2",
+        "flask>=0.12.2",
     ],
     entry_points={
         'console_scripts': [
