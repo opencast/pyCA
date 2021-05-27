@@ -11,7 +11,7 @@ def read(filename):
 
 setup(
     name="pyca",
-    version="4.1",
+    version="4.2",
     description="Opencast Capture Agent",
     author="Lars Kiesow",
     author_email='lkiesow@uos.de',
