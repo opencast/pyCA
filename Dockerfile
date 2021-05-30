@@ -2,6 +2,7 @@ FROM alpine:3.13 AS build
 
 RUN apk --no-cache add \
       curl-dev \
+      g++ \
       gcc \
       linux-headers \
       make \
@@ -38,6 +39,7 @@ RUN apk --no-cache --virtual .run-deps add \
  && apk --no-cache --virtual .build-deps add \
       curl \
       curl-dev \
+      g++ \
       gcc \
       linux-headers \
       make \
