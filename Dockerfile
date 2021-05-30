@@ -27,7 +27,7 @@ RUN make pypi
 FROM alpine:3.13
 LABEL maintainer="pyCA team"
 
-ENV FFMPEG_VERSION="20200918044515-N-99257-g01506c290a"
+ENV FFMPEG_VERSION="20210527041447-N-102608-g7a879cce37"
 
 COPY --from=build /usr/local/src/dist/pyca-*.tar.gz /tmp/pyca.tar.gz
 
@@ -54,7 +54,7 @@ RUN apk --no-cache --virtual .run-deps add \
       gunicorn \
       psycopg2 \
  && cd /usr/local/bin \
- && curl -sSL "https://pkg.opencast.org/bin/ffmpeg/ffmpeg-${FFMPEG_VERSION}.tar.xz" \
+ && curl -sSL "https://s3.opencast.org/opencast-ffmpeg-static/ffmpeg-${FFMPEG_VERSION}.tar.xz" \
      | tar xJf - --strip-components 1 --wildcards '*/ffmpeg' '*/ffprobe' \
  && apk del .build-deps \
  && rm -rf /tmp/pyca.tar.gz
