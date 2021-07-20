@@ -3,7 +3,12 @@
 Simple UI telling about the current state of the capture agent.
 '''
 from flask import Flask, send_from_directory, redirect, url_for
+from prometheus_client import make_wsgi_app
+from werkzeug.middleware.dispatcher import DispatcherMiddleware
+
 from pyca.config import config
+from pyca.ui.process_status_collector import ProcessStatusCollector
+from pyca.ui.recordings_collector import RecordingsCollector
 from pyca.ui.utils import requires_auth
 import os.path
 
@@ -12,6 +17,11 @@ app = Flask(
     __name__,
     template_folder=os.path.join(__base_dir__, 'templates'),
     static_folder=os.path.join(__base_dir__, 'static'))
+
+app.wsgi_app = DispatcherMiddleware(app.wsgi_app, {
+    '/metrics': make_wsgi_app()
+})
+
 import pyca.ui.jsonapi  # noqa
 
 
