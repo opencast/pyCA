@@ -2,7 +2,6 @@ from prometheus_client.metrics_core import GaugeMetricFamily
 from prometheus_client.registry import REGISTRY
 
 from pyca.db import get_session, RecordedEvent, UpcomingEvent, Status
-from pyca.utils import timestamp
 
 
 class RecordingsCollector(object):
