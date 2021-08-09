@@ -17,35 +17,18 @@ class ProcessStatusCollector(object):
             labels=['service', 'state']
         )
 
-        service_states.add_metric(
-            ['capture'],
-            self.get_state_dict(ServiceStatus.str(get_service_status(Service.CAPTURE)))
-        )
-
-        service_states.add_metric(
-            ['ingest'],
-            self.get_state_dict(ServiceStatus.str(get_service_status(Service.INGEST)))
-        )
-
-        service_states.add_metric(
-            ['schedule'],
-            self.get_state_dict(ServiceStatus.str(get_service_status(Service.SCHEDULE)))
-        )
-
-        service_states.add_metric(
-            ['agentstate'],
-            self.get_state_dict(ServiceStatus.str(get_service_status(Service.AGENTSTATE)))
-        )
+        for service in Service.values():
+            service_states.add_metric(
+                [Service.str(service)],
+                self.get_state_dict(get_service_status(service))
+            )
 
         yield service_states
 
     @staticmethod
     def get_state_dict(state: str):
-        return {
-            'stopped': 'stopped' == state,
-            'idle': 'idle' == state,
-            'busy': 'busy' == state,
-        }
+        return {ServiceStatus.str(s): s == state
+                for s in ServiceStatus.values()}
 
 
 PROCESS_STATUS_COLLECTOR = ProcessStatusCollector()

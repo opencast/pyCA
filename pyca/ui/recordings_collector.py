@@ -15,54 +15,28 @@ class RecordingsCollector(object):
         '''
         Return metrics about upcoming and recorded Events
         '''
-        recordings = GaugeMetricFamily('pyca_events_count',
-                                       'Count of Recorded Events with different status',
-                                       labels=['type'])
-        recordings.add_metric(
-            ['upcoming'],
-            value=self.db.query(UpcomingEvent).filter(UpcomingEvent.start >= timestamp()).count()
-        )
-        recordings.add_metric(
-            ['recording'],
-            value=self.db.query(RecordedEvent).filter(RecordedEvent.status == Status.RECORDING).count()
+        recordings = GaugeMetricFamily(
+            'pyca_events_count',
+            'Count of Recorded Events with different status',
+            labels=['type']
         )
 
         recorded_events = self.db.query(RecordedEvent)
 
-        # Filter RecordedEvents for different Status
-        recordings.add_metric(
-            ['failed_recording'],
-            value=recorded_events.filter(RecordedEvent.status == Status.FAILED_RECORDING).count()
-        )
+        for status in Status.values():
+            recordings.add_metric(
+                [Status.str(status)],
+                value=recorded_events.filter(RecordedEvent.status == status)
+                                     .count()
+            )
+
+        upcoming_events = (self.db.query(UpcomingEvent).count()
+                           - self.db.query(RecordedEvent.status == 'RECORDING')
+                                 .count())
 
         recordings.add_metric(
-            ['finished_recording'],
-            value=recorded_events.filter(RecordedEvent.status == Status.FINISHED_RECORDING).count()
-        )
-
-        recordings.add_metric(
-            ['uploading'],
-            value=recorded_events.filter(RecordedEvent.status == Status.UPLOADING).count()
-        )
-
-        recordings.add_metric(
-            ['failed_uploading'],
-            value=recorded_events.filter(RecordedEvent.status == Status.FAILED_UPLOADING).count()
-        )
-
-        recordings.add_metric(
-            ['finished_uploading'],
-            value=recorded_events.filter(RecordedEvent.status == Status.FINISHED_UPLOADING).count()
-        )
-
-        recordings.add_metric(
-            ['partial_recording'],
-            value=recorded_events.filter(RecordedEvent.status == Status.PARTIAL_RECORDING).count()
-        )
-
-        recordings.add_metric(
-            ['paused_after_recordings'],
-            value=recorded_events.filter(RecordedEvent.status == Status.PAUSED_AFTER_RECORDING).count()
+            ['upcoming'],
+            value=upcoming_events
         )
 
         yield recordings
