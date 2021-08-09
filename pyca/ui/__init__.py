@@ -7,8 +7,6 @@ from prometheus_client import make_wsgi_app
 from werkzeug.middleware.dispatcher import DispatcherMiddleware
 
 from pyca.config import config
-from pyca.ui.process_status_collector import ProcessStatusCollector
-from pyca.ui.recordings_collector import RecordingsCollector
 from pyca.ui.utils import requires_auth
 import os.path
 
