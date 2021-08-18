@@ -4,6 +4,7 @@ Simple UI telling about the current state of the capture agent.
 '''
 from flask import Flask, send_from_directory, redirect, url_for
 from prometheus_client import make_wsgi_app
+from pyca.ui import process_status_collector, recordings_collector # noqa
 from werkzeug.middleware.dispatcher import DispatcherMiddleware
 
 from pyca.config import config
