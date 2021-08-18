@@ -42,6 +42,8 @@ class TestPycaDb(unittest.TestCase):
         self.assertEqual(data['series'], series)
 
     def test_status(self):
+        for i, value in enumerate(db.Status.values()):
+            self.assertEqual(value, i + 1)
         self.assertEqual(db.Status.str(db.Status.UPCOMING), 'upcoming')
 
     def test_event(self):
