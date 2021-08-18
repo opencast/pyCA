@@ -2,6 +2,7 @@ from prometheus_client.metrics_core import GaugeMetricFamily
 from prometheus_client.registry import REGISTRY
 
 from pyca.db import get_session, RecordedEvent, UpcomingEvent, Status
+from pyca.utils import timestamp
 
 
 class RecordingsCollector(object):
@@ -29,9 +30,15 @@ class RecordingsCollector(object):
                                      .count()
             )
 
-        upcoming_events = (self.db.query(UpcomingEvent).count()
-                           - self.db.query(RecordedEvent.status == 'RECORDING')
-                                 .count())
+        recorded_events = self.db.query(RecordedEvent)\
+                              .filter(RecordedEvent.end > timestamp())
+
+        recorded_event_ids = [event.uid for event in recorded_events]
+
+        upcoming_events = (self.db.query(UpcomingEvent)
+                               .filter(UpcomingEvent.uid
+                                       not in recorded_event_ids)
+                               .count())
 
         recordings.add_metric(
             ['upcoming'],
