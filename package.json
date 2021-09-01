@@ -18,7 +18,7 @@
   "devDependencies": {
     "@vue/component-compiler-utils": "^3.2.2",
     "eslint": "^7.32.0",
-    "eslint-plugin-vue": "^7.15.1",
+    "eslint-plugin-vue": "^7.17.0",
     "parcel-bundler": "^1.12.5",
     "vue-template-compiler": "^2.6.14"
   }
