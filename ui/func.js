@@ -33,6 +33,7 @@ var data = {
 // create_event creates entries for the event list.
 var create_event = function (event, status, id) {
     return {
+        'title': event.attributes.title,
         'start': new Date(event.attributes.start * 1000).toLocaleString(),
         'end': new Date(event.attributes.end * 1000).toLocaleString(),
         'status': status,
