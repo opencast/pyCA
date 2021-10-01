@@ -1,6 +1,6 @@
 <template>
     <tr>
-        <td class="title">{{ event.title }}</td>
+        <td class="title" v-bind:title=event.title>{{ event.title }}</td>
         <td>{{ event.start }}</td>
         <td>{{ event.end }}</td>
         <td>
