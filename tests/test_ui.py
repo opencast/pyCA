@@ -37,6 +37,22 @@ class TestPycaUI(unittest.TestCase):
         with ui.app.test_request_context(headers=self.auth):
             self.assertEqual(ui.home().status_code, 302)
 
+    def test_prometheus_metrics(self):
+        # Without authentication
+        with ui.app.test_request_context():
+            self.assertEqual(ui.prometheus_metrics().status_code, 401)
+
+        # With authentication
+        with ui.app.test_request_context(headers=self.auth):
+            r = ui.prometheus_metrics()
+            self.assertEqual(r.status_code, 200)
+            data = r.data.decode()
+            self.assertIn('pyca_service_state_info', data)
+            self.assertIn('pyca_events_count', data)
+            self.assertIn('ingest', data)
+            self.assertIn('upcoming', data)
+            r.close()
+
     def test_ui(self):
         # Without authentication
         with ui.app.test_request_context():

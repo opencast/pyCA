@@ -65,6 +65,12 @@ def with_session(f):
 class Constants():
 
     @classmethod
+    def values(cls):
+        for key, value in cls.__dict__.items():
+            if not key.startswith('_'):
+                yield value
+
+    @classmethod
     def str(cls, value):
         '''Convert status (id) to its string name.'''
         for k, v in cls.__dict__.items():

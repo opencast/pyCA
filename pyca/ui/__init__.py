@@ -2,7 +2,9 @@
 '''
 Simple UI telling about the current state of the capture agent.
 '''
-from flask import Flask, send_from_directory, redirect, url_for
+from flask import Flask, send_from_directory, redirect, url_for, make_response
+from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
+from pyca.ui import process_status_collector, recordings_collector # noqa
 from pyca.config import config
 from pyca.ui.utils import requires_auth
 import os.path
@@ -12,6 +14,7 @@ app = Flask(
     __name__,
     template_folder=os.path.join(__base_dir__, 'templates'),
     static_folder=os.path.join(__base_dir__, 'static'))
+
 import pyca.ui.jsonapi  # noqa
 
 
@@ -44,3 +47,11 @@ def serve_image(image_id):
     except (IndexError, KeyError):
         pass
     return '', 404
+
+
+@app.route('/metrics')
+@requires_auth
+def prometheus_metrics():
+    r = make_response(generate_latest())
+    r.content_type = CONTENT_TYPE_LATEST
+    return r
