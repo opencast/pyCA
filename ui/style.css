@@ -113,6 +113,13 @@ td.more:hover {
     background-color: #eee;
 }
 
+td.title {
+    max-width: 250px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 div.logs {
     width: 100%;
     overflow-x: scroll;
