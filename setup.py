@@ -29,7 +29,7 @@ setup(
         "sdnotify>=0.3.2",
         "psutil>=5.0.1",
         "flask>=0.12.2",
-        "prometheus_client>=0.10.1"
+        "prometheus_client>=0.9"
     ],
     entry_points={
         'console_scripts': [
