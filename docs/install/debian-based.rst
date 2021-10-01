@@ -17,7 +17,7 @@ First, enable the repository and make sure that HTTPS connections can be used by
 
 .. code-block:: bash
 
-    % apt install apt-transport-https
+    % apt install apt-transport-https ca-certificates gnupg
     % apt-key adv --fetch https://pyca.deb.opencast.org/gpg.key
     % echo "deb [arch=all] https://pyca.deb.opencast.org/opencast-pyca buster main" > \
         /etc/apt/sources.list.d/opencast-pyca.list

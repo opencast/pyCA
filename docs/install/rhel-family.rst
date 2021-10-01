@@ -20,7 +20,13 @@ First, enable the Copr repository by executing:
 
     % dnf copr enable lkiesow/pyca
 
-After adding the repository, we can install pyCA via package manager:
+On CentOS, RHEL, … you also want to enable EPEL:
+
+.. code-block:: bash
+
+    % dnf install epel-release
+
+After adding the repository, you can install pyCA via package manager:
 
 .. code-block:: bash
 
