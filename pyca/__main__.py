@@ -19,6 +19,7 @@ Usage %s [OPTIONS] COMMAND
 
 COMMANDS:
   run        --  Start all pyCA components except ui (default)
+  all        --  Start all components (for testing only)
   capture    --  Start pyCA capture service
   ingest     --  Start pyCA ingest service
   schedule   --  Start pyCA schedule service
@@ -104,6 +105,14 @@ def main():
     if cmd == 'run':
         # ensure database is created first
         get_session().close()
+        run_all(schedule, capture, ingest, agentstate)
+    elif cmd == 'all':
+        get_session().close()
+        signal.signal(signal.SIGINT, signal.default_int_handler)
+        multiprocessing.Process(
+                target=ui.app.run,
+                kwargs={'threaded': False}
+            ).start()
         run_all(schedule, capture, ingest, agentstate)
     elif cmd == 'schedule':
         schedule.run()
