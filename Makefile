@@ -4,6 +4,7 @@ export DOCKER_BUILDKIT=1
 
 lint:
 	@flake8 $$(find pyca tests -name '*.py')
+	@bandit pyca tests
 	@npm run eslint
 
 test:
