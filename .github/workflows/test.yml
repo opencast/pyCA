@@ -10,6 +10,7 @@ jobs:
     strategy:
       matrix:
         # https://endoflife.date/python
+        # https://github.com/actions/virtual-environments/blob/main/images/linux/Ubuntu2004-README.md#python
         python-version:
           - 3.6
           - 3.7
@@ -31,7 +32,7 @@ jobs:
 
     - name: install dependencies
       run: |
-        pip install flake8 mock coverage coveralls
+        pip install flake8 bandit mock coverage coveralls
         pip install -r requirements.txt
         npm ci
 
