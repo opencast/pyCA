@@ -3,7 +3,7 @@ all: lint test
 export DOCKER_BUILDKIT=1
 
 lint:
-	@flake8 $$(find pyca tests -name '*.py')
+	@flake8 $$(find pyca tests -name '*.py') .github/selenium-tests
 	@bandit pyca tests
 	@npm run eslint
 

@@ -1,2 +1,6 @@
+bandit
+coverage
+coveralls
+flake8
+mock
 selenium
-urllib3
