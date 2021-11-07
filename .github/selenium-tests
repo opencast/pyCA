@@ -1,0 +1,52 @@
+#!/usr/bin/env python3
+
+import sys
+
+from selenium import webdriver
+from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.support import expected_conditions
+from selenium.webdriver.common.by import By
+
+
+BASE_URL = 'http://admin:opencast@127.0.0.1:5000'
+
+driver = None
+
+
+def navigate(path):
+    driver.get(f'{BASE_URL}{path}')
+
+
+def wait_for(driver, element, timeout=20):
+    return WebDriverWait(driver, timeout).until(
+            expected_conditions.presence_of_element_located(element))
+
+
+def check_pyca():
+    print('%-30s' % 'Testing pyCA header…', end='')
+    navigate('/')
+    elem = driver.find_element(By.TAG_NAME, 'header')
+    assert 'pyCA' == elem.text
+    print('✓')
+
+    print('%-30s' % 'Testing FontAwesome…', end='')
+    wait_for(driver, (By.CSS_SELECTOR, 'span.action'), timeout=0.2)
+    elem = driver.find_elements(By.CSS_SELECTOR, 'span.action svg')[0]
+    assert elem.get_attribute('role') == 'img'
+    print('✓')
+
+    print('%-30s' % 'Testing recordings table…', end='')
+    selector = '#recordings tbody tr'
+    wait_for(driver, (By.CSS_SELECTOR, selector), timeout=0.2)
+    recording_rows = driver.find_elements(By.CSS_SELECTOR, selector)
+    assert len(recording_rows) == 4
+    print('✓')
+
+
+if __name__ == '__main__':
+    options = webdriver.FirefoxOptions()
+    if sys.argv[-1] != 'gui':
+        options.headless = True
+    driver = webdriver.Firefox(options=options)
+    check_pyca()
+    driver.close()
