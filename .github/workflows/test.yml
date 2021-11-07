@@ -16,6 +16,7 @@ jobs:
           - 3.7
           - 3.8
           - 3.9
+          - '3.10'
 
     steps:
     - name: install libgnutls28-dev
@@ -41,6 +42,18 @@ jobs:
 
     - name: run test
       run: make test
+
+    - name: start user interface
+      run: |
+        gunzip .github/test.db.gz
+        mv .github/test.db pyca.db
+        ./start.sh ui &
+
+    - name: install selenium
+      run: pip install -r .github/requirements.txt
+
+    - name: run user interface integration tests
+      run: ./.github/selenium-tests
 
     - name: upload test coverage to coveralls
       env:
