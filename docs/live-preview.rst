@@ -42,3 +42,51 @@ it writes the output of a video filter which:
 - Generates an image representing the volume of the audio
 - Scales the input video to a horizontal 640px  - 
 - Overlays the video with the volume meter
+
+Continuous Preview
+------------------
+
+It's possible to enable a continuous preview ( instead of only during a recording ) by moving the preview command out of pyCA.
+
+One possible way to do this is to create a preview script that launches an ffmpeg process to generate the preview images in the configured
+preview directory. This script for instance creates a side-by-side preview of 2 video sources, together with an audio preview.
+
+.. code:: bash
+
+    #!/bin/bash
+    ######
+    #   preview pipeline
+    ######
+    ffmpeg -nostdin -nostats -re -y -f v4l2 -thread_queue_size 2048 -video_size 1920x1080 -r 30 -i /dev/hdcamera \
+      -f v4l2 -thread_queue_size 2048 -video_size 1920x1080 -r 30 -i /dev/screen \
+      -f pulse -thread_queue_size 2048 -i default \
+      -filter_complex "[2:a] showvolume=w=3840:h=80:p=0.8 [vol];[0:v][1:v]hstack[int];[int][vol] overlay=0:0 [int]"  \
+      -map [int] -r 1 -update 1 /recordings/preview/preview.jpg \
+      &
+
+
+Copy the following contents to /lib/systemd/system/pyca-preview.service ( when using a systemd enabled distro ).
+
+.. code::
+
+    [Unit]
+    Description=pyca preview
+
+    [Service]
+    Type=forking
+    WatchdogSec=300
+    User=pyca
+    ExecStart=/etc/pyca/pyca-preview.sh
+    Restart=always
+    RestartSec=10
+    TimeoutSec=300
+
+    [Install]
+    WantedBy=multi-user.target
+
+
+To start the preview script, and make it start after a reboot, run::
+
+    % systemctl start pyca-preview.service
+    % systemctl enable pyca-preview.service
+
