@@ -9,9 +9,15 @@ def read(filename):
         return f.read()
 
 
+def version():
+    with open(os.path.join(path, "pyca", "_version.py"), encoding='utf-8') as f:
+        exec(f.read())
+    return locals()['__version__']
+
+
 setup(
     name="pyca",
-    version="4.4",
+    version=version(),
     description="Opencast Capture Agent",
     author="Lars Kiesow",
     author_email='lkiesow@uos.de',

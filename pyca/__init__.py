@@ -6,3 +6,5 @@
     :copyright: 2014-2015, Lars Kiesow <lkiesow@uos.de>
     :license: LGPL – see license.lgpl for more details.
 '''
+
+from pyca._version import __version__
