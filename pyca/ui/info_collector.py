@@ -25,7 +25,8 @@ class InfoCollector(object):
         if state:
             last_sync = GaugeMetricFamily(
                 'pyca_last_sync',
-                'Timestamp of the last successful sync with the upstream server',
+                'Timestamp of the last successful sync with the '
+                'upstream server',
                 int(state.last_synced.timestamp())
             )
             yield last_sync

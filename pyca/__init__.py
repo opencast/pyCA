@@ -7,4 +7,4 @@
     :license: LGPL – see license.lgpl for more details.
 '''
 
-from pyca._version import __version__
+from pyca._version import __version__ # noqa
