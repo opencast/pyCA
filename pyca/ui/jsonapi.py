@@ -151,7 +151,10 @@ def modify_event(db, uid):
     of the scheduler cache cannot be modified.
     '''
     try:
-        data = request.get_json()['data'][0]
+        data = request.get_json()['data']
+        if len(data) != 1:
+            return make_error_response('Invalid data', 400)
+        data = data[0]
         if data['type'] != 'event' or data['id'] != uid:
             return make_error_response('Invalid data', 400)
         # Check attributes
