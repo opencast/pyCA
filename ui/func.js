@@ -9,6 +9,7 @@ import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import Event from './Event.vue'
 import Metrics from './Metrics.vue'
 import Preview from './Preview.vue'
+import Schedule from './Schedule.vue'
 
 library.add(faExclamationTriangle)
 library.add(faSync)
@@ -173,6 +174,7 @@ var update_data = function () {
         });
 };
 
+
 window.onload = function () {
     // Vue App
     new Vue({
@@ -182,6 +184,7 @@ window.onload = function () {
             Preview,
             Event,
             Metrics,
+            Schedule,
         },
         created: update_data,
     });

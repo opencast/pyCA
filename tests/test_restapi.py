@@ -282,3 +282,40 @@ class TestPycaRestInterface(unittest.TestCase):
             self.assertEqual(jsonevent.get('id'), event.uid)
             self.assertEqual(jsonevent['attributes'].get('start'), 1000)
             self.assertEqual(jsonevent['attributes'].get('end'), 2000)
+
+    def test_schedule_event(self):
+        # Mock scheduling
+        ui.jsonapi.schedule = lambda title, duration, creator: True
+
+        # Without authentication
+        with ui.app.test_request_context():
+            self.assertEqual(ui.jsonapi.schedule_event().status_code, 401)
+
+        args = dict(headers=self.headers, method='POST')
+
+        # With authentication but no or invalid data
+        for data in (
+                'null',
+                '{"data":[{}, {}]}',
+                '{"id":0}',
+                '{"data":[{"invalid":"test"}]}',
+                '{"data":[{"duration":"invalid"}]}'):
+            args['data'] = data
+            with ui.app.test_request_context(**args):
+                response = ui.jsonapi.schedule_event()
+                self.assertEqual(response.status_code, 400)
+                self.assertEqual(
+                    response.headers['Content-Type'], self.content_type)
+                error = json.loads(response.data.decode('utf-8'))['errors'][0]
+            self.assertEqual(error['status'], 400)
+
+        # With authentication and valid uid
+        args['data'] = json.dumps({'data': [{
+            'title': 'a',
+            'creator': 'b',
+            'duration': 1}]})
+        with ui.app.test_request_context(**args):
+            response = ui.jsonapi.schedule_event()
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(
+                response.headers['Content-Type'], self.content_type)
