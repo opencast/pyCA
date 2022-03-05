@@ -131,3 +131,17 @@ div.logs pre {
     padding: 10px;
     font-family: sans;
 }
+
+form#schedule {
+    padding: 20px;
+}
+
+form#schedule label {
+    display: inline-block;
+    width: 120px;
+    margin: 10px;
+}
+
+form#schedule input[type=submit] {
+    margin-left: 143px;
+}

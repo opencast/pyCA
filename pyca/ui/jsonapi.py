@@ -6,6 +6,7 @@ from pyca.db import Service, ServiceStatus, UpcomingEvent, \
 from pyca.db import with_session, Status, ServiceStates
 from pyca.ui import app
 from pyca.ui.utils import requires_auth, jsonapi_mediatype
+from pyca.ui.opencast_commands import schedule
 from pyca.utils import get_service_status, ensurelist, timestamp
 import logging
 import os
@@ -260,3 +261,38 @@ def logs():
         'type': 'logs',
         'attributes': {
             'lines': logs}})
+
+
+@app.route('/api/schedule', methods=['POST'])
+@requires_auth
+@jsonapi_mediatype
+def schedule_event():
+    try:
+        # We only allow one schedule at a time
+        print(0, request)
+        print(1, request.data)
+        print(2, request.get_json())
+        data = request.get_json()['data']
+        if len(data) != 1:
+            return make_error_response('Invalid data', 400)
+        data = data[0]
+
+        # Check attributes
+        for key in data.keys():
+            if key not in ('title', 'duration', 'creator'):
+                return make_error_response('Invalid data', 400)
+
+        # Check duration
+        if type(data['duration']) != int:
+            return make_error_response('Duration must be an integer', 400)
+    except Exception as e:
+        logger.debug('bad request', e)
+        return make_error_response('Invalid data', 400)
+
+    try:
+        schedule(title=data.get('title', 'pyCA Recording'),
+                 duration=data['duration'],
+                 creator=data.get('creator', config('ui', 'username')))
+    except Exception:
+        return make_error_response('Scheduling conflict', 409)
+    return make_data_response('Event scheduled')
