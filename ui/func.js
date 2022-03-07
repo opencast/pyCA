@@ -186,7 +186,7 @@ window.onload = function () {
         created: update_data,
     });
     // Trigger next refresh after set time if over.
-    const refresh = new URLSearchParams(window.location.search).get('refresh');
+    const refresh = new URLSearchParams(window.location.search).get('refresh') || 10;
     if (refresh) {
         setInterval(function () {
             update_data();
