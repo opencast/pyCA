@@ -47,6 +47,7 @@ class TestPycaUI(unittest.TestCase):
             r = ui.prometheus_metrics()
             self.assertEqual(r.status_code, 200)
             data = r.data.decode()
+            self.assertIn('pyca_version', data)
             self.assertIn('pyca_service_state_info', data)
             self.assertIn('pyca_events_count', data)
             self.assertIn('ingest', data)
