@@ -236,11 +236,19 @@ class TestPycaRestInterface(unittest.TestCase):
         args = dict(headers=self.headers)
 
         # With authentication but no or invalid data
-        for data in (None,
-                     '{"type":"event","id":0,"attributes":{"invalid":0}}',
-                     '{"type":"event","id":0,"attributes":\
-                     {"status":"invalid"}}'):
-            args['data'] = {'data': [data]}
+        for data in (
+                None,
+                {
+                    'type': 'event',
+                    'id': 0,
+                    'attributes': {'invalid': 0}
+                },
+                {
+                    'type': 'event',
+                    'id': 0,
+                    'attributes': {'status': 'invalid'}
+                }):
+            args['data'] = json.dumps({'data': [data]})
             with ui.app.test_request_context(**args):
                 response = ui.jsonapi.modify_event(0)
                 self.assertEqual(response.status_code, 400)
