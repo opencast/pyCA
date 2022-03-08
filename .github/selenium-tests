@@ -8,7 +8,7 @@ from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.common.by import By
 
 
-BASE_URL = 'http://admin:opencast@127.0.0.1:5000'
+BASE_URL = 'http://127.0.0.1:5000'
 
 driver = None
 
@@ -30,14 +30,14 @@ def check_pyca():
     print('✓')
 
     print('%-30s' % 'Testing FontAwesome…', end='')
-    wait_for(driver, (By.CSS_SELECTOR, 'span.action'), timeout=0.2)
+    wait_for(driver, (By.CSS_SELECTOR, 'span.action'), timeout=5)
     elem = driver.find_elements(By.CSS_SELECTOR, 'span.action svg')[0]
     assert elem.get_attribute('role') == 'img'
     print('✓')
 
     print('%-30s' % 'Testing recordings table…', end='')
     selector = '#recordings tbody tr'
-    wait_for(driver, (By.CSS_SELECTOR, selector), timeout=0.2)
+    wait_for(driver, (By.CSS_SELECTOR, selector), timeout=5)
     recording_rows = driver.find_elements(By.CSS_SELECTOR, selector)
     assert len(recording_rows) == 4
     print('✓')

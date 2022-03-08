@@ -1,6 +1,4 @@
 import { createApp, ref } from 'vue';
-import axios from 'axios';
-
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { faExclamationTriangle } from '@fortawesome/free-solid-svg-icons/faExclamationTriangle'
 import { faSync } from '@fortawesome/free-solid-svg-icons/faSync'
@@ -56,41 +54,45 @@ function format_bytes(bytes) {
 // update_data gets information from the backend and updates the main data structure 'data'.
 var update_data = function () {
     // Get capture agent name.
-    axios
-        .get('/api/name')
-        .then(response => data.name.value = response.data.meta.name);
-    // Get services.
-    axios
-        .get('/api/services')
+    fetch('/api/name')
+        .then(response => response.json())
         .then(response => {
-            data.capture.value = response.data.meta.services.capture === "busy";
-            data.uploading.value = response.data.meta.services.ingest === "busy";
+            data.name.value = response.meta.name
+        });
+    // Get services.
+    fetch('/api/services')
+        .then(response => response.json())
+        .then(response => {
+            data.capture = response.meta.services.capture === "busy";
+            data.uploading = response.meta.services.ingest === "busy";
         });
     // Get events.
-    axios
-        .get('/api/events')
+    fetch('/api/events')
+        .then(response => response.json())
         .then(response => {
-            data.recorded_events.value = response.data.data
+            data.recorded_events = response.data
                 .filter(x => x.attributes.status !== "upcoming")
                 .map(x => create_event(x, x.attributes.status, x.id));
-            data.processed.value = data.recorded_events.value.length;
-            var event_in_processing = data.processed.value > 0 ? data.recorded_events.value[0].id : null;
-            data.upcoming_events.value = response.data.data
+            data.processed = data.recorded_events.length;
+            let event_in_processing = data.processed > 0
+                ? data.recorded_events[0].id
+                : null;
+            data.upcoming_events = response.data
                 .filter(x => x.attributes.status === "upcoming")
                 .filter(x => x.id !== event_in_processing)
                 .map(x => create_event(x, x.attributes.status, x.id));
             data.upcoming.value = data.upcoming_events.value.length;
         });
     // Get preview images.
-    axios
-        .get('/api/previews')
+    fetch('/api/previews')
+        .then(response => response.json())
         .then(response => {
-            data.previews.value = response.data.data.map(x => "/img/" + x.attributes.id + "?" + Date.now());
+            data.previews = response.data.map(x => "/img/" + x.attributes.id + "?" + Date.now());
         });
 
     // Get metrics.
-    axios
-        .get('/api/metrics')
+    fetch('/api/metrics')
+        .then(response => response.json())
         .then(response => {
             data.metrics.value = [];
 
@@ -100,7 +102,7 @@ var update_data = function () {
                 'metrics': [],
             };
             // Get load
-            var load = response.data.meta.load;
+            var load = response.meta.load;
             if (load) {
                 machine.metrics.push({
                     'name': 'Load Averages',
@@ -108,7 +110,7 @@ var update_data = function () {
                 });
             }
             // Get disk usage
-            var disk_usage = response.data.meta.disk_usage_in_bytes;
+            var disk_usage = response.meta.disk_usage_in_bytes;
             if (disk_usage) {
                 const used = (disk_usage.used / disk_usage.total) * 100;
                 machine.metrics.push({
@@ -117,7 +119,7 @@ var update_data = function () {
                 });
             }
             // Get memory usage
-            var memory_usage = response.data.meta.memory_usage_in_bytes;
+            var memory_usage = response.meta.memory_usage_in_bytes;
             if (memory_usage) {
                 const used = (memory_usage.used / memory_usage.total) * 100;
                 machine.metrics.push({
@@ -134,7 +136,7 @@ var update_data = function () {
             // Service related metrics
             const services = {
                 'header': 'Services',
-                'metrics': response.data.meta.services.map(
+                'metrics': response.meta.services.map(
                     service => ({
                         'name': service.name[0].toUpperCase() + service.name.slice(1),
                         'value': service.status,
@@ -150,9 +152,9 @@ var update_data = function () {
                 'header': 'Upstream',
                 'metrics': [{
                     'name': 'Last Schedule Update',
-                    'value': response.data.meta.upstream.last_synchronized ?
-                        Date(response.data.meta.upstream.last_synchronized).toString() :
-                        'never'
+                    'value': response.meta.upstream.last_synchronized
+                        ? Date(response.meta.upstream.last_synchronized).toString()
+                        : 'never'
                 }]
             };
             // Add upstream metrics
@@ -161,16 +163,20 @@ var update_data = function () {
             }
         });
 
-    axios
-        .get('/api/logs')
+    fetch('/api/logs')
         .then(response => {
-            data.logs.value = response.data.data[0].attributes.lines;
-        })
-        .catch(error => {
-            if (error.response.status != 404) {
-                console.error(error);
+            if (response.ok) {
+                return response.json()
             }
-        });
+            if (response.status != 404) {
+                throw Error(response.statusText);
+            }
+        })
+        .then(response => {
+            if (response) {
+                data.logs = response.data[0].attributes.lines;
+            }
+        })
 };
 
 

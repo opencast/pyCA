@@ -47,6 +47,9 @@ jobs:
     - name: run test
       run: make test
 
+    - name: no auth for selenium tests
+      run: sed -i 's/#password *= .*$/password = ""/' etc/pyca.conf
+
     - name: start user interface
       run: |
         gunzip .github/test.db.gz
