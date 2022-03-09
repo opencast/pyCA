@@ -4,7 +4,7 @@ export DOCKER_BUILDKIT=1
 
 lint:
 	@flake8 $$(find pyca tests -name '*.py') .github/selenium-tests
-	@bandit pyca tests
+	@bandit -s B404,B602,B603 -r pyca
 	@npm run eslint
 
 test:
