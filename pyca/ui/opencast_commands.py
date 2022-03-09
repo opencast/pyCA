@@ -7,7 +7,7 @@
     :license: LGPL – see license.lgpl for more details.
 '''
 
-from xml.sax.saxutils import escape as xml_escape
+from xml.sax.saxutils import escape as xml_escape  # nosec B406
 from pyca.config import config
 from pyca.utils import http_request, service
 from datetime import datetime, timedelta
@@ -48,7 +48,7 @@ def schedule(title='pyCA Recording', duration=60, creator=None):
     # ingest services to ensure that not every capture agent uses the same
     # service at the same time
     service_url = service('ingest', force_update=True)
-    service_url = service_url[random.randrange(0, len(service_url))]
+    service_url = service_url[random.randrange(0, len(service_url))]  # nosec
     logger.info('Selecting ingest service for scheduling: ' + service_url)
 
     # create media package

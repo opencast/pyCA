@@ -250,6 +250,8 @@ def logs():
     if not cmd:
         return make_error_response('Logs are disabled.', 404)
 
+    # We specifically allow shell. This is no security issue since only admins
+    # may specify this command.
     logs = subprocess.run(cmd, shell=True, check=True, stdout=subprocess.PIPE,
                           stderr=subprocess.STDOUT)\
         .stdout\

@@ -53,7 +53,8 @@ def ingest(event):
     # ingest services to ensure that not every capture agent uses the same
     # service at the same time
     service_url = service('ingest', force_update=True)
-    service_url = service_url[random.randrange(0, len(service_url))]
+    # nosec: we do not need a secure random number here
+    service_url = service_url[random.randrange(0, len(service_url))]  # nosec
     logger.info('Selecting ingest service to use: ' + service_url)
 
     # create mediapackage
@@ -144,7 +145,8 @@ def control_loop():
                        .filter(RecordedEvent.status ==
                                Status.FINISHED_RECORDING).first()
         if event:
-            delay = random.randint(config('ingest', 'delay_min'),
+            # nosec: we do not need a secure random number here
+            delay = random.randint(config('ingest', 'delay_min'),  # nosec
                                    config('ingest', 'delay_max'))
             logger.info("Delaying ingest for %s seconds", delay)
             time.sleep(delay)
