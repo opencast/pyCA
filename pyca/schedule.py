@@ -30,7 +30,7 @@ def parse_ical(vcal):
     '''
     vcal = vcal.replace('\r\n ', '').replace('\r\n\r\n', '\r\n')
     vevents = vcal.split('\r\nBEGIN:VEVENT\r\n')
-    del(vevents[0])
+    del vevents[0]
     events = []
     for vevent in vevents:
         event = {}
