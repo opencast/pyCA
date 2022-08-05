@@ -5,7 +5,7 @@
     <meta http-equiv=content-type content="text/html; charset=utf-8" />
     <meta name=viewport content="width=device-width, initial-scale=1">
 
-    <script src="./func.js"></script>
+    <script type="module" src="./func.js"></script>
 
     <title>pyCA</title>
     <link rel=stylesheet type=text/css href="./style.css">
@@ -78,9 +78,9 @@
                                 </td>
                             </tr>
                         </template>
-                        <tr is="Event" v-for="item in upcoming_events.slice(0,limit_upcoming)"
+                        <tr is="vue:Event" v-for="item in upcoming_events.slice(0,limit_upcoming)"
                             v-bind:event="item" v-bind:key="item.start"></tr>
-                        <tr is="Event" v-for="item in recorded_events.slice(0,limit_processed)"
+                        <tr is="vue:Event" v-for="item in recorded_events.slice(0,limit_processed)"
                             v-bind:event="item" v-bind:key="item.start"></tr>
                         <template v-if="processed > limit_processed">
                             <tr class=extendlist>
@@ -96,10 +96,7 @@
             <section>
                 <h2>Status</h2>
                 <table>
-                    <template>
-                        <Metrics v-for="item in metrics" v-bind:metric="item" v-bind:key="item.header">
-                        </Metrics>
-                    </template>
+                    <tbody is="vue:Metrics" v-for="item in metrics" v-bind:metric="item" v-bind:key="item.header"></tbody>
                 </table>
             </section>
 

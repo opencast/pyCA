@@ -1,12 +1,10 @@
 <template>
     <tbody>
-    <th colspan="2">{{ metric.header }}</th>
-        <template v-for="item in metric.metrics">
-            <tr>
-                <td>{{ item.name }}</td>
-                <td>{{ item.value }}</td>
-            </tr>
-        </template>
+        <th colspan="2">{{ metric.header }}</th>
+        <tr v-for="item in metric.metrics" :key="item.id">
+            <td>{{ item.name }}</td>
+            <td>{{ item.value }}</td>
+        </tr>
     </tbody>
 </template>
 

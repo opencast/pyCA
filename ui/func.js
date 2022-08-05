@@ -1,4 +1,4 @@
-import Vue from 'vue';
+import { createApp, ref } from 'vue';
 import axios from 'axios';
 
 import { library } from '@fortawesome/fontawesome-svg-core'
@@ -13,22 +13,21 @@ import Schedule from './Schedule.vue'
 
 library.add(faExclamationTriangle)
 library.add(faSync)
-Vue.component('font-awesome-icon', FontAwesomeIcon)
 
 // Main data structure.
 var data = {
-    limit_upcoming: 5,
-    limit_processed: 15,
-    name: null,
-    capture: false,
-    uploading: false,
-    upcoming: null,
-    processed: null,
-    previews: null,
-    upcoming_events: [],
-    recorded_events: [],
-    metrics: [],
-    logs: [],
+    limit_upcoming: ref(5),
+    limit_processed: ref(15),
+    name: ref(null),
+    capture: ref(false),
+    uploading: ref(false),
+    upcoming: ref(null),
+    processed: ref(null),
+    previews: ref(null),
+    upcoming_events: ref([]),
+    recorded_events: ref([]),
+    metrics: ref([]),
+    logs: ref([]),
 };
 
 // create_event creates entries for the event list.
@@ -59,41 +58,41 @@ var update_data = function () {
     // Get capture agent name.
     axios
         .get('/api/name')
-        .then(response => data.name = response.data.meta.name);
+        .then(response => data.name.value = response.data.meta.name);
     // Get services.
     axios
         .get('/api/services')
         .then(response => {
-            data.capture = response.data.meta.services.capture === "busy";
-            data.uploading = response.data.meta.services.ingest === "busy";
+            data.capture.value = response.data.meta.services.capture === "busy";
+            data.uploading.value = response.data.meta.services.ingest === "busy";
         });
     // Get events.
     axios
         .get('/api/events')
         .then(response => {
-            data.recorded_events = response.data.data
+            data.recorded_events.value = response.data.data
                 .filter(x => x.attributes.status !== "upcoming")
                 .map(x => create_event(x, x.attributes.status, x.id));
-            data.processed = data.recorded_events.length;
-            var event_in_processing = data.processed > 0 ? data.recorded_events[0].id : null;
-            data.upcoming_events = response.data.data
+            data.processed.value = data.recorded_events.value.length;
+            var event_in_processing = data.processed.value > 0 ? data.recorded_events.value[0].id : null;
+            data.upcoming_events.value = response.data.data
                 .filter(x => x.attributes.status === "upcoming")
                 .filter(x => x.id !== event_in_processing)
                 .map(x => create_event(x, x.attributes.status, x.id));
-            data.upcoming = data.upcoming_events.length;
+            data.upcoming.value = data.upcoming_events.value.length;
         });
     // Get preview images.
     axios
         .get('/api/previews')
         .then(response => {
-            data.previews = response.data.data.map(x => "/img/" + x.attributes.id + "?" + Date.now());
+            data.previews.value = response.data.data.map(x => "/img/" + x.attributes.id + "?" + Date.now());
         });
 
     // Get metrics.
     axios
         .get('/api/metrics')
         .then(response => {
-            data.metrics = [];
+            data.metrics.value = [];
 
             // Machine related metrics
             var machine = {
@@ -129,7 +128,7 @@ var update_data = function () {
             }
             // Add machine metrics
             if (machine.metrics && machine.metrics.length) {
-                data.metrics.push(machine)
+                data.metrics.value.push(machine)
             }
 
             // Service related metrics
@@ -143,7 +142,7 @@ var update_data = function () {
             };
             // Add Service metrics
             if (services.metrics && services.metrics.length) {
-                data.metrics.push(services)
+                data.metrics.value.push(services);
             }
 
             // Upstream related metrics
@@ -158,14 +157,14 @@ var update_data = function () {
             };
             // Add upstream metrics
             if (upstream.metrics && upstream.metrics.length) {
-                data.metrics.push(upstream)
+                data.metrics.value.push(upstream);
             }
         });
 
     axios
         .get('/api/logs')
         .then(response => {
-            data.logs = response.data.data[0].attributes.lines;
+            data.logs.value = response.data.data[0].attributes.lines;
         })
         .catch(error => {
             if (error.response.status != 404) {
@@ -177,17 +176,22 @@ var update_data = function () {
 
 window.onload = function () {
     // Vue App
-    new Vue({
-        el: "#app",
-        data: data,
+    const app = createApp({
+        data() {
+            return data;
+        },
         components: {
             Preview,
             Event,
             Metrics,
             Schedule,
         },
-        created: update_data,
-    });
+        created() {
+            update_data();
+        }
+    })
+    app.component('font-awesome-icon', FontAwesomeIcon);
+    app.mount('#app');
     // Trigger next refresh after set time if over.
     const refresh = new URLSearchParams(window.location.search).get('refresh') || 10;
     if (refresh) {
