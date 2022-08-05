@@ -12,6 +12,8 @@ node_modules/
 .cache/
 dist/
 
+.parcel-cache
+
 /recordings/*
 /init/container/pyca.conf
 
