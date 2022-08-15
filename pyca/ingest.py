@@ -98,7 +98,7 @@ def ingest(event):
     # Update status
     set_service_status(Service.INGEST, ServiceStatus.BUSY)
     notify.notify('STATUS=Uploading')
-    recording_state(event.uid, 'uploading')
+    recording_state(event.uid, 'uploading', force_update=True)
     update_event_status(event, Status.UPLOADING)
 
     # Select ingest service
@@ -181,7 +181,7 @@ def safe_start_ingest(event):
     except Exception:
         logger.exception('Something went wrong during the upload')
         # Update state if something went wrong
-        recording_state(event.uid, 'upload_error')
+        recording_state(event.uid, 'upload_error', force_update=True)
         update_event_status(event, Status.FAILED_UPLOADING)
         set_service_status_immediate(Service.INGEST, ServiceStatus.IDLE)
 
@@ -190,7 +190,7 @@ def control_loop():
     '''Main loop of the capture agent, retrieving and checking the schedule as
     well as starting the capture process if necessry.
     '''
-    set_service_status_immediate(Service.INGEST, ServiceStatus.IDLE)
+    set_service_status_immediate(Service.INGEST, ServiceStatus.IDLE, force_update=True)
     notify.notify('READY=1')
     notify.notify('STATUS=Running')
     while not terminate():
