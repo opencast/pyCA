@@ -22,6 +22,59 @@ import time
 logger = logging.getLogger(__name__)
 notify = sdnotify.SystemdNotifier()
 
+def get_input_params(event):
+    '''Extract the input configuration parameters from the properties attached
+    to the schedule-entry
+    '''
+
+    inputs = []    
+    for attachment in event.get_data().get('attach'):
+        data = attachment.get('data')
+        if (attachment.get('x-apple-filename') == 'org.opencastproject.capture.agent.properties'):    
+            for prop in data.split('\n'):
+                if prop.startswith('capture.device.names'):
+                    param = prop.split('=', 1)
+                    inputs = param[1].split(',')
+                    break               
+    return inputs
+
+
+def trackinput_selected(event,flavor, track):
+    ''' check if input corresponding to flavor is selected in schedule-attachment
+    parameter 'capture.device.names'
+    returns True if input is selected or if capture.device.names='' 
+    ''' 
+
+    # inputs from pyca.conf
+    inputs_conf = config('agent', 'inputs')
+    
+    # if no inputs defined, return True -> add all tracks to mediapackage
+    if (inputs_conf == ['']):
+        logger.info('No inputs in config defined')
+        return True
+                
+    # flavors from pyca.conf
+    flavors_conf = config('capture', 'flavors')  
+    
+    # inputs in event attachment
+    inputs_event = get_input_params(event)
+	
+	# if no inputs in attachment, return True -> add all tracks to mediapackage
+    if (inputs_event == ['']):
+        logger.info('No inputs in schedule')
+	    # print('No inputs in event attachment')
+        return True
+    
+    # Input corresponding to track-flavor from pyca.conf
+    input_track = inputs_conf[flavors_conf.index(flavor)]
+        
+    if input_track in inputs_event:
+        # Input corresponding to flavor is selected in attachment
+        return True
+    
+    # Input corresponding to flavor is not selected in attachment
+    return False
+
 
 def get_config_params(properties):
     '''Extract the set of configuration parameters from the properties attached
@@ -86,11 +139,14 @@ def ingest(event):
 
     # add track
     for (flavor, track) in event.get_tracks():
-        logger.info('Adding track (%s -> %s)', flavor, track)
-        track = track.encode('ascii', 'ignore')
-        fields = [('mediaPackage', mediapackage), ('flavor', flavor),
+        if (trackinput_selected(event, flavor, track) == True):
+            logger.info('Adding track (%s -> %s)', flavor, track)
+            track = track.encode('ascii', 'ignore')
+            fields = [('mediaPackage', mediapackage), ('flavor', flavor),
                   ('BODY1', (pycurl.FORM_FILE, track))]
-        mediapackage = http_request(service_url + '/addTrack', fields)
+            mediapackage = http_request(service_url + '/addTrack', fields)
+        else:
+            logger.info('Ignoring track (%s -> %s)', flavor, track)
 
     # ingest
     logger.info('Ingest recording')
