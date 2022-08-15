@@ -66,8 +66,13 @@ def get_schedule(db):
     lookahead = config('agent', 'cal_lookahead') * 24 * 60 * 60
     if lookahead:
         params['cutoff'] = str((timestamp() + lookahead) * 1000)
-    uri = '%s/calendars?%s' % (service('scheduler')[0],
-                               urlencode(params))
+        
+    service_endpoint = service('scheduler', force_update=True)
+    if not service_endpoint:
+        logger.warning('Missing endpoint for updating schedule.')
+        return
+    uri = '%s/calendars?%s' % (service_endpoint[0],
+                               urlencode(params))    
     try:
         vcal = http_request(uri)
         UpstreamState.update_sync_time(config('server', 'url'))
