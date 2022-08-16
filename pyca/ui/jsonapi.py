@@ -226,8 +226,8 @@ def metrics(dbs):
                 'available': memory.available,
                 'used': memory.used,
                 'free': memory.free,
-                'cached': memory.cached,
-                'buffers': memory.buffers,
+                'cached': getattr(memory, 'cached', None),
+                'buffers': getattr(memory, 'buffers', None),
             },
             'load': {
                 '1m': load_1m,
