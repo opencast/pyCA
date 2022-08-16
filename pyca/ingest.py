@@ -22,24 +22,26 @@ import time
 logger = logging.getLogger(__name__)
 notify = sdnotify.SystemdNotifier()
 
+
 def get_input_params(event):
     '''Extract the input configuration parameters from the properties attached
     to the schedule-entry
     '''
 
-    inputs = []    
+    inputs = []
     for attachment in event.get_data().get('attach'):
         data = attachment.get('data')
-        if (attachment.get('x-apple-filename') == 'org.opencastproject.capture.agent.properties'):    
+        if (attachment.get('x-apple-filename') == 
+	    'org.opencastproject.capture.agent.properties'):
             for prop in data.split('\n'):
                 if prop.startswith('capture.device.names'):
                     param = prop.split('=', 1)
                     inputs = param[1].split(',')
-                    break               
+                    break
     return inputs
 
 
-def trackinput_selected(event,flavor, track):
+def trackinput_selected(event, flavor, track):
     ''' check if input corresponding to flavor is selected in schedule-attachment
     parameter 'capture.device.names'
     returns True if input is selected or if capture.device.names='' 
@@ -54,20 +56,20 @@ def trackinput_selected(event,flavor, track):
         return True
                 
     # flavors from pyca.conf
-    flavors_conf = config('capture', 'flavors')  
-    
+    flavors_conf = config('capture', 'flavors')
+
     # inputs in event attachment
     inputs_event = get_input_params(event)
-	
-	# if no inputs in attachment, return True -> add all tracks to mediapackage
+
+    # if no inputs in attachment, return True -> add all tracks to mediapackage
     if (inputs_event == ['']):
         logger.info('No inputs in schedule')
-	    # print('No inputs in event attachment')
+        # print('No inputs in event attachment')
         return True
     
     # Input corresponding to track-flavor from pyca.conf
     input_track = inputs_conf[flavors_conf.index(flavor)]
-        
+
     if input_track in inputs_event:
         # Input corresponding to flavor is selected in attachment
         return True
@@ -139,11 +141,11 @@ def ingest(event):
 
     # add track
     for (flavor, track) in event.get_tracks():
-        if (trackinput_selected(event, flavor, track) == True):
+        if trackinput_selected(event, flavor, track):
             logger.info('Adding track (%s -> %s)', flavor, track)
             track = track.encode('ascii', 'ignore')
             fields = [('mediaPackage', mediapackage), ('flavor', flavor),
-                  ('BODY1', (pycurl.FORM_FILE, track))]
+                      ('BODY1', (pycurl.FORM_FILE, track))]
             mediapackage = http_request(service_url + '/addTrack', fields)
         else:
             logger.info('Ignoring track (%s -> %s)', flavor, track)
@@ -190,7 +192,8 @@ def control_loop():
     '''Main loop of the capture agent, retrieving and checking the schedule as
     well as starting the capture process if necessry.
     '''
-    set_service_status_immediate(Service.INGEST, ServiceStatus.IDLE, force_update=True)
+    set_service_status_immediate(Service.INGEST, ServiceStatus.IDLE, 
+				 force_update=True)
     notify.notify('READY=1')
     notify.notify('STATUS=Running')
     while not terminate():
