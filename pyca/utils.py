@@ -129,14 +129,14 @@ def service(service_name, force_update=False):
                          service_name,
                          config('services', service_id))
         except pycurl.error:
-            if (force_update == True): 
+            if force_update:
                 logger.exception('Could not get %s endpoint. Retry in 5s',
-                             service_name)
+                                 service_name)
                 time.sleep(5.0)
             else:
-                logger.warning('Could not get %s endpoint. Ignoring', 
-                             service_name)
-                break;
+                logger.warning('Could not get %s endpoint. Ignoring',
+                               service_name)
+                break
     return config('services', service_id)
 
 
@@ -173,7 +173,7 @@ def register_ca(status='idle', force_update=False):
     # register_configuration
     url += '/configuration'
     inputstring = ",".join(config('agent', 'inputs'))
-    params=[('configuration','{\'capture.device.names\': \'' + inputstring +'\' }')]
+    params=[('configuration', '{\'capture.device.names\': \'' + inputstring + '\' }')]
     try:
         response = http_request(url, params).decode('utf-8')
         if response:
@@ -197,9 +197,9 @@ def recording_state(recording_id, status, force_update=False):
     # check if service_endpoint is availible, otherwise service()[0] is not defined
     if not service_endpoint:
         logger.warning('Missing endpoint for updating agent status.')
-        return   
+        return
     params = [('state', status)]
-    url = f'{service_endpoint[0]}/recordings/{recording_id}'   
+    url = f'{service_endpoint[0]}/recordings/{recording_id}'
     try:
         result = http_request(url, params).decode('utf-8')
         logger.info(result)
