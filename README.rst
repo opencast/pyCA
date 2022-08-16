@@ -1,5 +1,15 @@
 PyCA – Opencast Capture Agent
 =============================
+fork with following changes:
+
+- capture.py will not start capturing if connection to opencast endpoint is not possible. The original function service() will endless stay in a while-loop with 5sec sleep until endpoint is connected. Events in the database will not start recording. To change this, the already installed flag 'force_update' is used. The while-loop will only wait and loop if force_update=True and return immediately if force_update=False. force_update is passed through the calling functions register_ca(), recording_state(), set_service_status_immediate(), update_agent_state()
+- Inputs are now possible. The Definition in pyca.conf is extended with an item inputs
+- register_ca() is extended by the registration of the input configuration
+- Ingest only uploads the selected tracks from schedule events
+
+
+
+
 
 .. image:: https://github.com/opencast/pyCA/workflows/Test%20pyCA/badge.svg?branch=master
     :target: https://github.com/opencast/pyCA/actions?query=workflow%3A%22Test+pyCA%22+branch%3Amaster
