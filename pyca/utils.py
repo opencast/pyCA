@@ -171,7 +171,7 @@ def register_ca(status='idle', force_update=False):
         logger.warning('Could not set agent state to %s: %s', status, e)
 
     # register_configuration
-    url += '/configuration    
+    url += '/configuration'
     inputstring = ",".join(config('agent', 'inputs'))
     params=[('configuration','{\'capture.device.names\': \'' + inputstring +'\' }')]
     try:
