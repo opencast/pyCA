@@ -173,7 +173,8 @@ def register_ca(status='idle', force_update=False):
     # register_configuration
     url += '/configuration'
     inputstring = ",".join(config('agent', 'inputs'))
-    params=[('configuration', '{\'capture.device.names\': \'' + inputstring + '\' }')]
+    params = [('configuration',
+               '{\'capture.device.names\': \'' + inputstring + '\' }')]
     try:
         response = http_request(url, params).decode('utf-8')
         if response:
@@ -194,7 +195,8 @@ def recording_state(recording_id, status, force_update=False):
     if config('agent', 'backup_mode'):
         return
     service_endpoint = service('capture.admin', force_update)
-    # check if service_endpoint is availible, otherwise service()[0] is not defined
+    # check if service_endpoint is availible, otherwise service()[0]
+    # is not defined
     if not service_endpoint:
         logger.warning('Missing endpoint for updating agent status.')
         return
