@@ -180,7 +180,7 @@ def register_ca(status='idle', force_update=False):
             logger.info(response)
     except pycurl.error as e:
         logger.warning('Could not set configuration: %s', e)
-        
+
 
 def recording_state(recording_id, status, force_update=False):
     '''Send the state of the current recording to the Matterhorn core.
