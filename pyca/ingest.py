@@ -31,8 +31,8 @@ def get_input_params(event):
     inputs = []
     for attachment in event.get_data().get('attach'):
         data = attachment.get('data')
-        if (attachment.get('x-apple-filename') == 
-	    'org.opencastproject.capture.agent.properties'):
+        if (attachment.get('x-apple-filename') ==
+                'org.opencastproject.capture.agent.properties'):
             for prop in data.split('\n'):
                 if prop.startswith('capture.device.names'):
                     param = prop.split('=', 1)
@@ -42,19 +42,19 @@ def get_input_params(event):
 
 
 def trackinput_selected(event, flavor, track):
-    ''' check if input corresponding to flavor is selected in schedule-attachment
-    parameter 'capture.device.names'
-    returns True if input is selected or if capture.device.names='' 
-    ''' 
+    ''' check if input corresponding to flavor is selected in
+    schedule-attachment parameter 'capture.device.names'
+    returns True if input is selected or if capture.device.names=''
+    '''
 
     # inputs from pyca.conf
     inputs_conf = config('agent', 'inputs')
-    
+
     # if no inputs defined, return True -> add all tracks to mediapackage
     if (inputs_conf == ['']):
         logger.info('No inputs in config defined')
         return True
-                
+
     # flavors from pyca.conf
     flavors_conf = config('capture', 'flavors')
 
@@ -66,14 +66,14 @@ def trackinput_selected(event, flavor, track):
         logger.info('No inputs in schedule')
         # print('No inputs in event attachment')
         return True
-    
+
     # Input corresponding to track-flavor from pyca.conf
     input_track = inputs_conf[flavors_conf.index(flavor)]
 
     if input_track in inputs_event:
         # Input corresponding to flavor is selected in attachment
         return True
-    
+
     # Input corresponding to flavor is not selected in attachment
     return False
 
@@ -192,8 +192,8 @@ def control_loop():
     '''Main loop of the capture agent, retrieving and checking the schedule as
     well as starting the capture process if necessry.
     '''
-    set_service_status_immediate(Service.INGEST, ServiceStatus.IDLE, 
-				 force_update=True)
+    set_service_status_immediate(Service.INGEST, ServiceStatus.IDLE,
+                                 force_update=True)
     notify.notify('READY=1')
     notify.notify('STATUS=Running')
     while not terminate():
