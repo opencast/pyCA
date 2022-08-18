@@ -1,5 +1,3 @@
-PyCA – Opencast Capture Agent
-=============================
 fork with following changes:
 
 - capture.py will not start capturing if connection to opencast endpoint is not possible. The original function service() will endless stay in a while-loop with 5sec sleep until endpoint is connected. Events in the database will not start recording. To change this, the already installed flag 'force_update' is used. The while-loop will only wait and loop if force_update=True and return immediately if force_update=False. force_update is passed through the calling functions register_ca(), recording_state(), set_service_status_immediate(), update_agent_state()
@@ -21,6 +19,8 @@ fork with following changes:
     :target: https://github.com/opencast/pyCA/blob/master/license.lgpl
     :alt: LGPL-3 license
 
+PyCA – Opencast Capture Agent
+=============================
 **PyCA** is a fully functional Opencast_ capture agent written in Python.
 It is free software licensed under the terms of the `GNU Lesser General Public
 License`_.
