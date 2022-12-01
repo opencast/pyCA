@@ -16,7 +16,7 @@
     "vue": "^3.2.40"
   },
   "devDependencies": {
-    "@parcel/transformer-vue": "^2.7.0",
+    "@parcel/transformer-vue": "^2.8.0",
     "@vue/compiler-sfc": "^3.2.40",
     "@vue/component-compiler-utils": "^3.3.0",
     "buffer": "^6.0.3",
