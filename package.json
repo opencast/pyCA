@@ -9,7 +9,7 @@
     "vue": "./node_modules/vue/dist/vue.cjs.js"
   },
   "dependencies": {
-    "@fortawesome/fontawesome-svg-core": "^6.2.0",
+    "@fortawesome/fontawesome-svg-core": "^6.3.0",
     "@fortawesome/free-solid-svg-icons": "^6.2.0",
     "@fortawesome/vue-fontawesome": "^3.0.1",
     "axios": "^0.27.2",
