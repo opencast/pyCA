@@ -82,8 +82,21 @@ def get_service(service_type):
     response = http_request(url).decode('utf-8')
     services = json.loads(response).get('services', {}).get('service', [])
     services = ensurelist(services)
-    endpoints = [service['host'] + service['path'] for service in services
-                 if service['online'] and service['active']]
+
+    capture_admin_host = config('server', 'override_capture_admin_host')
+    ingest_host = config('server', 'override_ingest_host')
+    scheduler_host = config('server', 'override_scheduler_host')
+
+    if (service_type == 'org.opencastproject.capture.admin'
+            and capture_admin_host):
+        endpoints = [capture_admin_host + services[0]['path']]
+    elif service_type == 'org.opencastproject.ingest' and ingest_host:
+        endpoints = [ingest_host + services[0]['path']]
+    elif service_type == 'org.opencastproject.scheduler' and scheduler_host:
+        endpoints = [scheduler_host + services[0]['path']]
+    else:
+        endpoints = [service['host'] + service['path'] for service in services
+                     if service['online'] and service['active']]
     for endpoint in endpoints:
         logger.info(u'Endpoint for %s: %s', service_type, endpoint)
     return endpoints
@@ -144,7 +157,6 @@ def register_ca(status='idle'):
     '''Register this capture agent at the Matterhorn admin server so that it
     shows up in the admin interface.
 
-    :param address: Address of the capture agent web ui
     :param status: Current status of the capture agent
     '''
     # If this is a backup CA we don't tell the Matterhorn core that we are
