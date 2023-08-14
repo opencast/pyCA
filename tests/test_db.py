@@ -27,7 +27,8 @@ class TestPycaDb(unittest.TestCase):
         os.remove(self.dbfile)
 
     def test_get_session(self):
-        self.assertIn('autocommit', db.get_session().__dict__.keys())
+        # Check a random session attribute to ensure we have a valid session
+        self.assertIn('autoflush', db.get_session().__dict__.keys())
 
     def test_event_data(self):
         series = u'äöüßÄÖÜ'
