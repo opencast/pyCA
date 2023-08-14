@@ -14,11 +14,10 @@ jobs:
         # https://endoflife.date/python
         # https://github.com/actions/runner-images/blob/main/images/linux/Ubuntu2204-Readme.md#python
         python-version:
-          - 3.6
-          - 3.7
-          - 3.8
-          - 3.9
+          - '3.8'
+          - '3.9'
           - '3.10'
+          - '3.11'
 
     steps:
     - name: install libgnutls28-dev
