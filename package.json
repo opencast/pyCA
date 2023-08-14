@@ -13,7 +13,7 @@
     "@fortawesome/free-solid-svg-icons": "^6.2.0",
     "@fortawesome/vue-fontawesome": "^3.0.1",
     "axios": "^0.27.2",
-    "vue": "^3.2.40"
+    "vue": "^3.3.4"
   },
   "devDependencies": {
     "@parcel/transformer-vue": "^2.7.0",
