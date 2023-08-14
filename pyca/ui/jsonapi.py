@@ -285,7 +285,7 @@ def schedule_event():
                 return make_error_response('Invalid data', 400)
 
         # Check duration
-        if type(data['duration']) != int:
+        if type(data['duration']) is not int:
             return make_error_response('Duration must be an integer', 400)
     except Exception as e:
         logger.debug('bad request', e)
