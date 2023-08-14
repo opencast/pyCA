@@ -137,7 +137,7 @@ def service(service_name, force_update=False):
 
 def ensurelist(x):
     '''Ensure an element is a list.'''
-    return x if type(x) == list else [x]
+    return x if type(x) is list else [x]
 
 
 def register_ca(status='idle'):

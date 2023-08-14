@@ -11,7 +11,7 @@ from pyca.utils import timestamp, try_mkdir, terminate
 from pyca.utils import set_service_status, set_service_status_immediate
 from pyca.utils import recording_state, update_event_status
 from pyca.config import config
-from pyca.db import get_session, RecordedEvent, UpcomingEvent, Status,\
+from pyca.db import get_session, RecordedEvent, UpcomingEvent, Status, \
                     Service, ServiceStatus, with_session
 import glob
 import logging
