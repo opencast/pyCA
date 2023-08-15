@@ -16,13 +16,13 @@
     "vue": "^3.3.4"
   },
   "devDependencies": {
-    "@parcel/transformer-vue": "^2.7.0",
+    "@parcel/transformer-vue": "^2.9.3",
     "@vue/compiler-sfc": "^3.2.40",
     "@vue/component-compiler-utils": "^3.3.0",
     "buffer": "^6.0.3",
     "eslint": "^8.47.0",
     "eslint-plugin-vue": "^9.17.0",
-    "parcel": "^2.7.0",
+    "parcel": "^2.9.3",
     "process": "^0.11.10"
   }
 }
