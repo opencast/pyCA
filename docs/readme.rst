@@ -9,7 +9,7 @@ This section contains installation guides for specific operating systems or Linu
 - `Debian <install/debian-based.rst>`_
 - `Raspberry Pi OS <install/debian-based.rst>`_
 - `Ubuntu <install/debian-based.rst>`_
-- `CentOS 8 <install/rhel-family.rst>`_
+- `CentOS Stream <install/rhel-family.rst>`_
 - `Fedora <install/rhel-family.rst>`_
 - `Container <install/container.rst>`_
 
