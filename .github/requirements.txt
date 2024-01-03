@@ -1,6 +1,5 @@
 bandit
 coverage
-coveralls
 flake8
 mock
 selenium>=4.13.0
