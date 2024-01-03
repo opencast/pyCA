@@ -3,10 +3,9 @@ Install PyCA on RPM-based Systems
 
 This installation guide describes how to install pyCA on:
 
-- Fedora ≥ 31
-- CentOS 8
-- CentOS Stream
-- Red Hat Enterprise Linux 8
+- CentOS Stream ≥ 8
+- Red Hat Enterprise Linux ≥ 8
+- Fedora ≥ 37
 
 
 Install PyCA
