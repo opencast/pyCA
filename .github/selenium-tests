@@ -46,7 +46,7 @@ def check_pyca():
 if __name__ == '__main__':
     options = webdriver.FirefoxOptions()
     if sys.argv[-1] != 'gui':
-        options.headless = True
+        options.add_argument('--headless')
     driver = webdriver.Firefox(options=options)
     check_pyca()
     driver.close()
