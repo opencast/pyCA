@@ -4,9 +4,6 @@ PyCA – Opencast Capture Agent
 .. image:: https://github.com/opencast/pyCA/workflows/Test%20pyCA/badge.svg?branch=master
     :target: https://github.com/opencast/pyCA/actions?query=workflow%3A%22Test+pyCA%22+branch%3Amaster
     :alt: Test pyCA GitHub Workflow Status
-.. image:: https://coveralls.io/repos/github/opencast/pyCA/badge.svg?branch=master
-    :target: https://coveralls.io/github/opencast/pyCA?branch=master
-    :alt: Test Coverage
 .. image:: https://img.shields.io/github/license/opencast/pyCA
     :target: https://github.com/opencast/pyCA/blob/master/license.lgpl
     :alt: LGPL-3 license

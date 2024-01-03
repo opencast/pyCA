@@ -60,7 +60,5 @@ jobs:
     - name: run user interface integration tests
       run: ./.github/selenium-tests
 
-    - name: upload test coverage to coveralls
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: coveralls --service=github
+    - name: ensure test coverage doesn't drop
+      run: coverage report --fail-under=91
