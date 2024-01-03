@@ -3,4 +3,4 @@ coverage
 coveralls
 flake8
 mock
-selenium
+selenium>=4.13.0
