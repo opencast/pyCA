@@ -43,6 +43,9 @@ upload_rate      = string(default='0')
 
 [server]
 url              = string(default='https://develop.opencast.org')
+override_capture_admin_host = string(default='')
+override_ingest_host = string(default='')
+override_scheduler_host = string(default='')
 auth_method      = option('basic', 'digest', default='digest')
 username         = string(default='opencast_system_account')
 password         = string(default='CHANGE_ME')
