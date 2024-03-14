@@ -20,6 +20,7 @@ update_frequency = integer(min=5, default=60)
 cal_lookahead    = integer(min=0, default=14)
 backup_mode      = boolean(default=false)
 database         = string(default='sqlite:///pyca.db')
+inputs			 = force_list(default=list(''))
 
 [capture]
 directory        = string(default='./recordings')
