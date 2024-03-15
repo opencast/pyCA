@@ -77,26 +77,19 @@ def get_service(service_type):
     '''Get available service endpoints for a given service type from the
     Opencast ServiceRegistry.
     '''
+    override = config('server', 'service_overrides', service_type)
+    if override:
+        logger.info('Overriding endpoint for %s: %s', service_type, override)
+        return [override]
+
+    # Get available services from Opencast
     endpoint = '/services/available.json?serviceType=' + str(service_type)
     url = config('server', 'url') + endpoint
     response = http_request(url).decode('utf-8')
     services = json.loads(response).get('services', {}).get('service', [])
     services = ensurelist(services)
-
-    capture_admin_host = config('server', 'override_capture_admin_host')
-    ingest_host = config('server', 'override_ingest_host')
-    scheduler_host = config('server', 'override_scheduler_host')
-
-    if (service_type == 'org.opencastproject.capture.admin'
-            and capture_admin_host):
-        endpoints = [capture_admin_host + services[0]['path']]
-    elif service_type == 'org.opencastproject.ingest' and ingest_host:
-        endpoints = [ingest_host + services[0]['path']]
-    elif service_type == 'org.opencastproject.scheduler' and scheduler_host:
-        endpoints = [scheduler_host + services[0]['path']]
-    else:
-        endpoints = [service['host'] + service['path'] for service in services
-                     if service['online'] and service['active']]
+    endpoints = [service['host'] + service['path'] for service in services
+                 if service['online'] and service['active']]
     for endpoint in endpoints:
         logger.info(u'Endpoint for %s: %s', service_type, endpoint)
     return endpoints
