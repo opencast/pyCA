@@ -77,6 +77,12 @@ def get_service(service_type):
     '''Get available service endpoints for a given service type from the
     Opencast ServiceRegistry.
     '''
+    override = config('server', 'service_overrides', service_type)
+    if override:
+        logger.info('Overriding endpoint for %s: %s', service_type, override)
+        return [override]
+
+    # Get available services from Opencast
     endpoint = '/services/available.json?serviceType=' + str(service_type)
     url = config('server', 'url') + endpoint
     response = http_request(url).decode('utf-8')
@@ -144,7 +150,6 @@ def register_ca(status='idle'):
     '''Register this capture agent at the Matterhorn admin server so that it
     shows up in the admin interface.
 
-    :param address: Address of the capture agent web ui
     :param status: Current status of the capture agent
     '''
     # If this is a backup CA we don't tell the Matterhorn core that we are

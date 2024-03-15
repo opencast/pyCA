@@ -48,6 +48,7 @@ username         = string(default='opencast_system_account')
 password         = string(default='CHANGE_ME')
 insecure         = boolean(default=False)
 certificate      = string(default='')
+[[service_overrides]]
 
 [ui]
 username         = string(default='admin')
