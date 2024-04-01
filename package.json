@@ -19,7 +19,7 @@
     "@vue/compiler-sfc": "^3.4.21",
     "@vue/component-compiler-utils": "^3.3.0",
     "eslint": "^8.57.0",
-    "eslint-plugin-vue": "^9.23.0",
+    "eslint-plugin-vue": "^9.24.0",
     "parcel": "^2.12.0",
     "process": "^0.11.10"
   }
