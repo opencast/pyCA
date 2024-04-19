@@ -33,6 +33,11 @@ def http_request(url, post_data=None):
     curl = pycurl.Curl()
     curl.setopt(curl.URL, url.encode('ascii', 'ignore'))
 
+    # Use cookies if configured
+    if config('server', 'cookiefile'):
+        curl.setopt(curl.COOKIEJAR, config('server', 'cookiefile'))
+        curl.setopt(curl.COOKIEFILE, config('server', 'cookiefile'))
+
     # More verbose curl calls in debug mode
     if logger.getEffectiveLevel() == logging.DEBUG:
         curl.setopt(pycurl.VERBOSE, True)
