@@ -43,9 +43,9 @@ upload_rate      = string(default='0')
 
 [server]
 url              = string(default='https://develop.opencast.org')
-auth_method      = option('basic', 'digest', default='digest')
-username         = string(default='opencast_system_account')
-password         = string(default='CHANGE_ME')
+auth_method      = option('basic', 'digest', default='basic')
+username         = string(default='admin')
+password         = string(default='opencast')
 insecure         = boolean(default=False)
 certificate      = string(default='')
 cookiefile       = string(default='')
