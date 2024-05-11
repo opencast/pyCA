@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "build": "parcel build --public-url=/static/ --dist-dir=pyca/ui/static/ ui/index.html",
-    "eslint": "eslint ui/func.js"
+    "eslint": "eslint eslint.config.mjs ui/func.js"
   },
   "alias": {
     "vue": "./node_modules/vue/dist/vue.cjs.js"
@@ -15,11 +15,13 @@
     "vue": "^3.4.21"
   },
   "devDependencies": {
+    "@eslint/js": "^9.2.0",
     "@parcel/transformer-vue": "^2.9.3",
     "@vue/compiler-sfc": "^3.4.26",
     "@vue/component-compiler-utils": "^3.3.0",
-    "eslint": "^8.57.0",
-    "eslint-plugin-vue": "^9.24.0",
+    "eslint": "^9.2.0",
+    "eslint-plugin-vue": "^9.26.0",
+    "globals": "^15.2.0",
     "parcel": "^2.12.0",
     "process": "^0.11.10"
   }
