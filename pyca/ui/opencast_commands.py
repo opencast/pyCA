@@ -53,7 +53,7 @@ def schedule(title='pyCA Recording', duration=60, creator=None):
 
     # create media package
     logger.info('Creating new media package')
-    mediapackage = http_request(service_url + '/createMediaPackage')
+    mediapackage = http_request(service_url + '/createMediaPackage', timeout=0)
 
     # add dublin core catalog
     start = datetime.utcnow() + timedelta(seconds=10)
@@ -68,12 +68,13 @@ def schedule(title='pyCA Recording', duration=60, creator=None):
     fields = [('mediaPackage', mediapackage),
               ('flavor', 'dublincore/episode'),
               ('dublinCore', dublincore)]
-    mediapackage = http_request(service_url + '/addDCCatalog', fields)
+    mediapackage = http_request(service_url + '/addDCCatalog', fields,
+                                timeout=0)
 
     # schedule event
     logger.info('Scheduling recording')
     fields = [('mediaPackage', mediapackage)]
-    mediapackage = http_request(service_url + '/schedule', fields)
+    mediapackage = http_request(service_url + '/schedule', fields, timeout=0)
 
     # Update status
     logger.info('Event successfully scheduled')

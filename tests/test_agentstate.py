@@ -15,7 +15,7 @@ from tests.tools import terminate_fn, reload
 class TestPycaAgentState(unittest.TestCase):
 
     def setUp(self):
-        utils.http_request = lambda x, y=False: b'xxx'
+        utils.http_request = lambda x, y=False, timeout=0: b'xxx'
         self.fd, self.dbfile = tempfile.mkstemp()
         config.config()['agent']['database'] = 'sqlite:///' + self.dbfile
         config.config()['service-capture.admin'] = ['']

@@ -19,7 +19,7 @@ from tests.tools import should_fail, terminate_fn
 class TestPycaIngest(unittest.TestCase):
 
     def setUp(self):
-        ingest.http_request = lambda x, y=False: b'xxx'
+        ingest.http_request = lambda x, y=False, timeout=0: b'xxx'
         self.fd, self.dbfile = tempfile.mkstemp()
         self.cadir = tempfile.mkdtemp()
         config.config('agent')['database'] = 'sqlite:///' + self.dbfile

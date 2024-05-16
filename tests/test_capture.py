@@ -17,7 +17,7 @@ from tests.tools import should_fail, terminate_fn, reload
 class TestPycaCapture(unittest.TestCase):
 
     def setUp(self):
-        utils.http_request = lambda x, y=False: b'xxx'
+        utils.http_request = lambda x, y=False, timeout=0: b'xxx'
         self.fd, self.dbfile = tempfile.mkstemp()
         self.cadir = tempfile.mkdtemp()
         preview = os.path.join(self.cadir, 'preview.png')

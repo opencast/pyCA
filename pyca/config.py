@@ -64,6 +64,10 @@ file             = string(default='')
 level            = option('debug', 'info', 'warning', 'error', default='info')
 format           = string(default='[%(name)s:%(lineno)s:%(funcName)s()] [%(levelname)s] %(message)s')
 
+[http]
+timeout          = integer(min=0, default=300)
+connection_timeout = integer(min=0, default=180)
+
 [services]
 '''  # noqa
 

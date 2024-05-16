@@ -29,7 +29,7 @@ class TestPycaCapture(unittest.TestCase):
         END:VCALENDAR''' % END).replace('\n        ', '\r\n').encode('utf-8')
 
     def setUp(self):
-        utils.http_request = lambda x, y=False: b'xxx'
+        utils.http_request = lambda x, y=False, timeout=0: b'xxx'
         self.fd, self.dbfile = tempfile.mkstemp()
         config.config()['agent']['database'] = 'sqlite:///' + self.dbfile
         config.config()['services']['org.opencastproject.scheduler'] = ['']
