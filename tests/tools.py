@@ -50,6 +50,8 @@ class CurlMock():
     FAILONERROR = 11
     FOLLOWLOCATION = 12
     MAX_SEND_SPEED_LARGE = 13
+    CONNECTTIMEOUT = 14
+    TIMEOUT = 15
 
     def setopt(self, *args):
         pass

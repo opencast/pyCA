@@ -44,7 +44,7 @@ class TestPycaUtils(unittest.TestCase):
                         "error_state_trigger":0,
                         "warning_state_trigger":0}}}'''.encode('utf-8')
         # Mock http_request method
-        utils.http_request = lambda x, y=False: res
+        utils.http_request = lambda x, y=False, timeout=0: res
         endpoint = u'https://octestallinone.virtuos.uos.de/capture-admin'
         self.assertEqual(utils.get_service(''), [endpoint])
 
@@ -75,7 +75,7 @@ class TestPycaUtils(unittest.TestCase):
         reload(utils.pycurl)
 
     def test_register_ca(self):
-        utils.http_request = lambda x, y=False: b'xxx'
+        utils.http_request = lambda x, y=False, timeout=0: b'xxx'
         utils.register_ca()
         utils.http_request = should_fail
         utils.register_ca()
@@ -83,7 +83,7 @@ class TestPycaUtils(unittest.TestCase):
         utils.register_ca()
 
     def test_recording_state(self):
-        utils.http_request = lambda x, y=False: b''
+        utils.http_request = lambda x, y=False, timeout=0: b''
         utils.recording_state('123', 'recording')
         utils.http_request = should_fail
         utils.recording_state('123', 'recording')
@@ -91,7 +91,7 @@ class TestPycaUtils(unittest.TestCase):
         utils.recording_state('123', 'recording')
 
     def test_set_service_status_immediate(self):
-        utils.http_request = lambda x, y=False: b''
+        utils.http_request = lambda x, y=False, timeout=0: b''
         utils.set_service_status_immediate(db.Service.SCHEDULE,
                                            db.ServiceStatus.IDLE)
         utils.set_service_status_immediate(db.Service.INGEST,

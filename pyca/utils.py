@@ -25,7 +25,7 @@ from urllib.parse import quote as urlquote
 logger = logging.getLogger(__name__)
 
 
-def http_request(url, post_data=None):
+def http_request(url, post_data=None, timeout=None):
     '''Make an HTTP request to a given URL with optional parameters.
     '''
     logger.debug('Requesting URL: %s', url)
@@ -53,6 +53,12 @@ def http_request(url, post_data=None):
         curl.setopt(
             curl.MAX_SEND_SPEED_LARGE,
             config('ingest', 'upload_rate'))
+
+    curl.setopt(curl.CONNECTTIMEOUT, config('http', 'connection_timeout'))
+    if timeout is not None:
+        curl.setopt(curl.TIMEOUT, timeout)
+    else:
+        curl.setopt(curl.TIMEOUT, config('http', 'timeout'))
 
     if post_data:
         curl.setopt(curl.HTTPPOST, post_data)

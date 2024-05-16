@@ -59,7 +59,7 @@ def ingest(event):
 
     # create mediapackage
     logger.info('Creating new mediapackage')
-    mediapackage = http_request(service_url + '/createMediaPackage')
+    mediapackage = http_request(service_url + '/createMediaPackage', timeout=0)
 
     # extract workflow_def, workflow_config and add DC catalogs
     prop = 'org.opencastproject.capture.agent.properties'
@@ -78,7 +78,8 @@ def ingest(event):
             fields = [('mediaPackage', mediapackage),
                       ('flavor', 'dublincore/%s' % name),
                       ('dublinCore', data.encode('utf-8'))]
-            mediapackage = http_request(service_url + '/addDCCatalog', fields)
+            mediapackage = http_request(service_url + '/addDCCatalog', fields,
+                                        timeout=0)
 
         else:
             logger.info('Not uploading %s', attachment.get('x-apple-filename'))
@@ -90,7 +91,8 @@ def ingest(event):
         track = track.encode('ascii', 'ignore')
         fields = [('mediaPackage', mediapackage), ('flavor', flavor),
                   ('BODY1', (pycurl.FORM_FILE, track))]
-        mediapackage = http_request(service_url + '/addTrack', fields)
+        mediapackage = http_request(service_url + '/addTrack', fields,
+                                    timeout=0)
 
     # ingest
     logger.info('Ingest recording')
@@ -101,7 +103,7 @@ def ingest(event):
         fields.append(('workflowInstanceId',
                        event.uid.encode('ascii', 'ignore')))
     fields += workflow_config
-    mediapackage = http_request(service_url + '/ingest', fields)
+    mediapackage = http_request(service_url + '/ingest', fields, timeout=0)
 
     # Update status
     recording_state(event.uid, 'upload_finished')
