@@ -7,7 +7,7 @@ volumes:
 services:
   pyca-schedule:
     command: schedule
-    image: quay.io/opencast/pyca
+    image: ghcr.io/opencast/pyca
     restart: always
     volumes:
       - ./pyca.conf:/etc/pyca/pyca.conf:ro
@@ -15,7 +15,7 @@ services:
 
   pyca-ingest:
     command: ingest
-    image: quay.io/opencast/pyca
+    image: ghcr.io/opencast/pyca
     restart: always
     volumes:
       - ./pyca.conf:/etc/pyca/pyca.conf:ro
@@ -23,7 +23,7 @@ services:
 
   pyca-capture:
     command: capture
-    image: quay.io/opencast/pyca
+    image: ghcr.io/opencast/pyca
     restart: always
     volumes:
       - ./pyca.conf:/etc/pyca/pyca.conf:ro
@@ -31,7 +31,7 @@ services:
 
   pyca-agentstate:
     command: agentstate
-    image: quay.io/opencast/pyca
+    image: ghcr.io/opencast/pyca
     restart: always
     volumes:
       - ./pyca.conf:/etc/pyca/pyca.conf:ro
@@ -39,7 +39,7 @@ services:
 
   pyca-ui:
     entrypoint: ["gunicorn", "--config=/etc/pyca/gunicorn.conf.py", "pyca.ui:app"]
-    image: quay.io/opencast/pyca
+    image: ghcr.io/opencast/pyca
     restart: always
     volumes:
       - ./pyca.conf:/etc/pyca/pyca.conf:ro
