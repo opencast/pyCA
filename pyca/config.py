@@ -165,6 +165,8 @@ def logger_init():
         handlers.append(logging.StreamHandler(sys.stderr))
     if logconf['file']:
         handlers.append(logging.handlers.WatchedFileHandler(logconf['file']))
+    if logging.root.hasHandlers():
+        logging.root.handlers.clear()
     for handler in handlers:
         handler.setFormatter(logging.Formatter(logconf['format']))
         logging.root.addHandler(handler)
