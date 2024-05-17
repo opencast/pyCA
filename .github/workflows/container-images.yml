@@ -1,0 +1,82 @@
+name: container-images
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - '**'
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    env:
+      DOCKER_BUILDX_PLATFORM: linux/amd64
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: set up Docker buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          platforms: ${{ env.DOCKER_BUILDX_PLATFORM }}
+
+      - uses: docker/login-action@v3
+        if: ${{ github.event_name == 'push' }}
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: info
+        run: |
+          docker version
+          docker info
+
+          echo '${{ github.ref_name }}' | sed -e 's/[^a-zA-Z0-9._-]/_/g' > VERSION_TAG
+          echo "version_tag=$(cat VERSION_TAG)"
+
+      - name: build
+        run: |
+          docker buildx build \
+            --load \
+            --platform "${DOCKER_BUILDX_PLATFORM}" \
+            \
+            --build-arg "VERSION=${{ github.ref_name }}" \
+            --build-arg "FFMPEG_VERSION=release" \
+            --build-arg "BUILD_DATE=$(date -u +"%Y-%m-%dT%TZ")" \
+            --build-arg "GIT_COMMIT=${{ github.sha }}" \
+            \
+            -t "ghcr.io/opencast/pyca:latest" \
+            -t "ghcr.io/opencast/pyca:main" \
+            -t "ghcr.io/opencast/pyca:${{ github.sha }}" \
+            -t "ghcr.io/opencast/pyca:$(cat VERSION_TAG)" \
+            .
+
+      - name: push release
+        if: ${{ github.event_name == 'push' && github.ref_type == 'tag' }}
+        run: |
+          docker push "ghcr.io/opencast/pyca:$(cat VERSION_TAG)"
+          # assumption: last tag is always latest version
+          docker push "ghcr.io/opencast/pyca:latest"
+
+      - name: push dev version
+        if: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
+        run: |
+          docker push "ghcr.io/opencast/pyca:main"
+
+      - name: delete untagged container images
+        uses: snok/container-retention-policy@v2
+        if: ${{ github.event_name == 'push' }}
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          token-type: github-token
+          account-type: org
+          org-name: opencast
+          image-names: pyca
+          untagged-only: true
+          cut-off: 1 day ago UTC
