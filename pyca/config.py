@@ -23,16 +23,16 @@ database         = string(default='sqlite:///pyca.db')
 
 [capture]
 directory        = string(default='./recordings')
-command          = string(default='ffmpeg -nostats -re -f lavfi -r 25 -i testsrc -t {{time}} {{dir}}/{{name}}.webm')
+command          = string(default='ffmpeg -nostats -re -f lavfi -r 25 -i testsrc -f lavfi -i sine {{dir}}/{{name}}.webm')
 flavors          = force_list(default=list('presenter/source'))
 files            = force_list(default=list('{{dir}}/{{name}}.webm'))
 preview_dir      = string(default='./recordings')
 preview          = force_list(default=list())
 sigcustom        = integer(min=1, default=2)
 sigcustom_time   = integer(min=-1, default=-1)
-sigterm_time     = integer(min=-1, default=-1)
+sigterm_time     = integer(min=-1, default=0)
 sigkill_time     = integer(min=-1, default=120)
-exit_code        = integer(min=0, max=255, default=0)
+exit_code        = integer(min=0, max=255, default=255)
 
 [ingest]
 delay_max        = integer(min=0, default=0)
