@@ -14,6 +14,6 @@ For a simple example, run::
 
     cp etc/pyca.conf init/container/pyca.conf
     sed -i "s|#name .*|name = pyca-container|g" init/container/pyca.conf
-    docker-compose -f init/container/docker-compose.sqlite.yml up
+    docker compose -f init/container/docker-compose.sqlite.yml up
 
 More details can be found in the `container readme file <../../init/container/README.rst>`_.
