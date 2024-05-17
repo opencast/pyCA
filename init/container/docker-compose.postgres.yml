@@ -48,7 +48,7 @@ services:
       - "8000:8000"
 
   database:
-    image: postgres:12.3
+    image: docker.io/library/postgres:latest
     restart: always
     environment:
       - POSTGRES_PASSWORD=pyca
