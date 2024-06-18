@@ -135,9 +135,14 @@ def service(service_name, force_update=False):
                          service_name,
                          config('services', service_id))
         except pycurl.error:
-            logger.exception('Could not get %s endpoint. Retry in 5s',
-                             service_name)
-            time.sleep(5.0)
+            if force_update:
+                logger.exception('Could not get %s endpoint. Retry in 5s',
+                                 service_name)
+                time.sleep(5.0)
+            else:
+                logger.warning('Could not get %s endpoint. Ignoring',
+                               service_name)
+                break
     return config('services', service_id)
 
 
@@ -146,7 +151,7 @@ def ensurelist(x):
     return x if type(x) is list else [x]
 
 
-def register_ca(status='idle'):
+def register_ca(status='idle', force_update=False):
     '''Register this capture agent at the Matterhorn admin server so that it
     shows up in the admin interface.
 
@@ -156,7 +161,7 @@ def register_ca(status='idle'):
     # here.  We will just run silently in the background:
     if config('agent', 'backup_mode'):
         return
-    service_endpoint = service('capture.admin')
+    service_endpoint = service('capture.admin', force_update)
     if not service_endpoint:
         logger.warning('Missing endpoint for updating agent status.')
         return
@@ -170,8 +175,20 @@ def register_ca(status='idle'):
     except pycurl.error as e:
         logger.warning('Could not set agent state to %s: %s', status, e)
 
+    # register_configuration
+    url += '/configuration'
+    inputstring = ",".join(config('agent', 'inputs'))
+    params = [('configuration',
+               '{\'capture.device.names\': \'' + inputstring + '\' }')]
+    try:
+        response = http_request(url, params).decode('utf-8')
+        if response:
+            logger.info(response)
+    except pycurl.error as e:
+        logger.warning('Could not set configuration: %s', e)
 
-def recording_state(recording_id, status):
+
+def recording_state(recording_id, status, force_update=False):
     '''Send the state of the current recording to the Matterhorn core.
 
     :param recording_id: ID of the current recording
@@ -182,9 +199,14 @@ def recording_state(recording_id, status):
     # in the background:
     if config('agent', 'backup_mode'):
         return
+    service_endpoint = service('capture.admin', force_update)
+    # check if service_endpoint is availible, otherwise service()[0]
+    # is not defined
+    if not service_endpoint:
+        logger.warning('Missing endpoint for updating agent status.')
+        return
     params = [('state', status)]
-    url = service('capture.admin')[0]
-    url += f'/recordings/{recording_id}'
+    url = f'{service_endpoint[0]}/recordings/{recording_id}'
     try:
         result = http_request(url, params).decode('utf-8')
         logger.info(result)
@@ -214,12 +236,12 @@ def set_service_status(dbs, service, status):
     dbs.commit()
 
 
-def set_service_status_immediate(service, status):
+def set_service_status_immediate(service, status, force_update=False):
     '''Update the status of a particular service in the database and send an
     immediate signal to Opencast.
     '''
     set_service_status(service, status)
-    update_agent_state()
+    update_agent_state(force_update)
 
 
 @db.with_session
@@ -234,7 +256,7 @@ def get_service_status(dbs, service):
     return db.ServiceStatus.STOPPED
 
 
-def update_agent_state():
+def update_agent_state(force_update=False):
     '''Update the current agent state in opencast.
     '''
     status = 'idle'
@@ -247,7 +269,7 @@ def update_agent_state():
     elif get_service_status(db.Service.INGEST) == db.ServiceStatus.BUSY:
         status = 'uploading'
 
-    register_ca(status=status)
+    register_ca(status=status, force_update=force_update)
 
 
 def terminate(shutdown=None):
