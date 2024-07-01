@@ -77,4 +77,4 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           tag-selection: untagged
           image-names: pyca
-          cut-off: 1 day ago UTC
+          cut-off: 1y

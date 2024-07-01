@@ -24,7 +24,7 @@ FROM base as build-pyca
 WORKDIR /usr/local/src
 COPY requirements.txt package.json package-lock.json ./
 RUN pip install --break-system-packages -r requirements.txt
-RUN npm i
+RUN npm ci
 COPY . .
 RUN make pypi
 
