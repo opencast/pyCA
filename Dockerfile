@@ -1,4 +1,4 @@
-FROM docker.io/library/alpine:3.19 AS base
+FROM docker.io/library/alpine:3.20 AS base
 RUN apk --no-cache --virtual .run-deps add \
       libcurl \
       postgresql-libs \
@@ -38,7 +38,7 @@ RUN apk del .build-deps \
  && rm /tmp/pyca.tar.gz
 
 
-FROM docker.io/library/alpine:3.19 AS build-ffmpeg
+FROM docker.io/library/alpine:3.20 AS build-ffmpeg
 ARG TARGETARCH
 ARG FFMPEG_VERSION=release
 RUN apk add --no-cache \
@@ -67,7 +67,7 @@ RUN addgroup -S -g 800 pyca \
 
 
 FROM scratch AS squash
-LABEL org.opencontainers.image.base.name="docker.io/library/alpine:3.19"
+LABEL org.opencontainers.image.base.name="docker.io/library/alpine:3.20"
 
 COPY --from=assembly / /
 WORKDIR /var/lib/pyca
