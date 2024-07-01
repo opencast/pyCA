@@ -10,7 +10,7 @@ PyCA + SQLite
 
     cp etc/pyca.conf init/container/pyca.conf
     sed -i "s|#name .*|name = pyca-container|g" init/container/pyca.conf
-    docker-compose -f init/container/docker-compose.sqlite.yml up
+    docker compose -f init/container/docker-compose.sqlite.yml up
 
 PyCA + PostgreSQL
 -------------
@@ -20,4 +20,4 @@ PyCA + PostgreSQL
     cp etc/pyca.conf init/container/pyca.conf
     sed -i "s|#name .*|name = pyca-container|g" init/container/pyca.conf
     sed -i "s|#database .*|database = postgresql://pyca:pyca@database/pyca|g" init/container/pyca.conf
-    docker-compose -f init/container/docker-compose.postgres.yml up
+    docker compose -f init/container/docker-compose.postgres.yml up
