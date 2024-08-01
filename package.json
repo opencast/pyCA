@@ -17,7 +17,7 @@
   "devDependencies": {
     "@eslint/js": "^9.4.0",
     "@parcel/transformer-vue": "^2.9.3",
-    "@vue/compiler-sfc": "^3.4.27",
+    "@vue/compiler-sfc": "^3.4.35",
     "@vue/component-compiler-utils": "^3.3.0",
     "eslint": "^9.5.0",
     "eslint-plugin-vue": "^9.26.0",
