@@ -20,7 +20,7 @@ pypi: clean build
 	@printf "\nUpload to PyPI with \"twine upload dist/$$(python setup.py --fullname).tar.gz\"\n"
 
 docker:
-	@docker build -t quay.io/opencast/pyca .
+	@docker build -t ghcr.io/opencast/pyca .
 
 clean:
 	@python setup.py clean --all
