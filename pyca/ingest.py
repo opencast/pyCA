@@ -139,21 +139,24 @@ def control_loop():
     set_service_status_immediate(Service.INGEST, ServiceStatus.IDLE)
     notify.notify('READY=1')
     notify.notify('STATUS=Running')
+    # The true sense of the delay values define the autoingest mode status
+    autointesting_mode = config('ingest', 'delay_max') >= config('ingest', 'delay_min')
     while not terminate():
-        notify.notify('WATCHDOG=1')
-        # Get next recording
-        session = get_session()
-        event = session.query(RecordedEvent)\
-                       .filter(RecordedEvent.status ==
-                               Status.FINISHED_RECORDING).first()
-        if event:
-            # nosec: we do not need a secure random number here
-            delay = random.randint(config('ingest', 'delay_min'),  # nosec
-                                   config('ingest', 'delay_max'))
-            logger.info("Delaying ingest for %s seconds", delay)
-            time.sleep(delay)
-            safe_start_ingest(event)
-        session.close()
+        notify.notify('WATCHDOG=1')        
+        if autointesting_mode:
+            # Get next recording
+            session = get_session()
+            event = session.query(RecordedEvent)\
+                .filter(RecordedEvent.status ==
+                        Status.FINISHED_RECORDING).first()
+            if event:
+                # nosec: we do not need a secure random number here
+                delay = random.randint(config('ingest', 'delay_min'),  # nosec
+                                       config('ingest', 'delay_max'))
+                logger.info('Delaying ingest for %s seconds', delay)
+                time.sleep(delay)
+                safe_start_ingest(event)
+            session.close()
         time.sleep(1.0)
     logger.info('Shutting down ingest service')
     set_service_status(Service.INGEST, ServiceStatus.STOPPED)
