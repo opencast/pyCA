@@ -77,7 +77,14 @@ def start_capture(db, upcoming_event):
     elif config('agent', 'backup_mode'):
         state = Status.PAUSED_AFTER_RECORDING
     else:
-        state = Status.FINISHED_RECORDING
+        #Tag as:
+        # must ingest automatically after recording
+        # or must pause ingest until ask for it
+        if config('ingest', 'delay_min') >= 0 and \
+                config('ingest', 'delay_max') >= config('ingest', 'delay_min'):
+            state = Status.FINISHED_RECORDING
+        else:
+            state = Status.PAUSED_AFTER_RECORDING
 
     logger.info("Set %s to %s", event.uid, Status.str(state))
     update_event_status(event, state)
