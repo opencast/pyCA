@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from flask import jsonify, make_response, request
 from pyca.config import config
+from pyca.ingest import ingest
 from pyca.db import Service, ServiceStatus, UpcomingEvent, \
     RecordedEvent, UpstreamState
 from pyca.db import with_session, Status, ServiceStates
@@ -8,6 +9,7 @@ from pyca.ui import app
 from pyca.ui.utils import requires_auth, jsonapi_mediatype
 from pyca.ui.opencast_commands import schedule
 from pyca.utils import get_service_status, ensurelist, timestamp
+from pyca.utils import update_event_status, recording_state, set_service_status_immediate
 import logging
 import os
 import psutil
@@ -179,6 +181,32 @@ def modify_event(db, uid):
     logger.debug('Updating event %s via api', uid)
     db.commit()
     return make_data_response(event.serialize())
+
+
+@app.route('/api/ingest/<uid>', methods=['POST'])
+@requires_auth
+@jsonapi_mediatype
+@with_session
+def ingest_event(db, uid):
+    '''Ingest an event specified by its uid.    
+
+    Note that this method works for recorded events only. 
+    Returns 204 if the action was successful.
+    Returns 404 if event does not exist
+    '''
+    event = db.query(RecordedEvent).filter(RecordedEvent.uid == uid).first()
+    if not event:
+        return make_error_response('No event with specified uid', 404)
+    try:
+        ingest(event, force_uid=True)
+        return make_data_response(event.serialize(), status=204)
+    except Exception as e:
+        logger.exception(f'Something went wrong during the upload: {e}')
+        # Update state if something went wrong
+        recording_state(event.uid, 'upload_error')
+        update_event_status(event, Status.FAILED_UPLOADING)
+        set_service_status_immediate(Service.INGEST, ServiceStatus.IDLE)
+        return make_error_response('upload_error', 400)
 
 
 @app.route('/api/metrics', methods=['GET'])
