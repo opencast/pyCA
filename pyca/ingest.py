@@ -157,10 +157,10 @@ def control_loop():
     notify.notify('READY=1')
     notify.notify('STATUS=Running')
     # The true sense of the delay values define the autoingest mode status
-    autointesting_mode = config('ingest', 'delay_max') >= config('ingest', 'delay_min')
+    autoingesting_mode = config('ingest', 'delay_max') >= config('ingest', 'delay_min')
     while not terminate():
         notify.notify('WATCHDOG=1')
-        if autointesting_mode:
+        if autoingesting_mode:
             # Get next recording
             session = get_session()
             event = session.query(RecordedEvent)\
