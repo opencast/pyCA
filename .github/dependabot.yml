@@ -5,6 +5,14 @@ updates:
   directory: /
   schedule:
     interval: monthly
+  groups:
+    fontawesome:
+      patterns:
+        - "@fortawesome*"
+    eslint:
+      patterns:
+        - "@esline*"
+        - "eslint"
 
 - package-ecosystem: github-actions
   directory: /
