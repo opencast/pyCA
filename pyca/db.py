@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 '''
     pyca.db
-    ~~~~¨~~
+    ~~~~~~~
 
     Database specification for pyCA
 '''
