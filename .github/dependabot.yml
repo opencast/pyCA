@@ -11,8 +11,8 @@ updates:
         - "@fortawesome*"
     eslint:
       patterns:
-        - "@esline*"
-        - "eslint"
+        - "@eslint*"
+        - "eslint*"
 
 - package-ecosystem: github-actions
   directory: /
