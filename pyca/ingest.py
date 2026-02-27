@@ -23,6 +23,49 @@ logger = logging.getLogger(__name__)
 notify = sdnotify.SystemdNotifier()
 
 
+def inputs_from_event(event):
+    ''' Parse inputs from event attachment
+    '''
+
+    inputs = []
+    for attachment in event.get_data().get('attach'):
+        data = attachment.get('data')
+        if (attachment.get('x-apple-filename') ==
+                'org.opencastproject.capture.agent.properties'):
+            for prop in data.split('\n'):
+                if prop.startswith('capture.device.names'):
+                    param = prop.split('=', 1)
+                    inputs = param[1].split(',')
+                    break
+    return inputs
+
+
+def is_track_selected(event, flavor):
+    ''' If inputs are configured, check if track was selected
+    '''
+
+    # inputs not configured -> add all
+    inputs_conf = config('agent', 'inputs')
+    if not inputs_conf:
+        logger.info('No inputs in config')
+        return True
+
+    # Get inputs from event attachment
+    inputs_event = inputs_from_event(event)
+
+    # inputs not in attachment -> add all
+    if not inputs_event:
+        logger.info('No inputs in schedule')
+        return True
+
+    # input is selected
+    if flavor in inputs_event:
+        return True
+
+    # input is not selected
+    return False
+
+
 def get_config_params(properties):
     '''Extract the set of configuration parameters from the properties attached
     to the schedule
@@ -87,12 +130,15 @@ def ingest(event):
 
     # add track
     for (flavor, track) in event.get_tracks():
-        logger.info('Adding track (%s -> %s)', flavor, track)
-        track = track.encode('ascii', 'ignore')
-        fields = [('mediaPackage', mediapackage), ('flavor', flavor),
-                  ('BODY1', (pycurl.FORM_FILE, track))]
-        mediapackage = http_request(service_url + '/addTrack', fields,
-                                    timeout=0)
+        if is_track_selected(event, flavor):
+            logger.info('Adding track (%s -> %s)', flavor, track)
+            track = track.encode('ascii', 'ignore')
+            fields = [('mediaPackage', mediapackage), ('flavor', flavor),
+                      ('BODY1', (pycurl.FORM_FILE, track))]
+            mediapackage = http_request(service_url + '/addTrack', fields,
+                                        timeout=0)
+        else:
+            logger.info('Not adding track (%s -> %s)', flavor, track)
 
     # ingest
     logger.info('Ingest recording')
