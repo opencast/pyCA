@@ -12,6 +12,7 @@ from pyca.db import get_session, RecordedEvent, Status, Service, ServiceStatus
 from pyca.utils import http_request, service, set_service_status
 from pyca.utils import set_service_status_immediate, recording_state
 from pyca.utils import update_event_status, terminate
+from xml.etree import ElementTree
 import logging
 import pycurl
 import random
@@ -39,9 +40,14 @@ def get_config_params(properties):
     return wdef, param
 
 
-def ingest(event):
+def ingest(event, force_uid=False):
     '''Ingest a finished recording to the Opencast server.
-    '''
+
+    Args:
+        event (_type_): event data
+        force_uid (bool, optional): must set the current event UID in
+        the new mediapackage. Defaults to False.
+    '''    
     # Update status
     set_service_status(Service.INGEST, ServiceStatus.BUSY)
     notify.notify('STATUS=Uploading')
@@ -60,6 +66,17 @@ def ingest(event):
     # create mediapackage
     logger.info('Creating new mediapackage')
     mediapackage = http_request(service_url + '/createMediaPackage', timeout=0)
+
+    # if force_uid, change in the mediapackage the uid by the event uid
+    if force_uid:
+        msg = f'Forcing uid to {event.uid} in the mediapackage'
+        logger.info(msg)
+        xml_string = mediapackage.decode('utf-8')
+        xml_root = ElementTree.fromstring(xml_string)
+        xml_root.set('id', event.uid)
+        new_mediapackage = ElementTree.tostring(
+            xml_root, encoding='utf-8', xml_declaration=True)
+        mediapackage = new_mediapackage
 
     # extract workflow_def, workflow_config and add DC catalogs
     prop = 'org.opencastproject.capture.agent.properties'
@@ -139,21 +156,24 @@ def control_loop():
     set_service_status_immediate(Service.INGEST, ServiceStatus.IDLE)
     notify.notify('READY=1')
     notify.notify('STATUS=Running')
+    # The true sense of the delay values define the autoingest mode status
+    autoingesting_mode = config('ingest', 'delay_max') >= config('ingest', 'delay_min')
     while not terminate():
         notify.notify('WATCHDOG=1')
-        # Get next recording
-        session = get_session()
-        event = session.query(RecordedEvent)\
-                       .filter(RecordedEvent.status ==
-                               Status.FINISHED_RECORDING).first()
-        if event:
-            # nosec: we do not need a secure random number here
-            delay = random.randint(config('ingest', 'delay_min'),  # nosec
-                                   config('ingest', 'delay_max'))
-            logger.info("Delaying ingest for %s seconds", delay)
-            time.sleep(delay)
-            safe_start_ingest(event)
-        session.close()
+        if autoingesting_mode:
+            # Get next recording
+            session = get_session()
+            event = session.query(RecordedEvent)\
+                .filter(RecordedEvent.status ==
+                        Status.FINISHED_RECORDING).first()
+            if event:
+                # nosec: we do not need a secure random number here
+                delay = random.randint(config('ingest', 'delay_min'),  # nosec
+                                       config('ingest', 'delay_max'))
+                logger.info('Delaying ingest for %s seconds', delay)
+                time.sleep(delay)
+                safe_start_ingest(event)
+            session.close()
         time.sleep(1.0)
     logger.info('Shutting down ingest service')
     set_service_status(Service.INGEST, ServiceStatus.STOPPED)
