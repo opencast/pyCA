@@ -7,7 +7,8 @@
     :license: LGPL – see license.lgpl for more details.
 '''
 
-from pyca.utils import set_service_status, update_agent_state, timestamp
+from pyca.utils import set_service_status, update_agent_state, timestamp, \
+                       update_agent_config
 from pyca.utils import terminate
 from pyca.config import config
 from pyca.db import Service, ServiceStatus
@@ -34,6 +35,7 @@ def control_loop():
 
         if not terminate():
             update_agent_state()
+            update_agent_config()
 
     logger.info('Shutting down agentstate service')
     set_service_status(Service.AGENTSTATE, ServiceStatus.STOPPED)

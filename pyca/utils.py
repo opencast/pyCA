@@ -261,6 +261,33 @@ def update_agent_state():
     register_ca(status=status)
 
 
+def update_agent_config():
+    '''Update the current agent configuration in opencast.
+    '''
+
+    if config('agent', 'backup_mode'):
+        return
+    service_endpoint = service('capture.admin')
+    if not service_endpoint:
+        logger.warning('Missing endpoint for updating agent status.')
+        return
+
+    inputs = ",".join(config('agent', 'inputs'))
+    params = [(
+                'configuration',
+                '{\'capture.device.names\': \'' + inputs + '\'}'
+             )]
+
+    name = urlquote(config('agent', 'name').encode('utf-8'), safe='')
+    url = f'{service_endpoint[0]}/agents/{name}/configuration'
+    try:
+        response = http_request(url, params).decode('utf-8')
+        if response:
+            logger.info(response)
+    except pycurl.error as e:
+        logger.warning('Could not set configuration of agent %s: %s', name, e)
+
+
 def terminate(shutdown=None):
     '''Mark process as to be terminated.
     '''
