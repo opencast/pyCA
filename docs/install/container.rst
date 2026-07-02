@@ -3,7 +3,7 @@ Install PyCA via Container
 
 PyCA containers will automatically be built for each release and commit.
 This can be used to easily deploy pyCA e.g. for capturing network streams.
-The containers can be found at `quay.io/repository/opencast/pyca <https://quay.io/repository/opencast/pyca>`_.
+The containers can be found at `ghcr.io/opencast/pyca <https://github.com/opencast/pyca/pkgs/container/pyca>`_.
 
 
 Compose Files
@@ -14,6 +14,6 @@ For a simple example, run::
 
     cp etc/pyca.conf init/container/pyca.conf
     sed -i "s|#name .*|name = pyca-container|g" init/container/pyca.conf
-    docker-compose -f init/container/docker-compose.sqlite.yml up
+    docker compose -f init/container/docker-compose.sqlite.yml up
 
 More details can be found in the `container readme file <../../init/container/README.rst>`_.
