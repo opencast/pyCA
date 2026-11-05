@@ -7,6 +7,7 @@ Tests for basic capturing
 import os
 import os.path
 import shutil
+import pycurl
 import tempfile
 import unittest
 
@@ -91,3 +92,94 @@ class TestPycaIngest(unittest.TestCase):
         self.assertEqual(
                 set([('encode_720p', 'true'), ('cutting', 'false')]),
                 set(parameters))
+
+    PROP = 'org.opencastproject.capture.agent.properties'
+    TRACKS = [['presenter/source', 'a.mp4'], ['presentation/source', 'b.mp4']]
+
+    def _offer_inputs(self, inputs):
+        config.config('agent')['inputs'] = inputs
+        self.addCleanup(config.config('agent').__setitem__, 'inputs', [])
+
+    def _select(self, properties):
+        '''Let the event carry the given agent properties.'''
+        attach = [{'data': properties, 'fmttype': 'application/text',
+                   'x-apple-filename': self.PROP}]
+        self.event.set_data({'attach': attach})
+
+    def test_selected_inputs(self):
+        self._select('event.title=x\ncapture.device.names='
+                     'presenter/source, presentation/source ,\nx=y\n')
+        self.assertEqual(ingest.selected_inputs(self.event),
+                         ['presenter/source', 'presentation/source'])
+
+    def test_selected_inputs_nothing_selected(self):
+        # No agent properties, no key, empty value, no attachments at all
+        self.assertIsNone(ingest.selected_inputs(self.event))
+        self._select('event.title=x')
+        self.assertIsNone(ingest.selected_inputs(self.event))
+        self._select('capture.device.names=')
+        self.assertIsNone(ingest.selected_inputs(self.event))
+        self._select('capture.device.names= , ')
+        self.assertIsNone(ingest.selected_inputs(self.event))
+        self.event.set_data({})
+        self.assertIsNone(ingest.selected_inputs(self.event))
+
+    def test_select_tracks(self):
+        self._offer_inputs(['presenter/source', 'presentation/source'])
+        self._select('capture.device.names=presentation/source')
+        self.assertEqual(ingest.select_tracks(self.event, self.TRACKS),
+                         [('presentation/source', 'b.mp4')])
+        self._select('capture.device.names=presenter/source,'
+                     'presentation/source')
+        self.assertEqual(len(ingest.select_tracks(self.event, self.TRACKS)),
+                         2)
+
+    def test_select_tracks_all(self):
+        # Without selection
+        self._offer_inputs(['presenter/source', 'presentation/source'])
+        self._select('event.title=x')
+        self.assertEqual(ingest.select_tracks(self.event, self.TRACKS),
+                         self.TRACKS)
+        # Inputs which are not offered cannot have been selected
+        self._offer_inputs([])
+        self._select('capture.device.names=presentation/source')
+        self.assertEqual(ingest.select_tracks(self.event, self.TRACKS),
+                         self.TRACKS)
+
+    def test_select_tracks_stale_selection(self):
+        # A selection matching nothing must not result in an empty upload
+        self._offer_inputs(['presenter/source'])
+        self._select('capture.device.names=removed/input')
+        with self.assertLogs('pyca.ingest', 'WARNING'):
+            self.assertEqual(ingest.select_tracks(self.event, self.TRACKS),
+                             self.TRACKS)
+
+    def test_ingest_only_selected_tracks(self):
+        self._offer_inputs(['presenter/source', 'presentation/source'])
+        self._select('capture.device.names=presentation/source')
+        for name in ('a.mp4', 'b.mp4'):
+            open(os.path.join(self.event.directory(), name), 'wb').close()
+        self.event.set_tracks(
+            [[flavor, os.path.join(self.event.directory(), name)]
+             for flavor, name in self.TRACKS])
+
+        requests = []
+
+        def fake_request(url, post_data=None, timeout=None):
+            requests.append((url, post_data))
+            return b'mediapackage'
+
+        with patch.object(ingest, 'http_request', fake_request), \
+                patch.object(ingest, 'service', lambda *a, **k: ['http://x']),\
+                patch.object(ingest, 'recording_state'), \
+                patch.object(ingest, 'set_service_status_immediate'):
+            ingest.ingest(self.event)
+
+        added = [dict(fields) for url, fields in requests
+                 if url.endswith('/addTrack')]
+        self.assertEqual([track['flavor'] for track in added],
+                         ['presentation/source'])
+        self.assertEqual(added[0]['BODY1'][0], pycurl.FORM_FILE)
+        # The recording is still ingested
+        self.assertTrue(requests[-1][0].endswith('/ingest'))
+

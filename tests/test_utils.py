@@ -18,6 +18,8 @@ class TestPycaUtils(unittest.TestCase):
 
     def setUp(self):
         config.config()['services']['org.opencastproject.capture.admin'] = ['']
+        # Do not depend on the inputs of a local configuration file
+        config.config()['agent']['inputs'] = []
 
         # db
         self.fd, self.dbfile = tempfile.mkstemp()
@@ -58,6 +60,15 @@ class TestPycaUtils(unittest.TestCase):
         utils.terminate(False)
         utils.get_service = lambda x: 'x'
         self.assertEqual(utils.service('x'), 'x')
+
+    def test_agent_configuration_inputs(self):
+        # Inputs are only sent if there are any
+        self.assertNotIn('capture.device.names', utils.agent_configuration())
+        config.config()['agent']['inputs'] = ['presenter/source',
+                                              'presentation/source']
+        cfg = utils.agent_configuration()
+        self.assertEqual(cfg['capture.device.names'],
+                         'presenter/source,presentation/source')
 
     def test_http_request(self):
         config.config()['server']['insecure'] = True

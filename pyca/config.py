@@ -24,6 +24,7 @@ vendor_name      = string(min=1, max=256, default='Opencast')
 vendor_model     = string(min=1, max=256, default='pyCA')
 vendor_hardware  = string(max=256, default='')
 vendor_firmware  = string(max=256, default='')
+inputs           = force_list(default=list())
 
 [capture]
 directory        = string(default='./recordings')
@@ -108,6 +109,18 @@ def update_configuration(cfgfile=None):
         raise ValueError('Invalid configuration: %s' % val)
     if len(cfg['capture']['files']) != len(cfg['capture']['flavors']):
         raise ValueError('List of files and flavors do not match')
+    # Inputs are offered to users when scheduling. Opencast rejects the whole
+    # agent configuration for empty or too long entries.
+    # An empty value (`inputs =`) is parsed as a list with an empty entry
+    inputs = [name for name in cfg['agent']['inputs'] if name]
+    cfg['agent']['inputs'] = inputs
+    if any(len(name) > 256 for name in inputs):
+        raise ValueError('Inputs must not be longer than 256 characters')
+    flavors = cfg['capture']['flavors']
+    unknown = [name for name in inputs if name not in flavors]
+    if unknown:
+        raise ValueError('Inputs must be flavors listed in the capture '
+                         'flavors: %s' % ', '.join(unknown))
     if not cfg['agent']['name']:
         cfg['agent']['name'] = 'pyca@' + socket.gethostname()
     globals()['__config'] = cfg

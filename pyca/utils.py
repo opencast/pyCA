@@ -175,13 +175,13 @@ def agent_configuration():
     '''Build the CA API 2.x agent configuration which describes the agent
     and its capabilities to Opencast.
 
-    Optional keys (inputs, stream configurations, device positions, device
-    content) are deliberately not sent: Opencast rejects empty lists and pyCA
-    does not support them.
+    Optional keys are only sent if there is something to send, since Opencast
+    rejects empty lists. Stream configurations, device positions and device
+    content are not supported by pyCA and therefore never sent.
 
     :return: Dictionary of configuration keys and string values
     '''
-    return {
+    cfg = {
         'vendor.name': config('agent', 'vendor_name'),
         'vendor.model': config('agent', 'vendor_model'),
         'vendor.hardware': config('agent', 'vendor_hardware')
@@ -193,6 +193,9 @@ def agent_configuration():
         'capture.local.canstartpaused': 'false',
         'capture.stream.capable': 'false',
     }
+    if config('agent', 'inputs'):
+        cfg['capture.device.names'] = ','.join(config('agent', 'inputs'))
+    return cfg
 
 
 def register_ca(status='idle'):
