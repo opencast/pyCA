@@ -20,6 +20,10 @@ update_frequency = integer(min=5, default=60)
 cal_lookahead    = integer(min=0, default=14)
 backup_mode      = boolean(default=false)
 database         = string(default='sqlite:///pyca.db')
+vendor_name      = string(min=1, max=256, default='Opencast')
+vendor_model     = string(min=1, max=256, default='pyCA')
+vendor_hardware  = string(max=256, default='')
+vendor_firmware  = string(max=256, default='')
 
 [capture]
 directory        = string(default='./recordings')
