@@ -39,6 +39,54 @@ def get_config_params(properties):
     return wdef, param
 
 
+def selected_inputs(event):
+    '''Get the inputs a user selected for an event when scheduling it.
+
+    The selection is part of the agent properties attached to the event as
+    comma separated list in `capture.device.names`.
+
+    :param event: Recorded event
+    :return: List of selected inputs or None if the user did not select any
+    '''
+    prop = 'org.opencastproject.capture.agent.properties'
+    for attachment in event.get_data().get('attach') or []:
+        if attachment.get('x-apple-filename') != prop:
+            continue
+        for line in (attachment.get('data') or '').splitlines():
+            if line.startswith('capture.device.names='):
+                names = line.split('=', 1)[1].split(',')
+                return [name.strip() for name in names if name.strip()] \
+                    or None
+    return None
+
+
+def select_tracks(event, tracks):
+    '''Choose the tracks to ingest based on the inputs a user selected.
+
+    All tracks are ingested if pyCA does not offer inputs, if the user did not
+    select any, or if the selection does not match any recorded track (e.g.
+    because the inputs changed after the event was scheduled).
+
+    :param event: Recorded event
+    :param tracks: List of (flavor, file) tuples recorded for the event
+    :return: List of (flavor, file) tuples to ingest
+    '''
+    selected = selected_inputs(event) if config('agent', 'inputs') else None
+    if not selected:
+        return tracks
+    chosen = [(flavor, track) for (flavor, track) in tracks
+              if flavor in selected]
+    if not chosen:
+        logger.warning('None of the selected inputs (%s) matches a recorded '
+                       'track. Ingesting all tracks.', ', '.join(selected))
+        return tracks
+    for (flavor, track) in tracks:
+        if (flavor, track) not in chosen:
+            logger.info('Not adding track (%s -> %s): input not selected',
+                        flavor, track)
+    return chosen
+
+
 def ingest(event):
     '''Ingest a finished recording to the Opencast server.
     '''
@@ -86,7 +134,7 @@ def ingest(event):
             continue
 
     # add track
-    for (flavor, track) in event.get_tracks():
+    for (flavor, track) in select_tracks(event, event.get_tracks()):
         logger.info('Adding track (%s -> %s)', flavor, track)
         track = track.encode('ascii', 'ignore')
         fields = [('mediaPackage', mediapackage), ('flavor', flavor),

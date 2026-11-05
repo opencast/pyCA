@@ -12,10 +12,12 @@ from pyca import db
 from datetime import datetime
 from dateutil.tz import tzutc
 import errno
+import importlib.metadata
 import json
 import logging
 import os
 import os.path
+import platform
 import pycurl
 import time
 from io import BytesIO as bio
@@ -23,6 +25,9 @@ from urllib.parse import quote as urlquote
 
 
 logger = logging.getLogger(__name__)
+
+# Whether the CA API version assigned by Opencast has been verified already
+_version_checked = False
 
 
 def http_request(url, post_data=None, timeout=None):
@@ -157,13 +162,50 @@ def ensurelist(x):
     return x if type(x) is list else [x]
 
 
+def agent_version():
+    '''Get the version of pyCA, used as firmware revision of the agent.
+    '''
+    try:
+        return importlib.metadata.version('pyca')
+    except importlib.metadata.PackageNotFoundError:
+        return 'unknown'
+
+
+def agent_configuration():
+    '''Build the CA API 2.x agent configuration which describes the agent
+    and its capabilities to Opencast.
+
+    Optional keys are only sent if there is something to send, since Opencast
+    rejects empty lists. Stream configurations, device positions and device
+    content are not supported by pyCA and therefore never sent.
+
+    :return: Dictionary of configuration keys and string values
+    '''
+    cfg = {
+        'vendor.name': config('agent', 'vendor_name'),
+        'vendor.model': config('agent', 'vendor_model'),
+        'vendor.hardware': config('agent', 'vendor_hardware')
+        or platform.machine() or 'unknown',
+        'vendor.firmware': config('agent', 'vendor_firmware')
+        or agent_version(),
+        # pyCA records to local storage and ingests afterwards.
+        'capture.local.capable': 'true',
+        'capture.local.canstartpaused': 'false',
+        'capture.stream.capable': 'false',
+    }
+    if config('agent', 'inputs'):
+        cfg['capture.device.names'] = ','.join(config('agent', 'inputs'))
+    return cfg
+
+
 def register_ca(status='idle'):
-    '''Register this capture agent at the Matterhorn admin server so that it
-    shows up in the admin interface.
+    '''Register this capture agent at the Opencast admin server so that it
+    shows up in the admin interface, then send the current agent state and the
+    agent configuration (required to be recognized as a CA API 2.x agent).
 
     :param status: Current status of the capture agent
     '''
-    # If this is a backup CA we don't tell the Matterhorn core that we are
+    # If this is a backup CA we don't tell the Opencast core that we are
     # here.  We will just run silently in the background:
     if config('agent', 'backup_mode'):
         return
@@ -171,8 +213,10 @@ def register_ca(status='idle'):
     if not service_endpoint:
         logger.warning('Missing endpoint for updating agent status.')
         return
-    params = [('address', config('ui', 'url')), ('state', status)]
     name = urlquote(config('agent', 'name').encode('utf-8'), safe='')
+
+    # Agent state
+    params = [('address', config('ui', 'url')), ('state', status)]
     url = f'{service_endpoint[0]}/agents/{name}'
     try:
         response = http_request(url, params).decode('utf-8')
@@ -180,6 +224,54 @@ def register_ca(status='idle'):
             logger.info(response)
     except pycurl.error as e:
         logger.warning('Could not set agent state to %s: %s', status, e)
+
+    # Agent configuration. Opencast expects a JSON object of string values.
+    params = [('configuration', json.dumps(agent_configuration()))]
+    url = f'{service_endpoint[0]}/agents/{name}/configuration'
+    try:
+        response = http_request(url, params).decode('utf-8')
+        # The response repeats the whole configuration. Do not log this with
+        # every update at info level.
+        if response:
+            logger.debug(response)
+    except pycurl.error as e:
+        logger.warning('Could not set agent configuration: %s', e)
+        return
+
+    if not _version_checked:
+        check_agent_version(service_endpoint[0], name)
+
+
+def check_agent_version(endpoint, name):
+    '''Verify that Opencast registered this agent as a CA API 2.x agent and
+    log a warning if it did not (e.g. because Opencast does not support CA
+    API 2.x yet). Opencast reports the version it assigned in the agent
+    configuration under the key `opencast.agent.version`.
+
+    The check is done only once per process, as soon as Opencast has given a
+    usable answer, to avoid repeating the warning with every update.
+
+    :param endpoint: Location of the capture admin service
+    :param name: URL quoted name of this agent
+    '''
+    global _version_checked
+    url = f'{endpoint}/agents/{name}/configuration.json'
+    try:
+        response = json.loads(http_request(url).decode('utf-8'))
+        items = response['properties-response']['properties']['item']
+        version = {item['key']: item['value']
+                   for item in ensurelist(items)}.get('opencast.agent.version')
+    except (pycurl.error, ValueError, KeyError, TypeError) as e:
+        # No usable answer. Try again with the next update.
+        logger.debug('Could not verify agent version: %s', e)
+        return
+    _version_checked = True
+    if str(version) == '2':
+        logger.info('Opencast registered this agent as CA API 2.x agent')
+    else:
+        logger.warning('Opencast did not register this agent as CA API 2.x '
+                       'agent (reported version: %s). Does your Opencast '
+                       'support CA API 2.x?', version)
 
 
 def recording_state(recording_id, status):
